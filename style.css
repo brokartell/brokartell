@@ -295,11 +295,12 @@ h1{
   .stats{grid-template-columns:1fr}
 }
 
-/* Extra spacing in Media section */
-#media .section__head { 
-  margin-bottom: 18px !important; 
+/* Abstand zwischen "Media" Überschrift und Buttons – unabhängig von HTML */
+#media h2, 
+#media h3 {
+  margin-bottom: 18px !important;
 }
 
-#media .row { 
-  margin-top: 18px !important; 
+#media .row {
+  margin-top: 0 !important; /* damit’s nicht doppelt wird */
 }
