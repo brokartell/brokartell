@@ -332,7 +332,7 @@ h1{
 }
 
 h1 .muted{
-  font-size: 0.45em;   /* ← HIER steuerst du die Größe */
+  font-size: 0.4em;   /* ← HIER steuerst du die Größe */
   font-weight: 600;
   display: inline-block;
   margin-top: 8px;
