@@ -228,7 +228,7 @@ h1{
 }
 
 .section{padding:16px; margin-top:18px}
-.section__head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px}
+.section__head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;}
 .section__head h2{margin:0; font-size:20px}
 
 .split{
