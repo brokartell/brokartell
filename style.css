@@ -330,3 +330,10 @@ h1{
 #media .row {
   margin-top: 0 !important; /* damit’s nicht doppelt wird */
 }
+
+h1 .muted{
+  font-size: 0.45em;   /* ← HIER steuerst du die Größe */
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 8px;
+}
