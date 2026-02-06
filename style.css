@@ -294,3 +294,12 @@ h1{
   .split{grid-template-columns:1fr}
   .stats{grid-template-columns:1fr}
 }
+
+/* Extra spacing in Media section */
+#media .section__head { 
+  margin-bottom: 18px !important; 
+}
+
+#media .row { 
+  margin-top: 18px !important; 
+}
