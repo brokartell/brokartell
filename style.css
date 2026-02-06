@@ -196,11 +196,22 @@ h1{
 
 
 .spin{
-  position:absolute; inset:-60px;
-  background: conic-gradient(from 200deg, transparent, #ff7a1840, transparent, #ffb00030, transparent);
-  animation: spin 8s linear infinite;
-  opacity:.35;
+  position:absolute;
+  inset:-120px;                 /* größer → keine Kanten sichtbar */
+  border-radius:50%;            /* KEIN Rechteck mehr */
+  background: conic-gradient(
+    from 200deg,
+    transparent,
+    rgba(255,122,24,0.25),
+    transparent,
+    rgba(255,176,0,0.18),
+    transparent
+  );
+  animation: spin 14s linear infinite; /* langsamer = edler */
+  opacity:.25;
+  filter: blur(6px);            /* weicher Übergang */
 }
+
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .logoMissing{
