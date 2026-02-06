@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bro Kartell — Multigaming Clan</title>
+  <meta name="description" content="Bro Kartell — Multigaming Clan since 4 Okt. 2013. Join us." />
+  <meta name="theme-color" content="#0b0d14" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="Bro Kartell">
+        <img class="brand__logo" src="assets/logo.png" alt="Bro Kartell Logo"
+             onerror="this.style.display='none'">
+        <div class="brand__text">
+          <div class="brand__name">BRO KARTELL</div>
+          <div class="brand__tag">Multigaming Clan • since 4 Okt. 2013</div>
+        </div>
+      </a>
+
+      <nav class="links" aria-label="Navigation">
+        <a href="#about">Über uns</a>
+        <a href="#games">Games</a>
+        <a href="#join">Join</a>
+        <a href="#media">Media</a>
+        <a href="#contact">Kontakt</a>
+      </nav>
+
+      <div class="cta">
+        <!-- TODO: Discord Invite Link eintragen -->
+        <a class="btn btn--primary" id="discordTop" href="https://discord.gg/DEIN-INVITE" target="_blank" rel="noreferrer">Discord beitreten</a>
+        <a class="btn" href="#join">Mitmachen</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap">
+      <section class="hero">
+        <div class="panel hero__left">
+          <div class="kicker"><span class="dot"></span>Multigaming • Community • Events</div>
+
+          <h1>Bro Kartell<br><span class="muted">Gaming-Clan & Community</span></h1>
+
+          <p class="sub">
+            Wir sind ein Multigaming Clan seit <b>4. Okt. 2013</b> — fokussiert auf Teamplay,
+            entspannte Community-Vibes und starke Runs. Kein Drama, nur Gaming.
+          </p>
+
+          <div class="hero__actions">
+            <!-- TODO: Discord Invite Link eintragen -->
+            <a class="btn btn--primary" id="discordHero" href="https://discord.gg/DEIN-INVITE" target="_blank" rel="noreferrer">Jetzt joinen</a>
+            <a class="btn" href="#media">Wallpaper / Media</a>
+            <span class="badge">🔥 Events • Scrims • Fun-Nights</span>
+          </div>
+
+          <div id="about" class="grid">
+            <div class="panel card">
+              <h3>Teamplay zuerst</h3>
+              <p>Wir spielen taktisch, aber entspannt. Fokus auf Kommunikation, Skill & Spaß.</p>
+              <span class="tag">Squad</span>
+            </div>
+
+            <div class="panel card">
+              <h3>Aktive Community</h3>
+              <p>Discord als Base: LFG, Clips, Highlights, Events und Support für neue Member.</p>
+              <span class="tag">Community</span>
+            </div>
+
+            <div class="panel card">
+              <h3>Content & Media</h3>
+              <p>Wallpapers, Banner, Stream-Assets — alles im Bro-Kartell Look.</p>
+              <span class="tag">Design</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="panel hero__right" aria-label="Logo Showcase">
+          <div class="logoCard">
+            <div class="logoBox">
+              <img class="logoBig" src="assets/logo.png" alt="Bro Kartell Logo groß"
+                   onerror="this.insertAdjacentHTML('afterend','<div class=\'logoMissing\'><b>Logo fehlt</b><div class=\'small\'>Lege eine Datei <b>assets/logo.png</b> in dein Repo.</div></div>')">
+              <div class="spin" aria-hidden="true"></div>
+            </div>
+
+            <div class="stats">
+              <div class="stat"><b>2013</b><span>Gründung</span></div>
+              <div class="stat"><b>Multigame</b><span>Mehrere Titel</span></div>
+              <div class="stat"><b>Discord</b><span>Community Hub</span></div>
+            </div>
+
+            <div class="note">
+              <span class="small">Tipp:</span> Für einen cleanen Look nutze ein PNG mit transparentem Hintergrund.
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="games" class="panel section">
+        <div class="section__head">
+          <h2>Games</h2>
+          <p class="small">Passe die Liste in <code>index.html</code> an — oder sag mir, welche Games ihr spielt.</p>
+        </div>
+
+        <div class="split">
+          <div class="panel card">
+            <h3>Aktive Games</h3>
+            <ul class="list">
+              <li>Warzone / CoD</li>
+              <li>CS2</li>
+              <li>Fortnite</li>
+              <li>Valorant</li>
+              <li>…</li>
+            </ul>
+          </div>
+
+          <div class="panel card">
+            <h3>Was wir suchen</h3>
+            <ul class="list">
+              <li>Gute Kommunikation</li>
+              <li>Respekt & Teamplay</li>
+              <li>Aktivität (kein 24/7 Muss)</li>
+              <li>18+ optional (Regel anpassbar)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="media" class="panel section">
+        <div class="section__head">
+          <h2>Media</h2>
+          <p class="small">Hier kannst du eure Wallpapers/Assets verlinken. Leg Dateien in <code>/assets/wallpapers</code>.</p>
+        </div>
+
+        <div class="row">
+          <a class="btn" href="#" data-toast="Trage hier später Wallpaper-Links ein.">Wallpaper Pack</a>
+          <a class="btn" href="#" data-toast="Trage hier später Banner/Assets ein.">Discord Banner</a>
+          <a class="btn" href="#" data-toast="Trage hier später Clips/YouTube ein.">Highlights</a>
+        </div>
+      </section>
+
+      <section id="join" class="panel section">
+        <div class="section__head">
+          <h2>Join Bro Kartell</h2>
+          <p class="small">Schneller Join über Discord — fertig.</p>
+        </div>
+
+        <div class="split">
+          <div class="panel card">
+            <h3>Schnellstart</h3>
+            <ol class="list">
+              <li>Discord joinen</li>
+              <li>Vorstellen (Game + Spielzeiten)</li>
+              <li>Rolle bekommen & loslegen</li>
+            </ol>
+
+            <!-- TODO: Discord Invite Link eintragen -->
+            <div class="row" style="margin-top:12px">
+              <a class="btn btn--primary" id="discordJoin" href="https://discord.gg/DEIN-INVITE" target="_blank" rel="noreferrer">Discord beitreten</a>
+              <a class="btn" href="#contact">Kontakt</a>
+            </div>
+          </div>
+
+          <div class="panel card" id="contact">
+            <h3>Kontakt</h3>
+            <p class="small" style="margin:0 0 10px">Optional — du kannst diesen Block auch löschen.</p>
+
+            <label class="field">
+              <span>Kontaktmail</span>
+              <input class="input" type="email" placeholder="contact@brokartell.de" />
+            </label>
+
+            <label class="field">
+              <span>Ansprechpartner</span>
+              <input class="input" placeholder="Discord Tag / Name" />
+            </label>
+
+            <div class="row" style="margin-top:12px">
+              <a class="btn" href="mailto:contact@brokartell.de">E-Mail senden</a>
+              <button class="btn" type="button" id="copyDiscord">Discord-Link kopieren</button>
+            </div>
+
+            <p class="tiny muted" id="copyHint" aria-live="polite"></p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        © <span id="year"></span> Bro Kartell • Multigaming Clan since 4 Okt. 2013
+      </footer>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
