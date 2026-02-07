@@ -359,13 +359,21 @@ h1 .muted{
   border-radius:16px;
 }
 
-.wallThumb{
-  width:100%;
-  height:220px;          /* ← DAS ist die Thumbnail-Höhe */
-  object-fit:cover;      /* schneidet sauber zu */
-  display:block;
+.wallItem{
+  background:#ffffff06;
+  border-radius:16px;
+  overflow:hidden;
 }
+
+
 .wallItem:hover .wallThumb{
   transform: scale(1.03);
   transition: transform .3s ease;
+}
+
+/* Wallpaper Grid */
+.wallGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
 }
