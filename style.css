@@ -605,3 +605,11 @@ h1 .muted{
   color: var(--text);
   transform: translateX(-2px);
 }
+
+
+.back-link::before{
+  content: "•";
+  font-size: 18px;
+  line-height: 1;
+  opacity: .6;
+}
