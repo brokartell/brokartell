@@ -527,3 +527,22 @@ h1 .muted{
     padding-right: 6px;
   }
 }
+
+/* Mobile: Kontakt-Felder dürfen NICHT über die Card hinaus */
+@media (max-width: 600px){
+  #contact input,
+  #contact .input,
+  #kontakt input,
+  #kontakt .input{
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Falls die Card innen padding hat: etwas Luft rechts/links */
+  #contact .field,
+  #kontakt .field{
+    width: 100%;
+    padding-right: 0 !important;
+  }
+}
