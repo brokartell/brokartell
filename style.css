@@ -409,3 +409,13 @@ h1 .muted{
   margin-bottom: 6px;
   display: block;
 }
+/* Aktive Games: 2 Spalten (von oben nach unten) */
+#games .list{
+  columns: 2;
+  column-gap: 40px;
+}
+
+#games .list li{
+  break-inside: avoid;
+  margin: 0 0 8px 0;
+}
