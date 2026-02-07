@@ -435,3 +435,25 @@ h1 .muted{
   overflow:hidden;
   text-overflow:ellipsis;
 }
+/* Was wir suchen: auch als Chips Grid */
+#join ul.list{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+  list-style:none;
+  padding:0;
+  margin:10px 0 0;
+}
+
+#join ul.list li{
+  padding:8px 10px;
+  border:1px solid var(--line);
+  background:#ffffff06;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.2;
+  text-align:center;
+
+  white-space:normal;      /* hier darf er umbrechen */
+}
