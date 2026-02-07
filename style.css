@@ -609,7 +609,10 @@ h1 .muted{
 
 .back-link::before{
   content: "•";
-  font-size: 18px;
-  line-height: 1;
-  opacity: .6;
+  opacity: .5;
+  transition: opacity .15s ease;
+}
+
+.back-link:hover::before{
+  opacity: 1;
 }
