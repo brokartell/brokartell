@@ -353,3 +353,15 @@ h1 .muted{
 #contact .input{
   width: 100%;
 }
+/* Wallpaper Thumbnails sauber begrenzen */
+.wallItem{
+  overflow:hidden;
+  border-radius:16px;
+}
+
+.wallThumb{
+  width:100%;
+  height:220px;          /* ← DAS ist die Thumbnail-Höhe */
+  object-fit:cover;      /* schneidet sauber zu */
+  display:block;
+}
