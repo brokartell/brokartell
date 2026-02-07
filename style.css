@@ -377,3 +377,15 @@ h1 .muted{
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 }
+.wallMeta{
+  padding:12px;
+}
+
+.wallMeta h4{
+  margin:0 0 4px;
+  font-size:15px;
+}
+
+.wallMeta .small{
+  font-size:12px;
+}
