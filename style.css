@@ -514,3 +514,16 @@ h1 .muted{
     padding: 10px 12px;
   }
 }
+/* Mobile Fix: Kontaktfelder nicht zu breit */
+@media (max-width: 600px){
+  #kontakt .input{
+    width: 100%;
+    max-width: 100%;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  #kontakt .field{
+    padding-right: 6px;
+  }
+}
