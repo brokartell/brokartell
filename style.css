@@ -353,11 +353,24 @@ h1 .muted{
 #contact .input{
   width: 100%;
 }
-/* Wallpaper Thumbnails sauber begrenzen */
+/* Wallpaper Card */
 .wallItem{
-  overflow:hidden;
+  background:#ffffff06;
   border-radius:16px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
+
+/* Thumbnail Bild */
+.wallThumb{
+  width:100%;
+  height:160px;          /* ← HIER steuern wir die Höhe */
+  object-fit:cover;      /* schneidet Hochkant korrekt */
+  object-position:center;
+  display:block;
+}
+
 
 .wallItem{
   background:#ffffff06;
