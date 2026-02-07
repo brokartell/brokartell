@@ -409,3 +409,29 @@ h1 .muted{
   margin-bottom: 6px;
   display: block;
 }
+/* Games: Chips als Grid (5 pro Reihe) */
+#games ul.list{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:10px;
+  list-style:none;
+  padding:0;
+  margin:10px 0 0;
+}
+
+/* Chip Style */
+#games ul.list li{
+  padding:8px 10px;
+  border:1px solid var(--line);
+  background:#ffffff06;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.2;
+  text-align:center;
+
+  /* verhindert hässliche Umbrüche */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
