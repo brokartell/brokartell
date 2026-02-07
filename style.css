@@ -405,3 +405,7 @@ h1 .muted{
 .wallGrid{
   margin-top: 14px;
 }
+.wallMeta .small{
+  margin-bottom: 6px;
+  display: block;
+}
