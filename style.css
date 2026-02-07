@@ -365,3 +365,7 @@ h1 .muted{
   object-fit:cover;      /* schneidet sauber zu */
   display:block;
 }
+.wallItem:hover .wallThumb{
+  transform: scale(1.03);
+  transition: transform .3s ease;
+}
