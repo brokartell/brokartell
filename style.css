@@ -344,3 +344,12 @@ h1 .muted{
   display: inline-block;
   margin-top: 8px;
 }
+
+/* Kontaktformular: Eingabefelder schmaler (richtige ID) */
+#contact .field{
+  max-width: 420px;
+}
+
+#contact .input{
+  width: 100%;
+}
