@@ -78,7 +78,6 @@ function renderWallpapers() {
     grid.innerHTML = `
       <div class="panel card">
         <h3>Keine Wallpapers</h3>
-        <p class="small">Lege Bilder in <code>assets/wallpapers/</code> ab.</p>
       </div>
     `;
     return;
