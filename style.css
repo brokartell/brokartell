@@ -604,10 +604,11 @@ h1 .muted{
     filter: none;
   }
 }
-/* Alternative: heller Text auf Orange */
+/* Primary Button: Text immer gut lesbar */
 .btn--primary,
 .btn--primary:hover,
 .btn--primary:active{
-  color: rgba(255,255,255,.92) !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,.35);
+  color: #0a0b10 !important;        /* bleibt dunkel */
+  text-shadow: 0 1px 0 rgba(255,255,255,.25); /* minimaler Lift */
 }
+
