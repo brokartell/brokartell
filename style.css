@@ -604,11 +604,5 @@ h1 .muted{
     filter: none;
   }
 }
-/* Primary Button: Text immer gut lesbar */
-.btn--primary,
-.btn--primary:hover,
-.btn--primary:active{
-  color: #0a0b10 !important;        /* bleibt dunkel */
-  text-shadow: 0 1px 0 rgba(255,255,255,.25); /* minimaler Lift */
-}
+
 
