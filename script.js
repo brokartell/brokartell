@@ -58,3 +58,84 @@
     });
   }
 })();
+// ===== Wallpaper Gallery =====
+const grid = document.getElementById("wallpaperGrid");
+const filterButtons = document.querySelectorAll("[data-filter]");
+
+let wallpapers = [];
+let activeFilter = "all";
+
+function renderWallpapers() {
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  const filtered = wallpapers.filter(w =>
+    activeFilter === "all" ? true : w.tag === activeFilter
+  );
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="panel card">
+        <h3>Keine Wallpapers</h3>
+        <p class="small">Lege Bilder in <code>assets/wallpapers/</code> ab.</p>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(w => {
+    const url = `assets/wallpapers/${w.file}`;
+
+    const item = document.createElement("div");
+    item.className = "wallItem";
+
+    item.innerHTML = `
+      <a href="${url}" target="_blank" rel="noreferrer">
+        <img class="wallThumb" src="${url}" alt="${w.title}" loading="lazy">
+      </a>
+
+      <div class="wallMeta">
+        <div>
+          <h4>${w.title}</h4>
+          <div class="small">${w.tag} • ${w.resolution}</div>
+        </div>
+
+        <div class="wallBtns">
+          <a class="btn" href="${url}" target="_blank">Preview</a>
+          <a class="btn btn--primary" href="${url}" download>Download</a>
+        </div>
+      </div>
+    `;
+
+    grid.appendChild(item);
+  });
+}
+
+async function loadWallpapers() {
+  try {
+    const res = await fetch("assets/wallpapers/wallpapers.json", { cache: "no-store" });
+    wallpapers = await res.json();
+    renderWallpapers();
+  } catch (e) {
+    if (grid) {
+      grid.innerHTML = `
+        <div class="panel card">
+          <h3>Fehler</h3>
+          <p class="small">Wallpapers konnten nicht geladen werden.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+filterButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    filterButtons.forEach(b => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
+    activeFilter = btn.dataset.filter;
+    renderWallpapers();
+  });
+});
+
+loadWallpapers();
