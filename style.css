@@ -402,7 +402,6 @@ h1 .muted{
 .wallMeta .small{
   font-size:12px;
 }
-/* Abstand zwischen Filter-Buttons und Wallpaper-Grid */
-.wallFilters{
-  margin-bottom: 14px;
+.wallGrid{
+  margin-top: 14px;
 }
