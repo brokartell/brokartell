@@ -472,3 +472,45 @@ h1 .muted{
     max-width: 180px;
   }
 }
+/* =========================
+   iOS Safari Fix
+   ========================= */
+@supports (-webkit-touch-callout: none) {
+  .topbar{
+    position: sticky;
+    top: 0;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: rgba(7,8,12,0.92) !important;
+  }
+
+  .nav{
+    height: auto;
+  }
+}
+
+/* =========================
+   Mobile Header Layout
+   ========================= */
+@media (max-width: 600px){
+  .nav{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    height: auto;
+  }
+
+  .brand{
+    justify-content: center;
+    text-align: center;
+  }
+
+  .cta{
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn{
+    padding: 10px 12px;
+  }
+}
