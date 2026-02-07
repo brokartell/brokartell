@@ -344,3 +344,8 @@ h1 .muted{
   display: inline-block;
   margin-top: 8px;
 }
+
+/* Kontaktformular: Felder nicht zu breit */
+#kontakt .input{
+  max-width: 420px;
+}
