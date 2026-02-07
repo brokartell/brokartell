@@ -546,63 +546,21 @@ h1 .muted{
     padding-right: 0 !important;
   }
 }
-/* =========================
-   Button Micro-Animationen
-   ========================= */
-
-.btn{
-  position: relative;
-  transition:
-    transform .18s ease,
-    box-shadow .18s ease,
-    filter .18s ease,
-    background .18s ease;
-  will-change: transform;
-}
-
-.btn:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 14px 38px rgba(0,0,0,.55);
-}
-
-.btn:active{
-  transform: translateY(0);
-  box-shadow: 0 8px 18px rgba(0,0,0,.7);
-  filter: brightness(.95);
-}
-
-/* Primary Button (Orange) */
+/* Primary Button: kein Glow, kein Shine – nur leichtes Anheben */
 .btn--primary{
-  box-shadow:
-    0 0 0 rgba(255,122,24,0),
-    0 10px 26px rgba(0,0,0,.5);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0a0b10;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
 .btn--primary:hover{
-  box-shadow:
-    0 0 18px rgba(255,122,24,.45),
-    0 18px 40px rgba(0,0,0,.7);
-  filter: saturate(1.05) brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(0,0,0,.5);
+  filter: none;            /* 🔴 ganz wichtig */
 }
 
-/* Optionaler Pulse */
-@keyframes glowPulse {
-  0%   { box-shadow: 0 0 0 rgba(255,122,24,0); }
-  50%  { box-shadow: 0 0 20px rgba(255,122,24,.35); }
-  100% { box-shadow: 0 0 0 rgba(255,122,24,0); }
+.btn--primary:active{
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
 }
-
-.btn--primary.pulse{
-  animation: glowPulse 3.8s ease-in-out infinite;
-}
-
-/* Touch Devices (kein Hover) */
-@media (hover: none){
-  .btn:hover{
-    transform: none;
-    box-shadow: inherit;
-    filter: none;
-  }
-}
-
-
