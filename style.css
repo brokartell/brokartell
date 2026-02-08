@@ -618,21 +618,3 @@ h1 .muted{
 }
 
 
-/* Steam Button */
-.btn--steam{
-  background:#171a21;
-  color:#e9eefb;
-  border:1px solid #2a2f3a;
-  gap:8px;
-}
-
-.btn--steam svg{
-  width:18px;
-  height:18px;
-  fill:#c7d5e0;
-}
-
-.btn--steam:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(0,0,0,.55);
-}
