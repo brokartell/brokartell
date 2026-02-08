@@ -617,4 +617,10 @@ h1 .muted{
   opacity: 1;
 }
 
+@media (max-width: 600px){
+  .btn--steam{
+    font-size:13px;
+    padding:10px 12px;
+  }
+}
 
