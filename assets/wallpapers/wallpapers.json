@@ -1,20 +1,20 @@
 [
   {
     "title": "PC • SWAT Door",
-    "file": "pc_3840x2400_swatdoor_01.png",
+    "file": "pc_1530×1024_swatdoor_01.png",
     "tag": "PC",
     "resolution": "1530×1024"
   },
   {
     "title": "PC • Attack",
-    "file": "pc_3840x2400_attack_02.PNG",
+    "file": "pc_1530×1024_attack_02.PNG",
     "tag": "PC",
-    "resolution": "3840×2400"
+    "resolution": "1530×1024"
   },
   {
     "title": "PC • Equipment",
-    "file": "pc_3840x2400_equipment_03.png",
+    "file": "pc_1530×1024_equipment_03.png",
     "tag": "PC",
-    "resolution": "3840×2400"
+    "resolution": "1530×1024"
   }
 ]
