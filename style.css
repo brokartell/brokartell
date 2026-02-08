@@ -623,4 +623,10 @@ h1 .muted{
     padding:10px 12px;
   }
 }
+/* Kontakt: Anzeige-Felder statt editierbare Inputs */
+.input--readonly{
+  cursor: default;
+  user-select: text;      /* kopieren möglich */
+  pointer-events: none;   /* keine Eingabe möglich */
+}
 
