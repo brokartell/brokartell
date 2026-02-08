@@ -4,5 +4,17 @@
     "file": "pc_swatdoor_01.png",
     "tag": "PC",
     "resolution": "1536x1024"
+  },
+  {
+    "title": "PC • Attack",
+    "file": "pc_attack_02.png",
+    "tag": "PC",
+    "resolution": "1536x1024"
+  },
+  {
+    "title": "PC • Equipment",
+    "file": "pc_equipment_03",
+    "tag": "PC",
+    "resolution": "1536x1024"
   }
 ]
