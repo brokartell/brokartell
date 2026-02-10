@@ -667,3 +667,23 @@ h1 .muted{
   cursor:not-allowed;
   transform:none;
 }
+/* Wallpaper Pagination */
+.wallPager{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-top:14px;
+}
+
+.wallPager__nums{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.wallPager .btn[disabled]{
+  opacity:.4;
+  pointer-events:none;
+}
