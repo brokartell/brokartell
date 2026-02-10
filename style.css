@@ -687,3 +687,7 @@ h1 .muted{
   opacity:.4;
   pointer-events:none;
 }
+
+.check-green{
+  color:#3ddc84; /* schönes Gaming-Grün */
+}
