@@ -66,7 +66,10 @@ let wallpapers = [];
 let activeFilter = "all";
 
 // Pagination
-const PAGE_SIZE = 6;
+function getPageSize(){
+  return window.innerWidth <= 768 ? 3 : 6;
+}
+
 let currentPage = 1;
 
 // Pagination UI Container (wird automatisch unter dem Grid erstellt)
@@ -85,7 +88,9 @@ function getFilteredWallpapers() {
 function renderPager(totalItems) {
   if (!pager) return;
 
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  const pageSize = getPageSize();
+const totalPages = Math.ceil(totalItems / pageSize);
+
 
   // Wenn <= 1 Seite, Pager ausblenden
   if (totalPages <= 1) {
@@ -156,11 +161,13 @@ function renderWallpapers() {
     return;
   }
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const pageSize = getPageSize();
+const totalPages = Math.ceil(filtered.length / pageSize);
   if (currentPage > totalPages) currentPage = totalPages;
 
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+  const start = (currentPage - 1) * pageSize;
+const pageItems = filtered.slice(start, start + pageSize);
+
 
   pageItems.forEach(w => {
     const url = `assets/wallpapers/${w.file}`;
@@ -225,3 +232,9 @@ filterButtons.forEach(btn => {
 });
 
 loadWallpapers();
+// Reagiert auf Bildschirmgrößen-Wechsel (Mobile <-> Desktop)
+window.addEventListener("resize", () => {
+  currentPage = 1;
+  renderWallpapers();
+});
+
