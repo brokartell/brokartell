@@ -687,4 +687,12 @@ h1 .muted{
   opacity:.4;
   pointer-events:none;
 }
+/* Pagination – aktive Seite klar hervorheben */
+.page-btn.is-active,
+.wallPager .btn.is-active{
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0a0b10;
+  border-color: transparent;
+  box-shadow: 0 0 0 1px rgba(255,122,24,.25);
+}
 
