@@ -629,4 +629,41 @@ h1 .muted{
   user-select: text;      /* kopieren möglich */
   pointer-events: none;   /* keine Eingabe möglich */
 }
+/* Wallpapers Pagination */
+.pagination{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
 
+.page-btn{
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text);
+  padding: 7px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.page-btn:hover{
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.10);
+}
+
+.page-btn.is-active{
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0a0b10;
+  border-color: transparent;
+}
+
+.page-btn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+  transform:none;
+}
