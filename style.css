@@ -688,4 +688,12 @@ h1 .muted{
   pointer-events:none;
 }
 
+.rc-list li.done::before{
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #3ddc84; /* ✅ Grün */
+  font-weight: 900;
+}
 
