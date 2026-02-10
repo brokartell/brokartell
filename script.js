@@ -232,9 +232,22 @@ filterButtons.forEach(btn => {
 });
 
 loadWallpapers();
-// Reagiert auf Bildschirmgrößen-Wechsel (Mobile <-> Desktop)
+// Resize-Fix für Mobile (verhindert Zurückspringen auf Seite 1)
+let resizeTimer = null;
 window.addEventListener("resize", () => {
-  currentPage = 1;
-  renderWallpapers();
+  clearTimeout(resizeTimer);
+
+  resizeTimer = setTimeout(() => {
+    const totalPages = Math.ceil(
+      getFilteredWallpapers().length / getPageSize()
+    );
+
+    // Seite nur korrigieren, wenn sie ungültig wäre
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+
+    renderWallpapers();
+  }, 200);
 });
 
