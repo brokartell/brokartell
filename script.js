@@ -58,21 +58,93 @@
     });
   }
 })();
-// ===== Wallpaper Gallery =====
+// ===== Wallpaper Gallery (mit Pagination) =====
 const grid = document.getElementById("wallpaperGrid");
 const filterButtons = document.querySelectorAll("[data-filter]");
 
 let wallpapers = [];
 let activeFilter = "all";
 
+// Pagination
+const PAGE_SIZE = 6;
+let currentPage = 1;
+
+// Pagination UI Container (wird automatisch unter dem Grid erstellt)
+let pager = document.getElementById("wallpaperPager");
+if (!pager && grid) {
+  pager = document.createElement("div");
+  pager.id = "wallpaperPager";
+  pager.className = "wallPager";
+  grid.insertAdjacentElement("afterend", pager);
+}
+
+function getFilteredWallpapers() {
+  return wallpapers.filter(w => (activeFilter === "all" ? true : w.tag === activeFilter));
+}
+
+function renderPager(totalItems) {
+  if (!pager) return;
+
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+
+  // Wenn <= 1 Seite, Pager ausblenden
+  if (totalPages <= 1) {
+    pager.innerHTML = "";
+    pager.style.display = "none";
+    return;
+  }
+
+  pager.style.display = "flex";
+
+  const prevDisabled = currentPage <= 1 ? "disabled" : "";
+  const nextDisabled = currentPage >= totalPages ? "disabled" : "";
+
+  // Numbers
+  let nums = "";
+  for (let i = 1; i <= totalPages; i++) {
+    const active = i === currentPage ? "is-active" : "";
+    nums += `<button class="btn btn--chip ${active}" data-page="${i}">${i}</button>`;
+  }
+
+  pager.innerHTML = `
+    <button class="btn btn--chip" data-action="prev" ${prevDisabled}>←</button>
+    <div class="wallPager__nums">${nums}</div>
+    <button class="btn btn--chip" data-action="next" ${nextDisabled}>→</button>
+  `;
+
+  // Events
+  pager.querySelectorAll("[data-page]").forEach(b => {
+    b.addEventListener("click", () => {
+      currentPage = Number(b.dataset.page);
+      renderWallpapers();
+      // optional: nach oben zum Grid scrollen
+      grid?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  pager.querySelector("[data-action='prev']")?.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderWallpapers();
+      grid?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+
+  pager.querySelector("[data-action='next']")?.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderWallpapers();
+      grid?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+}
+
 function renderWallpapers() {
   if (!grid) return;
 
   grid.innerHTML = "";
 
-  const filtered = wallpapers.filter(w =>
-    activeFilter === "all" ? true : w.tag === activeFilter
-  );
+  const filtered = getFilteredWallpapers();
 
   if (!filtered.length) {
     grid.innerHTML = `
@@ -80,10 +152,17 @@ function renderWallpapers() {
         <h3>Keine Wallpapers</h3>
       </div>
     `;
+    renderPager(0);
     return;
   }
 
-  filtered.forEach(w => {
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+  pageItems.forEach(w => {
     const url = `assets/wallpapers/${w.file}`;
 
     const item = document.createElement("div");
@@ -101,7 +180,7 @@ function renderWallpapers() {
         </div>
 
         <div class="wallBtns">
-          <a class="btn" href="${url}" target="_blank">Preview</a>
+          <a class="btn" href="${url}" target="_blank" rel="noreferrer">Preview</a>
           <a class="btn btn--primary" href="${url}" download>Download</a>
         </div>
       </div>
@@ -109,12 +188,15 @@ function renderWallpapers() {
 
     grid.appendChild(item);
   });
+
+  renderPager(filtered.length);
 }
 
 async function loadWallpapers() {
   try {
     const res = await fetch("assets/wallpapers/wallpapers.json", { cache: "no-store" });
     wallpapers = await res.json();
+    currentPage = 1;
     renderWallpapers();
   } catch (e) {
     if (grid) {
@@ -125,6 +207,7 @@ async function loadWallpapers() {
         </div>
       `;
     }
+    renderPager(0);
   }
 }
 
@@ -133,6 +216,10 @@ filterButtons.forEach(btn => {
     filterButtons.forEach(b => b.classList.remove("is-active"));
     btn.classList.add("is-active");
     activeFilter = btn.dataset.filter;
+
+    // wichtig: beim Filterwechsel wieder Seite 1
+    currentPage = 1;
+
     renderWallpapers();
   });
 });
