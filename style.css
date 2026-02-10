@@ -688,4 +688,20 @@ h1 .muted{
   pointer-events:none;
 }
 
+/* Roadmap: erledigt */
+.rc-list li.done{
+  color: var(--muted);
+  text-decoration: line-through;
+  position: relative;
+  padding-left: 22px;
+}
+
+.rc-list li.done::before{
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--accent);
+  font-weight: 900;
+}
 
