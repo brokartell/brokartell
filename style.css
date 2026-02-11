@@ -714,3 +714,15 @@ h1 .muted{
   box-shadow: 0 0 12px rgba(255,60,60,.4);
 }
 
+.impressum-mail {
+  color: #ff7a00; /* dein Orange */
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.impressum-mail:hover {
+  color: #ff9d2a;
+  text-shadow: 0 0 6px rgba(255,122,0,0.5);
+}
+
