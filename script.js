@@ -269,3 +269,14 @@ window.addEventListener("resize", () => {
   }, 200);
 });
 
+// Mail-Adresse dynamisch generieren (Spam-Schutz)
+(() => {
+  const user = "post";
+  const domain = "bro-kartell.com";
+  const email = `${user}@${domain}`;
+
+  const btn = document.getElementById("mailBtn");
+  if (btn) {
+    btn.href = `mailto:${email}`;
+  }
+})();
