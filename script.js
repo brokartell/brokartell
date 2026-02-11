@@ -168,6 +168,17 @@ const totalPages = Math.ceil(filtered.length / pageSize);
   const start = (currentPage - 1) * pageSize;
 const pageItems = filtered.slice(start, start + pageSize);
 
+  function isNewWallpaper(dateStr){
+  if(!dateStr) return false;
+
+  const added = new Date(dateStr);
+  const now = new Date();
+
+  const diffDays = (now - added) / (1000 * 60 * 60 * 24);
+
+  return diffDays <= 7; // 7 Tage = neu
+}
+
 
   pageItems.forEach(w => {
     const url = `assets/wallpapers/${w.file}`;
@@ -175,10 +186,17 @@ const pageItems = filtered.slice(start, start + pageSize);
     const item = document.createElement("div");
     item.className = "wallItem";
 
-    item.innerHTML = `
-      <a href="${url}" target="_blank" rel="noreferrer">
-        <img class="wallThumb" src="${url}" alt="${w.title}" loading="lazy">
-      </a>
+  const isNew = isNewWallpaper(w.date);
+
+item.innerHTML = `
+  <div class="wallThumbWrap">
+    <a href="${url}" target="_blank" rel="noreferrer">
+      <img class="wallThumb" src="${url}" alt="${w.title}" loading="lazy">
+    </a>
+    ${isNew ? `<span class="badge-new">NEU</span>` : ""}
+  </div>
+
+  <div class="wallMeta">
 
       <div class="wallMeta">
         <div>
