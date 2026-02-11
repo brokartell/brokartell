@@ -1,4 +1,11 @@
 [
+   {
+    "title": "PC • Technik",
+    "file": "pc_technik_04.png",
+    "tag": "PC",
+    "resolution": "1536x1024",
+    "date": "2026-02-18"
+  },
   {
     "title": "PC • SWAT Door",
     "file": "pc_swatdoor_01.png",
@@ -34,12 +41,5 @@
     "file": "mobile_equipment_03.png",
     "tag": "Mobile",
     "resolution": "1024x1536"
-  },
-  {
-    "title": "PC • Technik",
-    "file": "pc_technik_04.png",
-    "tag": "PC",
-    "resolution": "1536x1024",
-    "date": "2026-02-18"
   }
 ]
