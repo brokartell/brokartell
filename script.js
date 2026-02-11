@@ -280,4 +280,15 @@ window.addEventListener("resize", () => {
     btn.href = `mailto:${email}`;
   }
 })();
+// Mail für Impressum / Datenschutz
+(() => {
+  const user = "post";
+  const domain = "bro-kartell.com";
+  const email = `${user}@${domain}`;
+
+  const btnLegal = document.getElementById("mailBtnLegal");
+  if (btnLegal) {
+    btnLegal.href = `mailto:${email}`;
+  }
+})();
 
