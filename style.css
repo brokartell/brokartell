@@ -696,3 +696,21 @@ h1 .muted{
   box-shadow: 0 0 0 1px rgba(255,122,24,.25);
 }
 
+.wallThumbWrap{
+  position:relative;
+}
+
+.badge-new{
+  position:absolute;
+  top:8px;
+  right:8px;
+  font-size:11px;
+  font-weight:800;
+  padding:4px 8px;
+  border-radius:999px;
+  background: linear-gradient(135deg, #ff3c3c, #ff7a18);
+  color:white;
+  letter-spacing:.5px;
+  box-shadow: 0 0 12px rgba(255,60,60,.4);
+}
+
