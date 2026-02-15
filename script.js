@@ -264,6 +264,7 @@ document.addEventListener("click", (e) => {
   openPreview(src, title);
 });
 function openPreview(src, title) {
+  document.querySelector(".previewModal")?.remove();
   const modal = document.createElement("div");
   modal.className = "previewModal";
 
