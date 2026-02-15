@@ -369,3 +369,11 @@ window.addEventListener("resize", () => {
     setTimeout(() => splash.remove(), 500);
   }, 650);
 })();
+
+(() => {
+  const isStandalone =
+    (window.navigator.standalone === true) ||
+    window.matchMedia("(display-mode: standalone)").matches;
+
+  if (isStandalone) document.documentElement.classList.add("is-standalone");
+})();
