@@ -359,3 +359,52 @@ async function checkForUpdate(){
 
 checkForUpdate();
 
+// ===== PWA / Service Worker Update Handling =====
+const updateBar = document.getElementById("updateBar");   // Container
+const updateBtn = document.getElementById("updateReload"); // Button
+
+function showUpdateBar() {
+  if (updateBar) updateBar.classList.add("show");
+}
+
+function hideUpdateBar() {
+  if (updateBar) updateBar.classList.remove("show");
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js").then((reg) => {
+    // Wenn bereits ein Update wartet:
+    if (reg.waiting) showUpdateBar();
+
+    // Wenn ein Update gefunden wird:
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener("statechange", () => {
+        // Update ist fertig installiert und wartet
+        if (nw.state === "installed" && navigator.serviceWorker.controller) {
+          showUpdateBar();
+        }
+      });
+    });
+
+    // Klick auf "Neu laden" => waiting Worker aktivieren
+    updateBtn?.addEventListener("click", async () => {
+      hideUpdateBar();
+
+      if (reg.waiting) {
+        reg.waiting.postMessage("SKIP_WAITING");
+      } else {
+        location.reload();
+      }
+    });
+  });
+
+  // Wenn der neue SW übernommen hat => einmal reloaden (Loop-Schutz)
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+}
