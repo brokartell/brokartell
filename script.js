@@ -205,7 +205,10 @@ item.innerHTML = `
         </div>
 
         <div class="wallBtns">
-          <a class="btn" href="${url}" target="_blank" rel="noreferrer">Preview</a>
+          <button class="btn js-preview" type="button" data-src="${url}" data-title="${w.title}">
+  Preview
+</button>
+
           <a class="btn btn--primary" href="${url}" download>Download</a>
         </div>
       </div>
@@ -250,6 +253,34 @@ filterButtons.forEach(btn => {
 });
 
 loadWallpapers();
+// ===== Preview Modal =====
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".js-preview");
+  if (!btn) return;
+
+  const src = btn.dataset.src;
+  const title = btn.dataset.title;
+
+  openPreview(src, title);
+});
+function openPreview(src, title) {
+  const modal = document.createElement("div");
+  modal.className = "previewModal";
+
+  modal.innerHTML = `
+    <div class="previewOverlay"></div>
+    <div class="previewContent">
+      <button class="previewClose">✕</button>
+      <img src="${src}" alt="${title}">
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector(".previewOverlay").onclick = () => modal.remove();
+  modal.querySelector(".previewClose").onclick = () => modal.remove();
+}
+
 // Resize-Fix für Mobile (verhindert Zurückspringen auf Seite 1)
 let resizeTimer = null;
 window.addEventListener("resize", () => {
