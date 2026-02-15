@@ -1,4 +1,4 @@
-const CACHE = "bk-v1.0.0"; // <- bei Änderungen hochzählen z.B. bk-v1.0.1
+const CACHE = "bk-v1.6.0"; // <- bei Änderungen hochzählen z.B. bk-v1.0.1
 const ASSETS = [
   "/",
   "/index.html",
