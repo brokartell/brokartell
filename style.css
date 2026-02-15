@@ -796,3 +796,35 @@ h1 .muted{
   border-radius: 14px;
   padding: 10px 12px;
   cursor: pointer;
+
+/* App Splash (nur Overlay, zerstört Layout nicht) */
+.appSplash{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;              /* wird per JS nur in Standalone eingeblendet */
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 16, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity .45s ease, transform .45s ease;
+  opacity: 1;
+}
+
+.appSplash__logo{
+  width: min(60vw, 220px);
+  height: auto;
+  filter: drop-shadow(0 10px 35px rgba(255,150,0,.25));
+  transform: translateY(0) scale(1);
+  transition: transform .45s ease, opacity .45s ease;
+}
+
+.appSplash.is-out{
+  opacity: 0;
+}
+
+.appSplash.is-out .appSplash__logo{
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
