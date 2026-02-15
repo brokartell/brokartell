@@ -377,3 +377,29 @@ window.addEventListener("resize", () => {
 
   if (isStandalone) document.documentElement.classList.add("is-standalone");
 })();
+
+(() => {
+  const splash = document.getElementById("appSplash");
+  if (!splash) return;
+
+  const isStandalone =
+    window.navigator.standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches;
+
+  // In normalem Browser NIE anzeigen
+  if (!isStandalone) {
+    splash.hidden = true;
+    splash.classList.remove("is-show");
+    return;
+  }
+
+  // In Web-App kurz anzeigen
+  splash.hidden = false;
+  splash.classList.add("is-show");
+
+  // Nach kurzer Zeit wieder ausblenden
+  setTimeout(() => {
+    splash.classList.remove("is-show");
+    splash.hidden = true;
+  }, 700);
+})();
