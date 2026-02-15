@@ -346,3 +346,26 @@ window.addEventListener("resize", () => {
     setTimeout(() => splash.remove(), 500);
   }, 700);
 })();
+
+(() => {
+  const splash = document.getElementById("appSplash");
+  if (!splash) return;
+
+  const isStandalone =
+    (window.navigator.standalone === true) ||
+    window.matchMedia("(display-mode: standalone)").matches;
+
+  // NUR in der Homescreen-Web-App
+  if (!isStandalone) return;
+
+  // pro App-Start nur einmal
+  if (sessionStorage.getItem("splashShown") === "1") return;
+  sessionStorage.setItem("splashShown", "1");
+
+  splash.hidden = false; // erst jetzt sichtbar machen
+
+  setTimeout(() => {
+    splash.classList.add("is-out");
+    setTimeout(() => splash.remove(), 500);
+  }, 650);
+})();
