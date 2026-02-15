@@ -796,41 +796,5 @@ h1 .muted{
   border-radius: 14px;
   padding: 10px 12px;
   cursor: pointer;
-}
-.updateBar{
-  position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  z-index: 9999;
 
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 12px 12px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: #0b0d14f2;
-  box-shadow: 0 18px 60px #000000a0;
-}
-
-.updateBar{
-  position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(12, 14, 22, .92);
-  border: 1px solid rgba(255,255,255,.10);
-  backdrop-filter: blur(10px);
-  z-index: 9999;
-}
-.updateBar.show{ display:flex; }
 
