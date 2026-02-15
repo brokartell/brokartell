@@ -323,4 +323,39 @@ window.addEventListener("resize", () => {
     btnLegal.href = `mailto:${email}`;
   }
 })();
+// ===== Update Check =====
+const APP_VERSION = "1.5"; // <-- HIER deine aktuelle Version eintragen
+
+async function checkForUpdate(){
+  try{
+    const res = await fetch(`/version.json?v=${Date.now()}`, { cache: "no-store" });
+    if(!res.ok) return;
+
+    const data = await res.json();
+    const remote = String(data.version || "").trim();
+
+    if(remote && remote !== APP_VERSION){
+      const bar = document.getElementById("updateBar");
+      const text = document.getElementById("updateText");
+      const btn = document.getElementById("updateReload");
+
+      if(bar){
+        bar.hidden = false;
+        if(text) text.textContent = `Update verfügbar (v${remote}) – ${data.message || ""}`.trim();
+        if(btn){
+          btn.onclick = () => {
+            // Cache umgehen: Seite mit Version neu laden
+            const url = new URL(window.location.href);
+            url.searchParams.set("v", remote);
+            window.location.href = url.toString();
+          };
+        }
+      }
+    }
+  } catch(e){
+    // still silent
+  }
+}
+
+checkForUpdate();
 
