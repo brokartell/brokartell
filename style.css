@@ -828,3 +828,32 @@ h1 .muted{
   opacity: 0;
   transform: translateY(10px) scale(0.98);
 }
+/* Splash ist per default komplett aus */
+.appSplash[hidden] { display: none !important; }
+
+.appSplash{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8,10,16,.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.appSplash__logo{
+  width: 180px;          /* <- nicht riesig */
+  height: 180px;
+  border-radius: 28px;   /* iOS icon feel */
+  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+}
+
+.appSplash.is-out{
+  animation: splashOut .45s ease forwards;
+}
+
+@keyframes splashOut{
+  to { opacity: 0; transform: scale(.98); }
+}
