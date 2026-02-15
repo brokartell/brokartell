@@ -323,3 +323,26 @@ window.addEventListener("resize", () => {
     btnLegal.href = `mailto:${email}`;
   }
 })();
+
+(() => {
+  const splash = document.getElementById("appSplash");
+  if (!splash) return;
+
+  // iOS: navigator.standalone, allgemein: display-mode standalone
+  const isStandalone =
+    (window.navigator.standalone === true) ||
+    window.matchMedia("(display-mode: standalone)").matches;
+
+  // Nur in der Web-App, und nur 1x pro Session
+  if (!isStandalone) return;
+  if (sessionStorage.getItem("splashShown") === "1") return;
+  sessionStorage.setItem("splashShown", "1");
+
+  splash.style.display = "flex";
+
+  // Kleine Verzögerung, damit es „smooth“ wirkt
+  setTimeout(() => {
+    splash.classList.add("is-out");
+    setTimeout(() => splash.remove(), 500);
+  }, 700);
+})();
