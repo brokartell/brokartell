@@ -901,3 +901,8 @@ h1 .muted{
   border-radius: 24px;
 }
 
+.appSplash__logo{
+  width: min(42vw, 160px);   /* kleiner auf iPhone */
+  height: auto;
+  border-radius: 24px;       /* optional, wirkt app-mäßiger */
+}
