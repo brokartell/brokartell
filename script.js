@@ -190,29 +190,29 @@ const pageItems = filtered.slice(start, start + pageSize);
 
 item.innerHTML = `
   <div class="wallThumbWrap">
-    <a href="${url}" target="_blank" rel="noreferrer">
+    <button class="wallThumbBtn js-preview" type="button"
+            data-src="${url}" data-title="${w.title}">
       <img class="wallThumb" src="${url}" alt="${w.title}" loading="lazy">
-    </a>
+    </button>
     ${isNew ? `<span class="badge-new">NEU</span>` : ""}
   </div>
 
   <div class="wallMeta">
+    <div>
+      <h4>${w.title}</h4>
+      <div class="small">${w.tag} • ${w.resolution}</div>
+    </div>
 
-      <div class="wallMeta">
-        <div>
-          <h4>${w.title}</h4>
-          <div class="small">${w.tag} • ${w.resolution}</div>
-        </div>
+    <div class="wallBtns">
+      <button class="btn js-preview" type="button"
+              data-src="${url}" data-title="${w.title}">
+        Preview
+      </button>
+      <a class="btn btn--primary" href="${url}" download>Download</a>
+    </div>
+  </div>
+`;
 
-        <div class="wallBtns">
-          <button class="btn js-preview" type="button" data-src="${url}" data-title="${w.title}">
-  Preview
-</button>
-
-          <a class="btn btn--primary" href="${url}" download>Download</a>
-        </div>
-      </div>
-    `;
 
     grid.appendChild(item);
   });
