@@ -857,3 +857,6 @@ h1 .muted{
 @keyframes splashOut{
   to { opacity: 0; transform: scale(.98); }
 }
+@media (max-width: 768px){
+  .hero__right{ display:none; }
+}
