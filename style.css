@@ -831,7 +831,13 @@ h1 .muted{
 /* Splash ist per default komplett aus */
 .appSplash[hidden] { display: none !important; }
 
+/* Standard: NIE anzeigen */
 .appSplash{
+  display: none;
+}
+
+/* Nur als Web-App (Home Screen / Standalone) anzeigen */
+.is-standalone .appSplash{
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -842,6 +848,12 @@ h1 .muted{
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+/* Falls du hidden benutzt */
+.appSplash[hidden]{
+  display: none !important;
+}
+
 
 .appSplash__logo{
   width: 180px;          /* <- nicht riesig */
