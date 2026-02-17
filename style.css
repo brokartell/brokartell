@@ -796,3 +796,19 @@ h1 .muted{
   border-radius: 14px;
   padding: 10px 12px;
   cursor: pointer;
+
+/* Mobile Header Buttons zentrieren */
+@media (max-width: 768px) {
+  .topbar .cta {
+    display: flex;
+    justify-content: center;   /* horizontal zentrieren */
+    align-items: center;
+    gap: 10px;                 /* Abstand zwischen Buttons */
+    width: 100%;
+  }
+
+  .topbar .cta .btn {
+    flex: 1;                   /* beide Buttons gleich breit */
+    text-align: center;
+  }
+}
