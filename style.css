@@ -800,19 +800,16 @@ h1 .muted{
 /* ===== Mobile Header Fix ===== */
 @media (max-width: 768px){
 
-  /* Navigation umbrechen */
   .wrap.nav{
     display: flex;
     flex-wrap: wrap;
     align-items: center;
   }
 
-  /* Links ausblenden (optional, falls sie Mobile stören) */
   .links{
     display: none;
   }
 
-  /* CTA-Leiste bekommt eigene Zeile */
   .cta{
     width: 100%;
     display: flex;
@@ -821,7 +818,6 @@ h1 .muted{
     margin-top: 12px;
   }
 
-  /* Buttons gleichmäßig */
   .cta .btn{
     flex: 1;
     max-width: 220px;
