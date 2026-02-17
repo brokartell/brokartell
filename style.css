@@ -812,3 +812,29 @@ h1 .muted{
     text-align: center;
   }
 }
+
+/* Mobile: CTA-Leiste (Discord / YouTube) sauber zentrieren */
+@media (max-width: 768px) {
+
+  /* Der Header-Inhalt darf umbrechen */
+  .topbar .wrap.nav{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* CTA bekommt volle Breite und kommt in die nächste Zeile */
+  .topbar .cta{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  /* Buttons gleich breit, aber nicht übertrieben groß */
+  .topbar .cta .btn{
+    flex: 0 1 220px;   /* wächst nicht unendlich, aber wird responsive */
+    text-align: center;
+  }
+}
