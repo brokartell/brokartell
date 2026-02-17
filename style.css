@@ -797,45 +797,34 @@ h1 .muted{
   padding: 10px 12px;
   cursor: pointer;
 
-/* Mobile Header Buttons zentrieren */
-@media (max-width: 768px) {
-  .topbar .cta {
-    display: flex;
-    justify-content: center;   /* horizontal zentrieren */
-    align-items: center;
-    gap: 10px;                 /* Abstand zwischen Buttons */
-    width: 100%;
-  }
+/* ===== Mobile Header Fix ===== */
+@media (max-width: 768px){
 
-  .topbar .cta .btn {
-    flex: 1;                   /* beide Buttons gleich breit */
-    text-align: center;
-  }
-}
-
-/* Mobile: CTA-Leiste (Discord / YouTube) sauber zentrieren */
-@media (max-width: 768px) {
-
-  /* Der Header-Inhalt darf umbrechen */
-  .topbar .wrap.nav{
+  /* Navigation umbrechen */
+  .wrap.nav{
     display: flex;
     flex-wrap: wrap;
     align-items: center;
   }
 
-  /* CTA bekommt volle Breite und kommt in die nächste Zeile */
-  .topbar .cta{
+  /* Links ausblenden (optional, falls sie Mobile stören) */
+  .links{
+    display: none;
+  }
+
+  /* CTA-Leiste bekommt eigene Zeile */
+  .cta{
     width: 100%;
     display: flex;
     justify-content: center;
     gap: 12px;
-    margin-top: 10px;
+    margin-top: 12px;
   }
 
-  /* Buttons gleich breit, aber nicht übertrieben groß */
-  .topbar .cta .btn{
-    flex: 0 1 220px;   /* wächst nicht unendlich, aber wird responsive */
+  /* Buttons gleichmäßig */
+  .cta .btn{
+    flex: 1;
+    max-width: 220px;
     text-align: center;
   }
 }
-.topbar .cta{ justify-content: center !important; }
