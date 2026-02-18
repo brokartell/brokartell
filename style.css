@@ -493,6 +493,7 @@ h1 .muted{
    Mobile Header Layout
    ========================= */
 @media (max-width: 600px){
+
   .nav{
     flex-direction: column;
     align-items: stretch;
@@ -507,13 +508,22 @@ h1 .muted{
 
   .cta{
     width: 100%;
+    display: flex;            /* ← DAS hat gefehlt */
     justify-content: center;
+    gap: 10px;                /* optional schöner Abstand */
+  }
+
+  .cta .btn{
+    flex: 1;
+    max-width: 220px;
+    text-align: center;
   }
 
   .btn{
     padding: 10px 12px;
   }
 }
+
 /* Mobile Fix: Kontaktfelder nicht zu breit */
 @media (max-width: 600px){
   #kontakt .input{
