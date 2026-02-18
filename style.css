@@ -453,25 +453,7 @@ h1 .muted{
     font-size: 12px;
   }
 }
-@media (max-width: 600px) {
 
-  .cta {
-    width: 100%;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .btn {
-    font-size: 13px;
-    padding: 10px 12px;
-    border-radius: 12px;
-  }
-
-  .btn--primary {
-    flex: 1;
-    max-width: 180px;
-  }
-}
 /* =========================
    iOS Safari Fix
    ========================= */
