@@ -807,3 +807,40 @@ h1 .muted{
   padding: 10px 12px;
   cursor: pointer;
 
+  /* ===== Mobile Header: Discord + YouTube mittig ===== */
+@media (max-width: 600px){
+
+  .topbar { padding: 10px 0; }
+
+  .nav{
+    height: auto;
+    flex-direction: column;
+    align-items: center;   /* wichtig: nicht stretch */
+    gap: 10px;
+  }
+
+  .brand{
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    min-width: 0;          /* überschreibt min-width:220 */
+  }
+
+  .links{ display:none; }
+
+  .cta{
+    width: 100%;
+    min-width: 0;          /* überschreibt min-width:220 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cta .btn{
+    flex: 1 1 0;
+    max-width: 180px;
+    justify-content: center;  /* Text in Button perfekt mittig */
+  }
+}
+
