@@ -807,30 +807,3 @@ h1 .muted{
   padding: 10px 12px;
   cursor: pointer;
 
-/* ===== Mobile Header Fix ===== */
-@media (max-width: 768px){
-
-  .wrap.nav{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .links{
-    display: none;
-  }
-
-  .cta{
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 12px;
-  }
-
-  .cta .btn{
-    flex: 1;
-    max-width: 220px;
-    text-align: center;
-  }
-}
