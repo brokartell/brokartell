@@ -791,3 +791,20 @@ h1 .muted{
     justify-content: center;  /* Text in Button perfekt mittig */
   }
 }
+
+@media (max-width: 600px){
+
+  .cta{
+    width: 100%;
+    display: flex;
+    justify-content: center;   /* zentriert die Gruppe */
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cta .btn{
+    flex: 0 0 auto;           /* NICHT mehr strecken */
+    min-width: 150px;         /* schöne Größe */
+    text-align: center;
+  }
+}
