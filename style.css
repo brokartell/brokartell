@@ -471,35 +471,7 @@ h1 .muted{
   }
 }
 
-/* =========================
-   Mobile Header Layout
-   ========================= */
-@media (max-width: 600px){
 
-  .nav{
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    height: auto;
-  }
-
-  .brand{
-    justify-content: center;
-    text-align: center;
-  }
-
-  .cta{
-    width: 100%;
-    display: flex;            /* ← DAS hat gefehlt */
-    justify-content: center;
-    gap: 10px;                /* optional schöner Abstand */
-  }
-
-  .cta .btn{
-  flex: 0 0 auto;      /* nicht mehr strecken */
-  min-width: 150px;    /* schöne Breite */
-  text-align: center;
-}
 
   .btn{
     padding: 10px 12px;
