@@ -799,3 +799,43 @@ h1 .muted{
   }
 }
 
+/* ===== Changelog Clean ===== */
+.changelog{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.cl{
+  border:1px solid var(--line);
+  background:#ffffff06;
+  border-radius:14px;
+  padding:10px 12px;
+}
+
+.cl summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--text);
+  font-size:14px;
+}
+
+.cl summary::-webkit-details-marker{ display:none; }
+
+.cl-date{
+  color:var(--muted);
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.cl ul{
+  margin:10px 0 0;
+  padding-left:18px;
+  color:var(--muted);
+  line-height:1.6;
+  font-size:13px;
+}
