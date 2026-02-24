@@ -915,3 +915,69 @@ h1 .muted{
   }
 }
 
+/* ===== Changelog: Mobile width/overflow fix ===== */
+.changelog { width: 100%; }
+
+.cl,
+.cl > summary {
+  width: 100%;
+  max-width: 100%;
+}
+
+.cl {
+  overflow: hidden;              /* verhindert raus-ragen */
+}
+
+/* Summary Layout: Version | Titel | Datum */
+.cl > summary{
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding-right: 12px;           /* bisschen Luft rechts */
+}
+
+.cl > summary b{
+  white-space: nowrap;           /* v1.7.1 bleibt kompakt */
+}
+
+.cl-title{
+  min-width: 0;                  /* WICHTIG für Grid */
+  overflow: hidden;
+  text-overflow: ellipsis;       /* Titel kürzt sauber */
+  white-space: nowrap;
+}
+
+.cl-date{
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Mobile: Datum darf unter den Titel springen (wenn’s eng wird) */
+@media (max-width: 600px){
+  .cl > summary{
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "ver title"
+      "date date";
+  }
+
+  .cl > summary b{ grid-area: ver; }
+  .cl-title{ grid-area: title; }
+  .cl-date{
+    grid-area: date;
+    margin-top: 6px;
+    justify-self: start;
+  }
+}
+
+/* Inhalte im offenen Details auch "safe" halten */
+.cl ul{
+  margin: 10px 0 0;
+  padding-left: 18px;
+  max-width: 100%;
+}
+.cl li{
+  word-break: break-word;
+}
