@@ -840,3 +840,35 @@ h1 .muted{
   font-size:13px;
 }
 
+/* Changelog Summary Layout Fix (Version + Titel links, Datum rechts) */
+.cl summary{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.cl-left{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cl-ver{
+  white-space: nowrap;
+}
+
+.cl-title{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.cl-date{
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
