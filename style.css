@@ -877,3 +877,32 @@ h1 .muted{
   margin-top: 14px;
 }
 
+/* ===== Changelog Fix – nichts ragt mehr raus ===== */
+
+.changelog details{
+  width: 100%;
+  overflow: hidden;
+}
+
+.changelog summary{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;        /* wichtig! */
+  gap: 8px;
+}
+
+.changelog summary b{
+  flex-shrink: 0;         /* Versionsnummer bleibt stabil */
+}
+
+.cl-date{
+  margin-left: auto;      /* Datum nach rechts */
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Falls Titel zu lang wird */
+.changelog summary{
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
