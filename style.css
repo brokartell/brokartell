@@ -840,9 +840,3 @@ h1 .muted{
   font-size:13px;
 }
 
-.cl--sub{
-  margin-top: 10px;
-  margin-left: 12px;
-  border-left: 2px solid rgba(255,122,24,.25);
-  padding-left: 12px;
-}
