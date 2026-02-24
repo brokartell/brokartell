@@ -876,3 +876,27 @@ h1 .muted{
 .cl--sub{
   margin-top: 14px;
 }
+
+@media (max-width: 600px){
+
+  .wrap{
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .panel{
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .card{
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .section{
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+}
