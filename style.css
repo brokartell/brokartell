@@ -900,3 +900,20 @@ h1 .muted{
   }
 
 }
+
+@media (max-width: 600px){
+
+  details{
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  details summary{
+    word-break: break-word;
+  }
+
+  .cl ul{
+    padding-left: 18px;
+  }
+
+}
