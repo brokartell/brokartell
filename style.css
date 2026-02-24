@@ -872,3 +872,8 @@ h1 .muted{
   color: var(--muted);
   font-size: 12px;
 }
+
+/* Abstand zwischen Archiv und erstem Unterpunkt */
+.cl > details{
+  margin-top: 14px;
+}
