@@ -873,7 +873,6 @@ h1 .muted{
   font-size: 12px;
 }
 
-/* Abstand zwischen Archiv und erstem Unterpunkt */
-.cl > details{
+.cl--sub{
   margin-top: 14px;
 }
