@@ -799,185 +799,78 @@ h1 .muted{
   }
 }
 
-/* ===== Changelog Clean ===== */
+/* ===== Changelog (clean + responsive) ===== */
 .changelog{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+  display: grid;
+  gap: 10px;
+  width: 100%;
 }
 
-.cl{
-  border:1px solid var(--line);
-  background:#ffffff06;
-  border-radius:14px;
-  padding:10px 12px;
+details.cl{
+  border: 1px solid var(--line);
+  background: #ffffff06;
+  border-radius: 14px;
+  overflow: hidden;              /* nix ragt raus */
 }
 
-.cl summary{
-  cursor:pointer;
-  list-style:none;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  color:var(--text);
-  font-size:14px;
-}
-
-.cl summary::-webkit-details-marker{ display:none; }
-
-.cl-date{
-  color:var(--muted);
-  font-size:12px;
-  white-space:nowrap;
-}
-
-.cl ul{
-  margin:10px 0 0;
-  padding-left:18px;
-  color:var(--muted);
-  line-height:1.6;
-  font-size:13px;
-}
-
-/* Changelog Summary Layout Fix (Version + Titel links, Datum rechts) */
-.cl summary{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+/* clickable header */
+details.cl > summary{
+  list-style: none;
   cursor: pointer;
-}
 
-.cl-left{
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;  /* ver | title | date */
   align-items: center;
   gap: 10px;
-  min-width: 0;
+
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 14px;
 }
 
-.cl-ver{
+details.cl > summary::-webkit-details-marker{ display:none; }
+
+/* version */
+details.cl > summary b{
   white-space: nowrap;
 }
 
-.cl-title{
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.cl-date{
+/* date */
+details.cl > summary .cl-date{
   white-space: nowrap;
   color: var(--muted);
   font-size: 12px;
 }
 
-.cl--sub{
-  margin-top: 14px;
-}
-
-/* ===== Changelog Fix – nichts ragt mehr raus ===== */
-
-.changelog details{
-  width: 100%;
-  overflow: hidden;
-}
-
-.changelog summary{
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;        /* wichtig! */
-  gap: 8px;
-}
-
-.changelog summary b{
-  flex-shrink: 0;         /* Versionsnummer bleibt stabil */
-}
-
-.cl-date{
-  margin-left: auto;      /* Datum nach rechts */
-  font-size: 12px;
+/* list */
+details.cl > ul{
+  margin: 0;
+  padding: 0 16px 14px 34px;
   color: var(--muted);
+  line-height: 1.6;
+  font-size: 13px;
 }
 
-/* Falls Titel zu lang wird */
-.changelog summary{
-  overflow-wrap: anywhere;
+/* Texte dürfen umbrechen, wenn nötig */
+details.cl > ul li{
   word-break: break-word;
 }
 
+/* Abstand für "Archiv" block (wenn du den ersten Archiv-Block markierst) */
+details.cl.cl--sub{
+  margin-top: 14px;
+}
+
+/* Mobile: Datum unter die erste Zeile */
 @media (max-width: 600px){
-  .cl-date{
-    width: 100%;
-    margin-left: 0;
-    text-align: left;
-  }
-}
-
-/* ===== Changelog: Mobile width/overflow fix ===== */
-.changelog { width: 100%; }
-
-.cl,
-.cl > summary {
-  width: 100%;
-  max-width: 100%;
-}
-
-.cl {
-  overflow: hidden;              /* verhindert raus-ragen */
-}
-
-/* Summary Layout: Version | Titel | Datum */
-.cl > summary{
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding-right: 12px;           /* bisschen Luft rechts */
-}
-
-.cl > summary b{
-  white-space: nowrap;           /* v1.7.1 bleibt kompakt */
-}
-
-.cl-title{
-  min-width: 0;                  /* WICHTIG für Grid */
-  overflow: hidden;
-  text-overflow: ellipsis;       /* Titel kürzt sauber */
-  white-space: nowrap;
-}
-
-.cl-date{
-  white-space: nowrap;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-/* Mobile: Datum darf unter den Titel springen (wenn’s eng wird) */
-@media (max-width: 600px){
-  .cl > summary{
+  details.cl > summary{
     grid-template-columns: auto 1fr;
     grid-template-areas:
       "ver title"
       "date date";
   }
 
-  .cl > summary b{ grid-area: ver; }
-  .cl-title{ grid-area: title; }
-  .cl-date{
-    grid-area: date;
-    margin-top: 6px;
-    justify-self: start;
-  }
-}
-
-/* Inhalte im offenen Details auch "safe" halten */
-.cl ul{
-  margin: 10px 0 0;
-  padding-left: 18px;
-  max-width: 100%;
-}
-.cl li{
-  word-break: break-word;
+  details.cl > summary b{ grid-area: ver; }
+  details.cl > summary .cl-title{ grid-area: title; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  details.cl > summary .cl-date{ grid-area: date; justify-self: start; }
 }
