@@ -874,3 +874,32 @@ details.cl.cl--sub{
   details.cl > summary .cl-title{ grid-area: title; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   details.cl > summary .cl-date{ grid-area: date; justify-self: start; }
 }
+/* ===== Archiv kompakter ===== */
+
+/* Archiv Container */
+.cl--archive{
+  padding: 10px 12px;
+}
+
+/* Alle Einträge IM Archiv kleiner */
+.cl--archive .cl{
+  padding: 6px 10px;          /* weniger Innenabstand */
+  border-radius: 12px;
+}
+
+/* Summary im Archiv kleiner */
+.cl--archive .cl > summary{
+  padding: 6px 0;
+  font-size: 13px;
+  gap: 6px;
+}
+
+/* Version im Archiv etwas dezenter */
+.cl--archive .cl > summary b{
+  font-weight: 600;
+}
+
+/* Optional: weniger Abstand zwischen Archiv-Items */
+.cl--archive .changelog{
+  gap: 6px;
+}
