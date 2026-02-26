@@ -914,7 +914,7 @@ details.cl > summary .cl-date{
 .cl--archive{
   background: #ffffff03;          /* weniger Kontrast */
   border: 1px solid #ffffff14;    /* etwas schwächere Border */
-  opacity: 0.5;                   /* minimal transparenter */
+  opacity: 0.9;                   /* minimal transparenter */
 }
 
 /* Sub-Updates im Archiv noch dezenter */
