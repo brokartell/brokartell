@@ -885,3 +885,26 @@ details.cl > summary .cl-date{
 .cl-date--empty{
   visibility: hidden;
 }
+
+/* ===== Archiv: Sub-Updates eingerückt (nicht volle Breite) ===== */
+.cl--archive{
+  padding: 0;              /* Archiv-Block nicht zusätzlich aufblasen */
+}
+
+.cl--archive > summary{
+  padding: 12px 14px;      /* gleich wie deine normalen Balken */
+}
+
+/* ALLE direkten Details im Archiv (v1.6.x, v1.5.x, …) */
+.cl--archive > details.cl{
+  margin: 10px 14px 14px;  /* Abstand + Einzug links/rechts */
+  width: calc(100% - 28px);
+}
+
+/* Optional: noch stärkerer Einzug */
+@media (max-width: 600px){
+  .cl--archive > details.cl{
+    margin: 10px 12px 12px;
+    width: calc(100% - 24px);
+  }
+}
