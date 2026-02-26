@@ -874,96 +874,14 @@ details.cl.cl--sub{
   details.cl > summary .cl-title{ grid-area: title; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   details.cl > summary .cl-date{ grid-area: date; justify-self: start; }
 }
-/* ===== Archiv kompakter ===== */
 
-/* Archiv Container */
-.cl--archive{
-  padding: 10px 12px;
+/* Datum-Spalte hat immer gleiche Breite (wie bei echten Datumswerten) */
+details.cl > summary .cl-date{
+  min-width: 92px;
+  text-align: right;
 }
 
-/* Alle Einträge IM Archiv kleiner */
-.cl--archive .cl{
-  padding: 6px 10px;          /* weniger Innenabstand */
-  border-radius: 12px;
-}
-
-/* Summary im Archiv kleiner */
-.cl--archive .cl > summary{
-  padding: 6px 0;
-  font-size: 13px;
-  gap: 6px;
-}
-
-/* Version im Archiv etwas dezenter */
-.cl--archive .cl > summary b{
-  font-weight: 600;
-}
-
-/* Optional: weniger Abstand zwischen Archiv-Items */
-.cl--archive .changelog{
-  gap: 6px;
-}
-
-/* Archiv soll identisch wie normale Updates aussehen */
-.cl--archive{
-  padding: 12px 14px;        /* gleich wie normale */
-}
-
-.cl--archive > summary{
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 10px;
-  padding: 0;                /* kein Extra-Einzug */
-  font-size: 14px;
-}
-
-/* Schrift exakt ausrichten */
-.cl--archive .cl-title{
-  margin-left: 0;
-}
-
-/* Archiv exakt wie normale Changelog-Bars */
-.cl--archive > summary{
-  display: grid;
-  grid-template-columns: auto 1fr auto; /* wie die anderen */
-  align-items: center;
-  gap: 10px;
-}
-
-/* "leeres Datum" nimmt keinen Platz weg, hält aber das Grid stabil */
-.cl--archive .cl-date--empty{
-  width: 0;
-  padding: 0;
-  margin: 0;
+/* Archiv: Dummy-Datum unsichtbar, aber Platz bleibt */
+.cl-date--empty{
   visibility: hidden;
-}
-
-/* ===== Archiv: exakt wie die normalen Changelog-Balken ===== */
-.cl.cl--archive{
-  padding: 10px 12px !important;   /* gleiche Innenabstände wie .cl */
-}
-
-.cl.cl--archive > summary{
-  display: grid !important;
-  grid-template-columns: auto 1fr auto !important; /* wie bei v1.7.x */
-  align-items: center !important;
-  gap: 10px !important;
-  list-style: none !important;
-  width: 100% !important;
-}
-
-/* rechter "Datum"-Platz wird als unsichtbare Spalte erzeugt */
-.cl.cl--archive > summary::after{
-  content: "" !important;
-  display: block !important;
-  width: 86px !important;          /* ungefähr Datum-Breite */
-}
-
-/* links exakt wie bei den anderen */
-.cl.cl--archive .cl-left{
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  min-width: 0 !important;
 }
