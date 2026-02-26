@@ -938,3 +938,32 @@ details.cl.cl--sub{
   margin: 0;
   visibility: hidden;
 }
+
+/* ===== Archiv: exakt wie die normalen Changelog-Balken ===== */
+.cl.cl--archive{
+  padding: 10px 12px !important;   /* gleiche Innenabstände wie .cl */
+}
+
+.cl.cl--archive > summary{
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important; /* wie bei v1.7.x */
+  align-items: center !important;
+  gap: 10px !important;
+  list-style: none !important;
+  width: 100% !important;
+}
+
+/* rechter "Datum"-Platz wird als unsichtbare Spalte erzeugt */
+.cl.cl--archive > summary::after{
+  content: "" !important;
+  display: block !important;
+  width: 86px !important;          /* ungefähr Datum-Breite */
+}
+
+/* links exakt wie bei den anderen */
+.cl.cl--archive .cl-left{
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
