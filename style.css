@@ -909,16 +909,3 @@ details.cl > summary .cl-date{
   }
 }
 
-/* ===== Archiv optisch dezenter ===== */
-
-.cl--archive{
-  background: #ffffff03;          /* weniger Kontrast */
-  border: 1px solid #ffffff14;    /* etwas schwächere Border */
-  opacity: 0.9;                   /* minimal transparenter */
-}
-
-/* Sub-Updates im Archiv noch dezenter */
-.cl--archive > details.cl{
-  background: #ffffff02;
-  border: 1px solid #ffffff10;
-}
