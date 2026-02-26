@@ -922,3 +922,19 @@ details.cl.cl--sub{
 .cl--archive .cl-title{
   margin-left: 0;
 }
+
+/* Archiv exakt wie normale Changelog-Bars */
+.cl--archive > summary{
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* wie die anderen */
+  align-items: center;
+  gap: 10px;
+}
+
+/* "leeres Datum" nimmt keinen Platz weg, hält aber das Grid stabil */
+.cl--archive .cl-date--empty{
+  width: 0;
+  padding: 0;
+  margin: 0;
+  visibility: hidden;
+}
