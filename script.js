@@ -323,7 +323,3 @@ window.addEventListener("resize", () => {
     btnLegal.href = `mailto:${email}`;
   }
 })();
-
-{
-  "orientation": "portrait"
-}
