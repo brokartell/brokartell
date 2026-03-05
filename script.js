@@ -324,3 +324,6 @@ window.addEventListener("resize", () => {
   }
 })();
 
+{
+  "orientation": "portrait"
+}
