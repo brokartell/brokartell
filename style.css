@@ -11,6 +11,14 @@
   --radius: 18px;
   --max: 1100px;
 }
+html{
+  background:
+    radial-gradient(1200px 700px at 20% 10%, #ff7a1820, transparent 55%),
+    radial-gradient(900px 600px at 80% 30%, #ffb00015, transparent 55%),
+    radial-gradient(700px 500px at 50% 90%, #5aa1ff10, transparent 60%),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+  background-color: var(--bg);
+}
 html, body{
   width: 100%;
   min-height: 100%;
