@@ -12,26 +12,29 @@
   --max: 1100px;
 }
 
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  color:var(--text);
-  overflow-x:hidden;
+html, body{
+  background: var(--bg);   /* verhindert weißes html */
+  height: 100%;
 }
-/* Durchgehender Hintergrund (bleibt beim Scrollen gleich) */
+
+body{
+  margin: 0;
+  position: relative;      /* wichtig */
+  overflow-x: hidden;
+}
+
+/* Durchgehender Hintergrund */
 body::before{
   content:"";
   position: fixed;
   inset: 0;
-  z-index: -2;
-
+  z-index: -1;             /* statt -2 */
   background:
     radial-gradient(1200px 700px at 20% 10%, #ff7a1820, transparent 55%),
     radial-gradient(900px 600px at 80% 30%, #ffb00015, transparent 55%),
     radial-gradient(700px 500px at 50% 90%, #5aa1ff10, transparent 60%),
     linear-gradient(180deg, var(--bg), var(--bg2));
 }
-
 
 a{color:inherit;text-decoration:none}
 code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
