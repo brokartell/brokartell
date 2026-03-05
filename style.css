@@ -11,6 +11,15 @@
   --radius: 18px;
   --max: 1100px;
 }
+html, body{
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg); /* verhindert weiße Ränder */
+}
+
+body{
+  min-height: 100svh; /* iOS safe viewport height */
+}
 
 body{
   margin:0;
@@ -18,11 +27,12 @@ body{
   color:var(--text);
   overflow-x:hidden;
 }
-/* Durchgehender Hintergrund (bleibt beim Scrollen gleich) */
 body::before{
   content:"";
   position: fixed;
-  inset: 0;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100svh;
   z-index: -2;
 
   background:
