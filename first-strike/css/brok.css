@@ -140,3 +140,10 @@ body{
 
 /* Kein Schatten vom oberen Arm auf der Mitte */
 #controller_up{ box-shadow: none; }
+
+/* iPhone: Knoepfe nicht unter Kamera/Rand legen */
+#controller_dpad{ left: env(safe-area-inset-left, 0px); }
+#controller_a{ right: calc(20px + env(safe-area-inset-right, 0px)); }
+#controller_b{ right: calc(100px + env(safe-area-inset-right, 0px)); }
+#controller_start{ right: calc(15px + env(safe-area-inset-right, 0px)); }
+#controller_select{ right: calc(100px + env(safe-area-inset-right, 0px)); }
