@@ -136,3 +136,4 @@ body{
   }
   #game::after{ font-size: 16px; margin-top: 6px; }
 }
+#controller_up{ box-shadow: none; }
