@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bro Kartell">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BroK Games — Bro Kartell</title>
+  <meta name="description" content="BroK Games — die Spiele des Bro Kartells. Bro Kartell: First Strike jetzt im Browser spielen." />
+  <meta name="theme-color" content="#0b0d14" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Nur fuer diese Seite – alles andere kommt aus style.css */
+    .gameShot{width:100%;height:auto;border-radius:16px;image-rendering:pixelated;display:block}
+    .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center}
+    .keys kbd{border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;
+              padding:1px 8px;font-family:inherit;font-size:.85em;white-space:nowrap}
+    .gameText p{margin-bottom:14px}
+    .soon{text-align:center}
+  </style>
+</head>
+
+<body>
+
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="index.html" aria-label="Bro Kartell">
+        <img class="brand__logo" src="assets/logo.png" alt="Bro Kartell Logo"
+             onerror="this.style.display='none'">
+        <div class="brand__text">
+          <div class="brand__name">BRO KARTELL</div>
+          <div class="brand__tag">Multigaming Clan • seit 4 Okt. 2013</div>
+        </div>
+      </a>
+
+      <nav class="links" aria-label="Navigation">
+        <a href="index.html#about">Über uns</a>
+        <a href="index.html#games">Games</a>
+        <a href="index.html#media">Wallpapers</a>
+        <a href="index.html#join">Join & Kontakt</a>
+      </nav>
+
+      <div class="cta">
+        <a class="btn btn--primary" href="index.html">Bro Kartell</a>
+        <a class="btn btn--primary" href="https://www.youtube.com/@Bro-Kartell" target="_blank" rel="noreferrer">YouTube</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap">
+
+      <!-- Spiel: First Strike -->
+      <section class="hero">
+        <div class="panel hero__left gameText">
+          <div class="kicker"><span class="dot"></span>Bro Kartell - First Strike • Jetzt verfügbar</div>
+
+          <h1>FIRST STRIKE<br><span class="muted">Das Bro-Kartell-Spiel</span></h1>
+
+          <p class="sub">
+            Du bist der CEO. Die LAN-Party steht an, aber deine Bros sind spurlos verschwunden.
+            Durchkämme die Stadt, finde alle <b>5 Mitglieder</b> und <b>5 Lootboxen</b> und bring den Clan wieder zusammen.
+            Warnung: Keiner kommt hier gut weg. Vor allem nicht der CEO. 👑
+          </p>
+
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="first-strike/">▶ Im Browser spielen</a>
+            <a class="btn" href="https://discord.gg/J6aN7mTUGc" target="_blank" rel="noreferrer">💾 ROM auf Discord</a>
+            <span class="badge">🎮 Game Boy • PC • Handy</span>
+            <span class="badge">Version 1.3</span>
+          </div>
+
+          <div class="grid">
+            <div class="panel card">
+              <h3>Im Browser</h3>
+              <p>Kein Download nötig. Läuft am PC und am Handy mit Touch-Knöpfen. Der Spielstand wird im Browser gespeichert.</p>
+              <span class="tag">Sofort spielen</span>
+            </div>
+
+            <div class="panel card">
+              <h3>Als ROM</h3>
+              <p>Die .gb-Datei gibt's auf unserem Discord. Läuft auf Emulatoren, Retro-Handhelds oder einem echten Game Boy.</p>
+              <span class="tag">Discord</span>
+            </div>
+
+            <div class="panel card">
+              <h3>Teil 2</h3>
+              <p><b>Second Punch</b> – in Farbe, für den Game Boy Color. Kommt irgendwann. Vielleicht. Bleibt dran.</p>
+              <span class="tag">Coming soon</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="panel hero__right" aria-label="Spiel Vorschau">
+          <img class="gameShot" src="release_bro_kartell_first_strike.png"
+               alt="Bro Kartell: First Strike auf einem Game-Boy-ähnlichen Handheld">
+        </aside>
+      </section>
+
+      <!-- Steuerung & Credits -->
+      <section class="panel section">
+        <div class="section__head">
+          <h2>Infos</h2>
+        </div>
+
+        <div class="split">
+          <div class="panel card">
+            <h3>Steuerung (Browser)</h3>
+            <div class="keys">
+              <span><kbd>← ↑ → ↓</kbd></span><span>Laufen</span>
+              <span><kbd>Z</kbd> / <kbd>J</kbd></span><span>A – Ansprechen</span>
+              <span><kbd>X</kbd> / <kbd>K</kbd></span><span>B – Zurück</span>
+              <span><kbd>Enter</kbd></span><span>Start – Menü &amp; Checkliste</span>
+            </div>
+          </div>
+
+          <div class="panel card">
+            <h3>Credits</h3>
+            <ul class="list">
+              <li>Idee &amp; Umsetzung: izec313</li>
+              <li>Beta-Test: Noih313</li>
+              <li>Musik &amp; Sounds: Yogi (Tronimal) –
+                <a href="https://yogi-tronimal.itch.io/" target="_blank" rel="noreferrer">yogi-tronimal.itch.io</a> –
+                <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noreferrer">CC-BY 4.0</a> (Musik angepasst)</li>
+              <li>Erstellt mit GB Studio</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Changelog First Strike -->
+      <section class="panel section">
+        <div class="section__head">
+          <h2>Changelog – First Strike</h2>
+        </div>
+
+        <div class="panel card">
+          <div class="changelog">
+
+            <details open class="cl">
+              <summary>
+                <b>v1.3</b>
+                <span class="cl-title">• Sound-Update</span>
+              </summary>
+              <ul>
+                <li>Zu laute Stellen bei Musik und Sounds leiser gemacht</li>
+              </ul>
+            </details>
+
+            <details class="cl">
+              <summary>
+                <b>v1.2</b>
+                <span class="cl-title">• Text-Update</span>
+              </summary>
+              <ul>
+                <li>Texte und Dialoge überarbeitet</li>
+              </ul>
+            </details>
+
+            <details class="cl">
+              <summary>
+                <b>v1.1</b>
+                <span class="cl-title">• Kollisions-Update</span>
+              </summary>
+              <ul>
+                <li>Kollisionen verbessert – weniger durch Wände laufen, weniger hängen bleiben</li>
+              </ul>
+            </details>
+
+            <details class="cl">
+              <summary>
+                <b>v1.0</b>
+                <span class="cl-title">• Release</span>
+                <span class="cl-date">31.10.2026</span>
+              </summary>
+              <ul>
+                <li>Bro Kartell: First Strike veröffentlicht</li>
+                <li>Im Browser spielbar + ROM auf Discord</li>
+              </ul>
+            </details>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Feedback & Kontakt -->
+      <section class="panel section">
+        <div class="section__head">
+          <h2>Feedback & Bugs</h2>
+        </div>
+
+        <div class="panel card">
+          <h3>Was gefunden? Sag Bescheid!</h3>
+          <p>Bug entdeckt, Idee für Teil 2 oder einfach beleidigt worden? 😏
+             Schreib uns, wir lesen alles. Fast alles.</p>
+          <div class="row" style="margin-top:12px">
+            <a class="btn btn--primary" id="gamesMail" href="#">E-Mail an BroK Games</a>
+            <span class="badge" id="gamesMailText">games[@]bro-kartell.com</span>
+          </div>
+        </div>
+      </section>
+      
+      <footer class="footer">
+        © <span id="year"></span> Bro Kartell - Multigaming Clan seit 4 Okt. 2013
+        <a href="impressum.html"> • Impressum</a>
+        <a href="datenschutz.html"> • Datenschutz</a>
+      </footer>
+    </div>
+  </main>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+<script src="script.js"></script>
+
+<script>
+  (() => {
+    const user = "games";
+    const domain = "bro-kartell.com";
+    const btnGames = document.getElementById("gamesMail");
+    if (btnGames) {
+      btnGames.href = `mailto:${user}@${domain}?subject=First%20Strike%20Feedback`;
+    }
+  })();
+</script>
+  
+</body>
+</html>
