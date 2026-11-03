@@ -162,6 +162,17 @@
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 
 <script src="script.js"></script>
+
+<script>
+  (() => {
+    const user = "games";
+    const domain = "bro-kartell.com";
+    const btnGames = document.getElementById("gamesMail");
+    if (btnGames) {
+      btnGames.href = `mailto:${user}@${domain}?subject=First%20Strike%20Feedback`;
+    }
+  })();
+</script>
   
 </body>
 </html>
