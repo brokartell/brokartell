@@ -324,14 +324,3 @@ window.addEventListener("resize", () => {
   }
 })();
 
-// Mail für BroK Games
-(() => {
-  const user = "games";
-  const domain = "bro-kartell.com";
-  const email = `${user}@${domain}`;
-
-  const btnGames = document.getElementById("gamesMail");
-  if (btnGames) {
-    btnGames.href = `mailto:${email}?subject=First%20Strike%20Feedback`;
-  }
-})();
