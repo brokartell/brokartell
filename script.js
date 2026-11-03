@@ -303,7 +303,7 @@ window.addEventListener("resize", () => {
 
 // Mail-Adresse dynamisch generieren (Spam-Schutz)
 (() => {
-  const user = "post";
+  const user = "info";
   const domain = "bro-kartell.com";
   const email = `${user}@${domain}`;
 
@@ -314,7 +314,7 @@ window.addEventListener("resize", () => {
 })();
 // Mail für Impressum / Datenschutz
 (() => {
-  const user = "post";
+  const user = "info";
   const domain = "bro-kartell.com";
   const email = `${user}@${domain}`;
 
