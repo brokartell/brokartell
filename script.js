@@ -323,3 +323,10 @@ window.addEventListener("resize", () => {
     btnLegal.href = `mailto:${email}`;
   }
 })();
+<script>
+  (function(){
+    var u = "games", d = "bro-kartell.com";
+    var a = document.getElementById("gamesMail");
+    if (a) a.href = "mailto:" + u + "@" + d + "?subject=First%20Strike%20Feedback";
+  })();
+</script>
