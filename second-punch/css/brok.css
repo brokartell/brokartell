@@ -64,6 +64,14 @@ body{
   letter-spacing: 2px;
   color: var(--label);
 }
+/* "COLOR" in Bro-Kartell-Orange */
+#game::after{
+  background: linear-gradient(90deg, var(--label) 0 64%, var(--orange2) 64% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
 
 /* ---------- Steuerung ---------- */
 #controller{
