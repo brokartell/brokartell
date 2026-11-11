@@ -54,7 +54,7 @@ body{
 
 /* Schriftzug unter dem Display */
 #game::after{
-  content: "BROK BOY";
+  content: "BROK BOY COLOR";
   display: block;
   margin-top: 10px;
   font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
