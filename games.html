@@ -17,7 +17,13 @@
   <style>
     /* Nur fuer diese Seite – alles andere kommt aus style.css */
     .gamesHead{padding:26px 22px;margin-top:18px}
-    .gamesHead h1{margin:14px 0 8px}
+    .gamesHead h1{margin:14px 0 12px}
+    .gamesHead .sub{margin-bottom:12px}
+    .gamesHead h1 .muted{font-size:inherit;display:inline;font-weight:inherit;color:var(--accent)}
+    .signature{font-style:italic;color:var(--accent2)}
+    .journey{align-items:center;margin-top:6px}
+    .journey__arrow{color:var(--accent);font-weight:800}
+    @media (max-width: 600px){ .journey__arrow{display:none} }
     .gameList{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
     .gameCard{display:flex;flex-direction:column;padding:18px;gap:14px;transition:transform .15s ease, border-color .15s ease}
     a.gameCard:hover{transform:translateY(-3px);border-color:#ff7a1866}
@@ -69,9 +75,25 @@
 
       <section class="panel gamesHead">
         <div class="kicker"><span class="dot"></span>BroK Games</div>
-        <h1>UNSERE SPIELE</h1>
-        <p class="sub">Game-Boy-Spiele aus dem Bro Kartell – selbst gebaut, mit viel Liebe und noch mehr Sprüchen.
-          Such dir ein Spiel aus.</p>
+        <h1>VON GAMERN.<br><span class="muted">FÜR GAMER.</span></h1>
+        <p class="sub">Angefangen hat bei mir alles mit einem Atari 2600. Danach kamen der Commodore 64,
+          der Amiga 500, der Game Boy, das Sega Mega Drive und das Super Nintendo – und mit jeder Konsole
+          wurde die Liebe zum Zocken ein Stück größer.</p>
+        <p class="sub">2013 habe ich dann das Bro Kartell gegründet. Videospiele sind seitdem das Herz des Clans:
+          Sie haben uns zusammengebracht, und sie halten uns zusammen – ob LAN-Party, Ranked-Abend oder Koop
+          bis spät in die Nacht.</p>
+        <p class="sub">Irgendwann kam die Frage: Warum nur zocken, wenn man auch selbst ein Spiel bauen kann?
+          So ist BroK Games entstanden. Angefangen habe ich da, wo für mich vieles angefangen hat – auf dem
+          Game Boy. Gerade entsteht Teil 2 in Farbe für den Game Boy Color, und danach wage ich mich an eine
+          neue Engine. Alles selbst gemacht: jeder Pixel, jede Zeile, jeder dumme Spruch.</p>
+        <p class="sub signature">– izec313, CEO des Bro Kartells</p>
+        <div class="row journey">
+          <span class="badge">🕹️ Game Boy – First Strike</span>
+          <span class="journey__arrow">→</span>
+          <span class="badge">🎨 Game Boy Color – Second Punch</span>
+          <span class="journey__arrow">→</span>
+          <span class="badge">🚀 Neue Engine – Teil 3</span>
+        </div>
       </section>
 
       <div class="gameList">
