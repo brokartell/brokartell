@@ -24,20 +24,23 @@
     .journey{align-items:center;margin-top:6px}
     .journey__arrow{color:var(--accent);font-weight:800}
     @media (max-width: 600px){ .journey__arrow{display:none} }
-    .gameList{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
-    .gameCard{display:flex;flex-direction:column;padding:18px;gap:14px;transition:transform .15s ease, border-color .15s ease}
-    a.gameCard:hover{transform:translateY(-3px);border-color:#ff7a1866}
-    .gameCard__img{width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:14px;
-                   background:#07080c80;image-rendering:pixelated;display:block}
-    .gameCard__top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-    .gameCard h2{margin:0;font-size:clamp(24px,3vw,32px);letter-spacing:-.4px}
-    .gameCard p{margin:0;color:var(--muted);line-height:1.5}
-    .gameCard__go{margin-top:auto}
-    .gameCard--soon{opacity:.75;cursor:default}
-    .gameCard--soon .gameCard__img{filter:grayscale(.35)}
-    .soonBadge{display:inline-block;padding:10px 14px;border-radius:999px;border:1px dashed #ffffff3a;
-               color:var(--muted);font-weight:800;letter-spacing:.5px;text-align:center}
-    @media (max-width: 720px){ .gameList{grid-template-columns:1fr} }
+    .gameRow{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;padding:18px;margin-top:18px;align-items:start}
+    .gameRow__img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:#07080c80;image-rendering:pixelated;display:block}
+    .gameRow__body{display:flex;flex-direction:column;gap:12px;padding:6px 4px}
+    .gameRow__top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .gameRow h2{margin:0;font-size:clamp(28px,3.4vw,40px);letter-spacing:-.5px}
+    .gameRow p{margin:0;color:var(--muted);line-height:1.55}
+    .gameRow--soon{opacity:.8}
+    .gameRow--soon .gameRow__img{filter:grayscale(.3)}
+    .soonBadge{display:inline-block;padding:10px 16px;border-radius:999px;border:1px dashed #ffffff3a;
+               color:var(--muted);font-weight:800;letter-spacing:.5px}
+    .more{border-top:1px solid var(--line);padding-top:10px}
+    .more summary{cursor:pointer;font-weight:700;color:var(--text)}
+    .more[open] summary{margin-bottom:10px}
+    .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;color:var(--muted)}
+    .keys kbd{border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;
+              padding:1px 8px;font-family:inherit;font-size:.85em;white-space:nowrap}
+    @media (max-width: 760px){ .gameRow{grid-template-columns:1fr} .gameRow__img{aspect-ratio:4/3} }
   </style>
 </head>
 
@@ -92,36 +95,116 @@
         </div>
       </section>
 
-      <div class="gameList">
-
-        <!-- Teil 1: First Strike -->
-        <a class="panel gameCard" href="first-strike.html" aria-label="Zur Seite von First Strike">
-          <img class="gameCard__img" src="release_bro_kartell_first_strike.png"
+      <!-- Teil 1: First Strike -->
+      <section class="panel gameRow" id="first-strike">
+        <div class="gameRow__media">
+          <img class="gameRow__img" src="release_bro_kartell_first_strike.png"
                alt="Bro Kartell: First Strike auf einem Game-Boy-ähnlichen Handheld">
-          <div class="gameCard__top">
-            <div class="kicker"><span class="dot"></span>Jetzt verfügbar</div>
+        </div>
+        <div class="gameRow__body">
+          <div class="gameRow__top">
+            <div class="kicker"><span class="dot"></span>Teil 1 • Jetzt verfügbar</div>
             <span class="badge">Version 1.3</span>
           </div>
           <h2>FIRST STRIKE</h2>
-          <p>Teil 1 für den Game Boy. Der CEO sucht seine verschwundenen Bros und 5 Lootboxen –
-             im Browser oder als ROM.</p>
-          <span class="btn btn--primary gameCard__go">Zum Spiel →</span>
-        </a>
+          <p>Die LAN-Party steht an, aber deine Bros sind spurlos verschwunden. Durchkämme die Stadt,
+             finde alle <b>5 Mitglieder</b> und <b>5 Lootboxen</b> und bring den Clan wieder zusammen.
+             Warnung: Keiner kommt hier gut weg. 👑</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="first-strike/">▶ Im Browser spielen</a>
+            <a class="btn" href="https://discord.gg/J6aN7mTUGc" target="_blank" rel="noreferrer">💾 ROM auf Discord</a>
+            <span class="badge">🎮 Game Boy • PC • Handy</span>
+          </div>
 
-        <!-- Teil 2: Second Punch -->
-        <div class="panel gameCard gameCard--soon" aria-label="Second Punch – Coming soon">
-          <img class="gameCard__img" src="second-punch/apple-touch-icon.png"
-               alt="Bro Kartell: Second Punch Logo">
-          <div class="gameCard__top">
-            <div class="kicker"><span class="dot"></span>In Entwicklung</div>
+          <details class="more">
+            <summary>Steuerung</summary>
+            <div class="keys">
+              <span><kbd>← ↑ → ↓</kbd></span><span>Laufen</span>
+              <span><kbd>Z</kbd> / <kbd>J</kbd></span><span>A – Ansprechen</span>
+              <span><kbd>X</kbd> / <kbd>K</kbd></span><span>B – Zurück</span>
+              <span><kbd>Enter</kbd></span><span>Start – Menü &amp; Checkliste</span>
+            </div>
+          </details>
+          <details class="more">
+            <summary>Changelog</summary>
+            <div class="changelog">
+
+            <details open class="cl">
+              <summary>
+                <b>v1.3</b>
+                <span class="cl-title">• Sound-Update</span>
+              </summary>
+              <ul>
+                <li>Zu laute Stellen bei Musik und Sounds leiser gemacht</li>
+              </ul>
+            </details>
+
+            <details class="cl">
+              <summary>
+                <b>v1.2</b>
+                <span class="cl-title">• Text-Update</span>
+              </summary>
+              <ul>
+                <li>Texte und Dialoge überarbeitet</li>
+              </ul>
+            </details>
+
+            <details class="cl">
+              <summary>
+                <b>v1.1</b>
+                <span class="cl-title">• Kollisions-Update</span>
+              </summary>
+              <ul>
+                <li>Kollisionen verbessert – weniger durch Wände laufen, weniger hängen bleiben</li>
+              </ul>
+            </details>
+
+            <details class="cl">
+              <summary>
+                <b>v1.0</b>
+                <span class="cl-title">• Release</span>
+                <span class="cl-date">31.10.2026</span>
+              </summary>
+              <ul>
+                <li>Bro Kartell: First Strike veröffentlicht</li>
+                <li>Im Browser spielbar + ROM auf Discord</li>
+              </ul>
+            </details>
+
+          </div>
+          </details>
+          <details class="more">
+            <summary>Credits</summary>
+            <ul class="list">
+              <li>Idee &amp; Umsetzung: izec313</li>
+              <li>Beta-Test: Noih313</li>
+              <li>Musik &amp; Sounds: Yogi (Tronimal) –
+                <a href="https://yogi-tronimal.itch.io/" target="_blank" rel="noreferrer">yogi-tronimal.itch.io</a> –
+                <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noreferrer">CC-BY 4.0</a> (Musik angepasst)</li>
+              <li>Erstellt mit GB Studio</li>
+            </ul>
+          </details>
+        </div>
+      </section>
+
+      <!-- Teil 2: Second Punch -->
+      <section class="panel gameRow gameRow--soon" id="second-punch">
+        <div class="gameRow__media">
+          <img class="gameRow__img" src="second-punch/apple-touch-icon.png" alt="Bro Kartell: Second Punch Logo">
+        </div>
+        <div class="gameRow__body">
+          <div class="gameRow__top">
+            <div class="kicker"><span class="dot"></span>Teil 2 • In Entwicklung</div>
             <span class="badge">Game Boy Color</span>
           </div>
           <h2>SECOND PUNCH</h2>
-          <p>Teil 2 – in Farbe. Sechs Bros, sechs Genres, sechs Artefakte. Kommt, wenn er fertig ist.</p>
-          <span class="soonBadge gameCard__go">COMING SOON</span>
+          <p>Teil 2 – in Farbe. Sechs Bros, sechs Genres, sechs Artefakte: Horror-Hotel, Kartbahn, Paintball
+             und noch einiges mehr. Kommt, wenn er fertig ist.</p>
+          <div class="hero__actions">
+            <span class="soonBadge">COMING SOON</span>
+          </div>
         </div>
-
-      </div>
+      </section>
 
       <!-- Feedback & Kontakt -->
       <section class="panel section">
