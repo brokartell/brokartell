@@ -25,6 +25,21 @@
     .journey__arrow{color:var(--accent);font-weight:800}
     @media (max-width: 600px){ .journey__arrow{display:none} }
     .brand__logo{width:56px;height:44px}
+    /* Silber-Chrom statt Orange für das BroK-Games-Logo */
+    .logoBox{background:
+      radial-gradient(600px 240px at 30% 20%, #ffffff14, transparent 60%),
+      radial-gradient(420px 240px at 80% 60%, #c8d0e012, transparent 60%),
+      linear-gradient(180deg, #0b0d14, #050608)}
+    .logoBig{filter:
+      drop-shadow(0 0 10px rgba(255,255,255,.22))
+      drop-shadow(0 0 24px rgba(190,200,220,.14))
+      drop-shadow(0 14px 28px rgba(0,0,0,.85))}
+    .logoBox:hover .logoBig{filter:
+      drop-shadow(0 0 14px rgba(255,255,255,.38))
+      drop-shadow(0 0 34px rgba(200,210,230,.24))
+      drop-shadow(0 18px 36px rgba(0,0,0,.9))}
+    .spin{background:conic-gradient(from 200deg, transparent,
+      rgba(255,255,255,.22), transparent, rgba(180,190,210,.16), transparent)}
     .gameRow{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;padding:18px;margin-top:18px;align-items:start}
     .gameRow__img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:#07080c80;image-rendering:pixelated;display:block}
     .gameRow__body{display:flex;flex-direction:column;gap:12px;padding:6px 4px}
