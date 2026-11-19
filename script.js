@@ -11,7 +11,16 @@
     const el = document.querySelector(id);
     if (!el) return;
     e.preventDefault();
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // "Über uns" und Logo: ganz nach oben
+    if (id === "#top" || id === "#about") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    // Abschnitt knapp unter dem festen Header anzeigen
+    const bar = document.querySelector(".topbar");
+    const offset = (bar ? bar.offsetHeight : 0) + 16;
+    const y = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
   });
 
   const toast = document.getElementById("toast");
