@@ -15,6 +15,21 @@
   <link rel="icon" href="assets/logo.png" />
   <link rel="stylesheet" href="style.css" />
   <style>
+    /* Chrom-Look nur auf der Spieleseite (Akzente, Buttons, Schilder, Hintergrund) */
+    :root{--accent:#e3e6ea;--accent2:#9da1a9}
+    body::before{background:
+      radial-gradient(1200px 700px at 20% 10%, #ffffff0d, transparent 55%),
+      radial-gradient(900px 600px at 80% 30%, #c8d0e00a, transparent 55%),
+      radial-gradient(700px 500px at 50% 90%, #5aa1ff10, transparent 60%),
+      linear-gradient(180deg, var(--bg), var(--bg2))}
+    .dot{box-shadow:0 0 12px #ffffff55}
+    .btn--primary,.btn--primary:hover,.btn--primary:active{
+      background-image:linear-gradient(180deg,#f4f5f7 0%,#c7cbd1 100%) !important;
+      color:#111318 !important;border:1px solid #ffffff40 !important;
+      box-shadow:inset 0 1px 0 #ffffffcc,0 10px 30px rgba(0,0,0,.45) !important;
+      text-shadow:0 1px 0 #ffffff80 !important}
+    .btn--primary:hover{box-shadow:inset 0 1px 0 #ffffffcc,0 10px 28px rgba(220,225,235,.25) !important}
+
     /* Nur fuer diese Seite – alles andere kommt aus style.css */
     .gamesHead{padding:26px 22px;margin-top:18px}
     .gamesHead h1{margin:14px 0 12px}
