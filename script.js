@@ -91,7 +91,11 @@ if (!pager && grid) {
 }
 
 function getFilteredWallpapers() {
-  return wallpapers.filter(w => (activeFilter === "all" ? true : w.tag === activeFilter));
+  return wallpapers.filter(w => {
+    if (activeFilter === "all") return true;
+    if (activeFilter.startsWith("brand:")) return w.brand === activeFilter.slice(6);
+    return w.tag === activeFilter;
+  });
 }
 
 function renderPager(totalItems) {

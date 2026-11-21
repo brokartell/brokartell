@@ -1,80 +1,100 @@
 [
   {
+    "title": "PC • Bro Kartell Games Studio",
+    "file": "pc_brokartellgames_studio_09.png",
+    "tag": "PC",
+    "resolution": "1672x941",
+    "date": "2026-11-21",
+    "brand": "Bro Kartell Games"
+  },
+  {
     "title": "PC • Bro Kartell Games Stahl",
     "file": "pc_brokartellgames_stahl_08.png",
     "tag": "PC",
     "resolution": "1729x910",
-    "date": "2026-11-21"
+    "date": "2026-11-21",
+    "brand": "Bro Kartell Games"
   },
   {
     "title": "PC • Bro Kartell Games Engine",
     "file": "pc_brokartellgames_engine_08.png",
     "tag": "PC",
     "resolution": "1672x941",
-    "date": "2026-11-21"
+    "date": "2026-11-21",
+    "brand": "Bro Kartell Games"
   },
   {
     "title": "PC • Bro Kartell Games Cyber",
     "file": "pc_brokartellgames_cyber_07.png",
     "tag": "PC",
     "resolution": "1672x941",
-    "date": "2026-11-18"
+    "date": "2026-11-18",
+    "brand": "Bro Kartell Games"
   },
   {
     "title": "PC • Bro Kartell Games Metall",
     "file": "pc_brokartellgames_metall_07.png",
     "tag": "PC",
     "resolution": "1672x941",
-    "date": "2026-11-18"
+    "date": "2026-11-18",
+    "brand": "Bro Kartell Games"
   },
   {
     "title": "Mobile • Future",
     "file": "mobile_future_04.png",
     "tag": "Mobile",
     "resolution": "1024x1536x",
-    "date": "2026-02-11"
+    "date": "2026-02-11",
+    "brand": "Bro Kartell"
   },
   {
     "title": "PC • Technik",
     "file": "pc_technik_04.png",
     "tag": "PC",
     "resolution": "1536x1024",
-    "date": "2026-02-11"
+    "date": "2026-02-11",
+    "brand": "Bro Kartell"
   },
   {
     "title": "PC • SWAT Door",
     "file": "pc_swatdoor_01.png",
     "tag": "PC",
-    "resolution": "1536x1024"
+    "resolution": "1536x1024",
+    "brand": "Bro Kartell"
   },
   {
     "title": "PC • Attack",
     "file": "pc_attack_02.PNG",
     "tag": "PC",
-    "resolution": "1536x1024"
+    "resolution": "1536x1024",
+    "brand": "Bro Kartell"
   },
   {
     "title": "PC • Equipment",
     "file": "pc_equipment_03.png",
     "tag": "PC",
-    "resolution": "1536x1024"
+    "resolution": "1536x1024",
+    "brand": "Bro Kartell"
   },
   {
     "title": "Mobile • SWAT Door",
     "file": "mobile_swatdoor_01.png",
     "tag": "Mobile",
-    "resolution": "1024x1536"
+    "resolution": "1024x1536",
+    "brand": "Bro Kartell"
   },
   {
     "title": "Mobile • Attack",
     "file": "mobile_attack_02.png",
     "tag": "Mobile",
-    "resolution": "1024x1536"
+    "resolution": "1024x1536",
+    "brand": "Bro Kartell"
   },
   {
     "title": "Mobile • Equipment",
     "file": "mobile_equipment_03.png",
     "tag": "Mobile",
-    "resolution": "1024x1536"
+    "resolution": "1024x1536",
+    "brand": "Bro Kartell"
   }
 ]
