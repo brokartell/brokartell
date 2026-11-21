@@ -910,3 +910,6 @@ details.cl > summary .cl-date{
     width: calc(100% - 24px);
   }
 }
+
+/* Wallpaper-Filter: Abstand auch zwischen den Zeilen (Handy) */
+.filters{display:flex;flex-wrap:wrap;gap:10px}
