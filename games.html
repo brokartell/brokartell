@@ -15,6 +15,20 @@
   <link rel="icon" href="assets/logo.png" />
   <link rel="stylesheet" href="style.css" />
   <style>
+        /* Screenshot-Galerie */
+    .shots{position:relative}
+    .shots .shots__img{display:none}
+    .shots .shots__img.is-active{display:block}
+    .shots__nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;
+      border:1px solid #ffffff40;background:linear-gradient(180deg,#f4f5f7,#c7cbd1);color:#111318;
+      font-size:26px;line-height:36px;padding:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5);
+      opacity:.85;transition:opacity .15s, transform .15s}
+    .shots__nav:hover{opacity:1;transform:translateY(calc(-50% - 2px))}
+    .shots__nav--prev{left:10px}
+    .shots__nav--next{right:10px}
+    .shots__dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px}
+    .shots__dots span{width:7px;height:7px;border-radius:50%;background:#ffffff55}
+    .shots__dots span.is-active{background:#e3e6ea}
     /* Chrom-Look nur auf der Spieleseite (Akzente, Buttons, Schilder, Hintergrund) */
     :root{--accent:#e3e6ea;--accent2:#9da1a9}
     body::before{background:
@@ -173,8 +187,20 @@
       <!-- Teil 1: First Strike -->
       <section class="panel gameRow" id="first-strike">
         <div class="gameRow__media">
-          <img class="gameRow__img" src="release_bro_kartell_first_strike.png"
-               alt="Bro Kartell: First Strike auf einem Game-Boy-ähnlichen Handheld">
+          <div class="shots" data-shots>
+            <img class="gameRow__img shots__img is-active" src="release_bro_kartell_first_strike.png"
+                 alt="Bro Kartell: First Strike auf einem Game-Boy-ähnlichen Handheld">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_01.png" alt="Screenshot: Logo-Szene: Bro Kartell Games präsentiert" loading="lazy">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_02.png" alt="Screenshot: Titelbildschirm von First Strike" loading="lazy">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_03.png" alt="Screenshot: Im Clanhaus: Heute Abend ist LAN-Party!" loading="lazy">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_04.png" alt="Screenshot: Ohne Kasse kein Bier. Ohne Bier…" loading="lazy">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_05.png" alt="Screenshot: Vor dem Clanhaus: Die LAN-Party fängt gleich an!" loading="lazy">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_06.png" alt="Screenshot: Unterwegs in der Stadt: Shop und Bar" loading="lazy">
+            <img class="gameRow__img shots__img" src="first-strike/screens/screen_07.png" alt="Screenshot: Vor der Polizei" loading="lazy">
+            <button class="shots__nav shots__nav--prev" type="button" aria-label="Vorheriger Screenshot">‹</button>
+            <button class="shots__nav shots__nav--next" type="button" aria-label="Nächster Screenshot">›</button>
+            <div class="shots__dots" aria-hidden="true"></div>
+          </div>
         </div>
         <div class="gameRow__body">
           <div class="gameRow__top">
@@ -308,6 +334,36 @@
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 
+<script>
+  // Screenshot-Galerie: Pfeile, Punkte, Wischen und Pfeiltasten
+  document.querySelectorAll("[data-shots]").forEach((box) => {
+    const imgs = [...box.querySelectorAll(".shots__img")];
+    const dots = box.querySelector(".shots__dots");
+    imgs.forEach(() => dots.appendChild(document.createElement("span")));
+    let i = 0;
+    const show = (n) => {
+      i = (n + imgs.length) % imgs.length;
+      imgs.forEach((im, k) => im.classList.toggle("is-active", k === i));
+      [...dots.children].forEach((d, k) => d.classList.toggle("is-active", k === i));
+    };
+    box.querySelector(".shots__nav--prev").addEventListener("click", () => show(i - 1));
+    box.querySelector(".shots__nav--next").addEventListener("click", () => show(i + 1));
+    let x0 = null;
+    box.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    box.addEventListener("touchend", (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+      x0 = null;
+    });
+    box.tabIndex = 0;
+    box.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") show(i - 1);
+      if (e.key === "ArrowRight") show(i + 1);
+    });
+    show(0);
+  });
+</script>
 <script src="script.js?v=197"></script>
 
 <script>
