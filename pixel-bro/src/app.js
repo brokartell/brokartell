@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.2.6';
+const APP_VERSION = '1.3.0';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -94,6 +94,11 @@ const settings = {
   theme: 'dark',
   playing: true,
   autoUpdate: true,
+  center: false,
+  gradSteps: 4,
+  gradDither: true,
+  sprayDensity: 6,
+  lang: 'de',
 };
 
 const view = { zoom: 16, ox: 0, oy: 0 };
@@ -104,7 +109,7 @@ const history = { undo: [], redo: [], max: 120 };
 
 /* ---------- Dokument ---------- */
 function createDoc(w, h) {
-  return { w, h, fps: 8, layers: [makeLayer('Ebene 1', w, h, 1)] };
+  return { w, h, fps: 8, layers: [makeLayer(t('Ebene') + ' 1', w, h, 1)] };
 }
 function makeLayer(name, w, h, frames) {
   return { name, visible: true, opacity: 1, frames: Array.from({ length: frames }, () => new Uint32Array(w * h)) };
@@ -152,7 +157,7 @@ function markDirty() {
   scheduleAutosave();
 }
 function updateTitle() {
-  document.title = `${dirty ? '● ' : ''}${fileInfo.name} – Pixel Bro`;
+  document.title = `${dirty ? '● ' : ''}${fileInfo.name === 'unbenannt' ? t('unbenannt') : fileInfo.name} – Pixel Bro`;
 }
 
 /* ---------- Canvas & Rendering ---------- */
@@ -281,6 +286,17 @@ function render() {
     for (let y = t; y < h; y += t) { ctx.moveTo(view.ox, view.oy + y * z); ctx.lineTo(view.ox + W, view.oy + y * z); }
     ctx.stroke();
   }
+  // Mittellinien (waagerecht + senkrecht durch die Bildmitte)
+  if (settings.center) {
+    const mx = Math.round((view.ox + (w * z) / 2) * dpr) / dpr + 0.5 / dpr;
+    const my = Math.round((view.oy + (h * z) / 2) * dpr) / dpr + 0.5 / dpr;
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(79, 209, 255, .85)';
+    ctx.lineWidth = 1;
+    ctx.moveTo(mx, view.oy); ctx.lineTo(mx, view.oy + H);
+    ctx.moveTo(view.ox, my); ctx.lineTo(view.ox + W, my);
+    ctx.stroke();
+  }
   // Rahmen
   ctx.strokeStyle = settings.theme === 'light' ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.18)';
   ctx.lineWidth = 1;
@@ -298,6 +314,27 @@ function render() {
     ctx.setLineDash([]);
   }
 
+  // Verlauf: Richtungslinie während des Ziehens
+  if (drag && drag.tool === 'gradient') {
+    const a = drag.start, b = drag.endSnap || drag.end;
+    const ax = view.ox + (a.x + 0.5) * z, ay = view.oy + (a.y + 0.5) * z, bx = view.ox + (b.x + 0.5) * z, by = view.oy + (b.y + 0.5) * z;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+    for (const [px, py, c] of [[ax, ay, drag.c0], [bx, by, drag.c1]]) {
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fillStyle = (c >>> 24) ? cssColor(c | 0xff000000) : '#fff'; ctx.fill();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+    }
+  }
+  // Sprühdose: Kreis zeigt den Sprühbereich
+  if (hover && !isPanning && activeTool() === 'spray') {
+    const rr = sprayRadius() * z;
+    ctx.beginPath();
+    ctx.arc(view.ox + (hover.x + 0.5) * z, view.oy + (hover.y + 0.5) * z, rr, 0, Math.PI * 2);
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.stroke();
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.stroke(); ctx.setLineDash([]);
+  }
   // Cursor
   if (hover && !isPanning && ['pen', 'eraser', 'dither', 'shade', 'line', 'rect', 'ellipse'].includes(activeTool())) {
     const s = settings.size, o = Math.floor((s - 1) / 2);
@@ -527,7 +564,7 @@ let spaceDown = false, altDown = false, shiftDown = false;
 
 function activeTool() {
   if (spaceDown) return 'hand';
-  if (altDown && ['pen', 'eraser', 'bucket', 'dither', 'line', 'rect', 'ellipse'].includes(settings.tool)) return 'picker';
+  if (altDown && ['pen', 'eraser', 'bucket', 'dither', 'line', 'rect', 'ellipse', 'gradient', 'spray'].includes(settings.tool)) return 'picker';
   return settings.tool;
 }
 
@@ -554,9 +591,38 @@ function onPointerDown(e) {
   const tool = activeTool();
   const color = right ? settings.secondary : settings.primary;
 
+  // Text-Werkzeug: in den eingefügten Text klicken = verschieben
+  const onFloat = float && p.x >= float.x && p.y >= float.y && p.x < float.x + float.w && p.y < float.y + float.h;
+  if (tool === 'text' && onFloat) {
+    drag = { tool: 'move', start: p, fx: float.x, fy: float.y };
+    requestRender();
+    return;
+  }
   if (tool !== 'move' && tool !== 'picker') commitFloat(false);
 
   switch (tool) {
+    case 'gradient': {
+      const region = gradientRegion(p.x, p.y);
+      if (!region) break;
+      pushUndo();
+      const c0 = right ? settings.secondary : settings.primary, c1 = right ? settings.primary : settings.secondary;
+      addRecent(c0);
+      drag = { tool, start: p, end: p, buf: curBuf(), backup: curBuf().slice(), region, c0, c1 };
+      applyGradient(drag, e.shiftKey);
+      break;
+    }
+    case 'spray': {
+      pushUndo();
+      addRecent(color);
+      const d = { tool, color, pos: p, buf: curBuf(), last: 0 };
+      drag = d;
+      sprayAt(d);
+      d.timer = setInterval(() => { if (drag !== d) return; sprayAt(d); requestRender(); scheduleUI(); }, 60);
+      break;
+    }
+    case 'text':
+      textDialog(p);
+      break;
     case 'pen':
     case 'eraser': {
       pushUndo();
@@ -638,6 +704,14 @@ function onPointerMove(e) {
 
 function handleDragPoint(p, e) {
   switch (drag.tool) {
+    case 'gradient':
+      drag.end = p;
+      applyGradient(drag, e.shiftKey);
+      break;
+    case 'spray':
+      drag.pos = p;
+      if (performance.now() - drag.last > 30) sprayAt(drag);
+      break;
     case 'pen':
     case 'eraser':
       bresenham(drag.last.x, drag.last.y, p.x, p.y, (x, y) => plotPP(drag, x, y));
@@ -676,6 +750,7 @@ function handleDragPoint(p, e) {
 
 function onPointerUp(e) {
   if (!drag) return;
+  if (drag.timer) clearInterval(drag.timer);
   if (drag.pan) {
     isPanning = false;
     canvas.style.cursor = '';
@@ -794,6 +869,161 @@ function drawShape(p, constrain) {
 }
 function setPxMirror(buf, x, y, color) {
   for (const [px, py] of mirrorPoints(x, y)) setPx(buf, px, py, color);
+}
+
+/* ---------- Verlauf ---------- */
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+/** Bereich für den Verlauf: die Auswahl – oder wie beim Füllen alle Pixel mit der Farbe unter dem Startpunkt. */
+function gradientRegion(x, y) {
+  [x, y] = wrapXY(x, y);
+  const { w, h } = doc;
+  if (x < 0 || y < 0 || x >= w || y >= h) return null;
+  const out = [];
+  if (sel) {
+    for (let i = 0; i < sel.mask.length; i++) if (sel.mask[i]) out.push(i);
+    return out.length ? Int32Array.from(out) : null;
+  }
+  const buf = curBuf();
+  const target = buf[y * w + x];
+  if (!settings.contiguous) {
+    for (let i = 0; i < buf.length; i++) if (buf[i] === target) out.push(i);
+    return Int32Array.from(out);
+  }
+  const seen = new Uint8Array(w * h);
+  const stack = [y * w + x];
+  while (stack.length) {
+    const i = stack.pop();
+    if (seen[i]) continue;
+    seen[i] = 1;
+    if (buf[i] !== target) continue;
+    out.push(i);
+    const px = i % w, py = (i / w) | 0;
+    if (px > 0) stack.push(i - 1);
+    if (px < w - 1) stack.push(i + 1);
+    if (py > 0) stack.push(i - w);
+    if (py < h - 1) stack.push(i + w);
+  }
+  return Int32Array.from(out);
+}
+/** Mischt zwei Farben (f = 0 → a, f = 1 → b). Transparente Farben übernehmen den Farbton der anderen. */
+function mixColor(a, b, f) {
+  const A = unpack(a), B = unpack(b);
+  if (!A[3]) { A[0] = B[0]; A[1] = B[1]; A[2] = B[2]; }
+  if (!B[3]) { B[0] = A[0]; B[1] = A[1]; B[2] = A[2]; }
+  const m = (i) => Math.round(A[i] + (B[i] - A[i]) * f);
+  const alpha = m(3);
+  return alpha ? pack(m(0), m(1), m(2), alpha) : 0;
+}
+function applyGradient(d, constrain) {
+  d.buf.set(d.backup);
+  const { w } = doc;
+  let ex = d.end.x, ey = d.end.y;
+  if (constrain) { // in 45°-Schritten einrasten
+    const dx = ex - d.start.x, dy = ey - d.start.y, adx = Math.abs(dx), ady = Math.abs(dy);
+    if (adx > ady * 2) ey = d.start.y;
+    else if (ady > adx * 2) ex = d.start.x;
+    else { const m = Math.max(adx, ady); ex = d.start.x + Math.sign(dx) * m; ey = d.start.y + Math.sign(dy) * m; }
+  }
+  d.endSnap = { x: ex, y: ey };
+  const dx = ex - d.start.x, dy = ey - d.start.y, len2 = dx * dx + dy * dy;
+  const n = clamp(settings.gradSteps | 0, 2, 16);
+  const colors = Array.from({ length: n }, (_, k) => mixColor(d.c0, d.c1, k / (n - 1)));
+  for (const i of d.region) {
+    const x = i % w, y = (i / w) | 0;
+    const tt = len2 ? clamp(((x - d.start.x) * dx + (y - d.start.y) * dy) / len2, 0, 1) : 0;
+    const level = tt * (n - 1);
+    let k;
+    if (settings.gradDither) {
+      const base = Math.floor(level);
+      k = level - base > (BAYER4[(y & 3) * 4 + (x & 3)] + 0.5) / 16 ? base + 1 : base;
+    } else k = Math.round(level);
+    d.buf[i] = colors[clamp(k, 0, n - 1)];
+  }
+}
+
+/* ---------- Sprühdose ---------- */
+const sprayRadius = () => 2 + settings.size * 1.5;
+function sprayAt(d) {
+  d.last = performance.now();
+  const r = sprayRadius();
+  const n = clamp(settings.sprayDensity | 0, 1, 40);
+  for (let k = 0; k < n; k++) {
+    const a = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * r;
+    const x = Math.floor(d.pos.x + 0.5 + Math.cos(a) * rr), y = Math.floor(d.pos.y + 0.5 + Math.sin(a) * rr);
+    for (const [px, py] of mirrorPoints(x, y)) setPx(d.buf, px, py, d.color);
+  }
+}
+
+/* ---------- Text (Pixel-Schrift, 5 px hoch) ---------- */
+const FONT = {
+  A: '.#./#.#/###/#.#/#.#', B: '##./#.#/##./#.#/##.', C: '.##/#../#../#../.##', D: '##./#.#/#.#/#.#/##.',
+  E: '###/#../##./#../###', F: '###/#../##./#../#..', G: '.##/#../#.#/#.#/.##', H: '#.#/#.#/###/#.#/#.#',
+  I: '###/.#./.#./.#./###', J: '..#/..#/..#/#.#/.#.', K: '#.#/#.#/##./#.#/#.#', L: '#../#../#../#../###',
+  M: '#...#/##.##/#.#.#/#...#/#...#', N: '#..#/##.#/#.##/#..#/#..#', O: '.#./#.#/#.#/#.#/.#.', P: '##./#.#/##./#../#..',
+  Q: '.#./#.#/#.#/##./.##', R: '##./#.#/##./#.#/#.#', S: '.##/#../.#./..#/##.', T: '###/.#./.#./.#./.#.',
+  U: '#.#/#.#/#.#/#.#/###', V: '#.#/#.#/#.#/#.#/.#.', W: '#...#/#...#/#.#.#/##.##/#...#', X: '#.#/#.#/.#./#.#/#.#',
+  Y: '#.#/#.#/.#./.#./.#.', Z: '###/..#/.#./#../###',
+  0: '###/#.#/#.#/#.#/###', 1: '.#./##./.#./.#./###', 2: '##./..#/.#./#../###', 3: '##./..#/.#./..#/##.',
+  4: '#.#/#.#/###/..#/..#', 5: '###/#../##./..#/##.', 6: '.##/#../###/#.#/###', 7: '###/..#/.#./.#./.#.',
+  8: '###/#.#/###/#.#/###', 9: '###/#.#/###/..#/##.',
+  ' ': '.../.../.../.../...', '.': '././././#', ',': './././#/#', '!': '#/#/#/./#', '?': '##./..#/.#./.../.#.',
+  ':': './#/./#/.', ';': './#/./#/#', '-': '.../.../###/.../...', '+': '.../.#./###/.#./...', '=': '.../###/.../###/...',
+  '/': '..#/..#/.#./#../#..', '(': '.#/#./#./#./.#', ')': '#./.#/.#/.#/#.', "'": '#/#/././.', '"': '#.#/#.#/.../.../...',
+  '*': '.../#.#/.#./#.#/...', '_': '.../.../.../.../###', '%': '#.#/..#/.#./#../#.#', '<': '..#/.#./#../.#./..#',
+  '>': '#../.#./..#/.#./#..', '#': '#.#/###/#.#/###/#.#', '&': '.#./#.#/.#./#.#/.##', '@': '.#./#.#/###/#../.##',
+};
+const UMLAUT = { 'Ä': 'A', 'Ö': 'O', 'Ü': 'U' };
+function textPixels(text, spacing, color) {
+  const lines = text.toUpperCase().replace(/ß/g, 'SS').replace(/\r/g, '').split('\n');
+  const glyphs = (ch) => {
+    const base = UMLAUT[ch] || ch;
+    const g = (FONT[base] || FONT['?']).split('/');
+    return { rows: g, w: Math.max(...g.map((r) => r.length)), dots: !!UMLAUT[ch] };
+  };
+  const pts = [];
+  let maxW = 0;
+  lines.forEach((line, li) => {
+    let x = 0;
+    const top = li * 8 + 2; // 2 Reihen Platz für Umlaut-Punkte
+    for (const ch of line) {
+      const g = glyphs(ch);
+      g.rows.forEach((row, ry) => [...row].forEach((c, rx) => { if (c === '#') pts.push([x + rx, top + ry]); }));
+      if (g.dots) { pts.push([x, top - 2]); pts.push([x + g.w - 1, top - 2]); }
+      x += g.w + spacing;
+    }
+    maxW = Math.max(maxW, x - spacing);
+  });
+  if (!pts.length) return null;
+  const minX = Math.min(...pts.map((q) => q[0])), minY = Math.min(...pts.map((q) => q[1]));
+  const maxX = Math.max(...pts.map((q) => q[0])), maxY = Math.max(...pts.map((q) => q[1]));
+  const w = maxX - minX + 1, h = maxY - minY + 1;
+  const data = new Uint32Array(w * h), mask = new Uint8Array(w * h);
+  for (const [x, y] of pts) { const i = (y - minY) * w + (x - minX); data[i] = color; mask[i] = 1; }
+  return { data, mask, w, h };
+}
+let lastText = '';
+let lastTextSpacing = 1;
+async function textDialog(p) {
+  const body = el(`<div class="field"><label>Text</label><textarea id="tx" rows="3" maxlength="400" spellcheck="false"></textarea></div>
+    <div class="field"><label>Zeichenabstand</label><select id="tsp"><option value="0">0 px</option><option value="1">1 px</option><option value="2">2 px</option></select></div>
+    <p class="hint">Großbuchstaben, Ziffern, Umlaute und einfache Satzzeichen · Enter = neue Zeile · Farbe: Primärfarbe</p>
+    <p class="hint">Kleinbuchstaben werden als Großbuchstaben gezeichnet (5 px hohe Pixel-Schrift).</p>`);
+  body.querySelector('#tx').value = lastText;
+  body.querySelector('#tsp').value = String(lastTextSpacing);
+  const ok = await modal({ title: 'Text einfügen', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Einfügen', value: true, primary: true }] });
+  if (!ok) return;
+  lastText = body.querySelector('#tx').value;
+  lastTextSpacing = parseInt(body.querySelector('#tsp').value) || 0;
+  const px = textPixels(lastText, lastTextSpacing, settings.primary);
+  if (!px) return;
+  commitFloat(false);
+  pushUndo();
+  addRecent(settings.primary);
+  float = { ...px, x: p.x, y: p.y };
+  sel = null;
+  requestRender();
+  scheduleUI(true);
+  toast('Text eingefügt – mit der Maus verschieben, Enter setzt ihn fest');
 }
 
 function floodFill(buf, x, y, color, contiguous) {
@@ -1017,7 +1247,7 @@ function replaceColor() {
   let n = 0;
   for (const L of doc.layers) for (const f of L.frames) for (let i = 0; i < f.length; i++) if (f[i] === from) { f[i] = to; n++; }
   afterPaint();
-  toast(`${n} Pixel ersetzt (Primär → Sekundär)`);
+  toast(t('{n} Pixel ersetzt (Primär → Sekundär)', { n }));
 }
 /** Ersetzt eine Farbe in allen Ebenen und Frames (Doppelklick in der Live-Palette). */
 async function replaceColorDialog(from) {
@@ -1027,7 +1257,7 @@ async function replaceColorDialog(from) {
       <div class="field" style="flex:0;font-size:22px;padding-top:14px">→</div>
       <div class="field"><label>Neue Farbe</label><input type="color" id="rc-new" value="${toHex(from).slice(0, 7)}"><span class="mono" id="rc-hex">${toHex(from).toUpperCase()}</span></div>
     </div>
-    <p class="hint">Betrifft ${usedCounts.get(from) || 0} Pixel in allen Ebenen und Frames. Die Deckkraft bleibt erhalten.</p>`);
+    <p class="hint">${t('Betrifft')} ${usedCounts.get(from) || 0} ${t('Pixel in allen Ebenen und Frames. Die Deckkraft bleibt erhalten.')}</p>`);
   const inp = body.querySelector('#rc-new');
   inp.oninput = () => { body.querySelector('#rc-hex').textContent = inp.value.toUpperCase(); };
   const ok = await modal({ title: 'Farbe überall ersetzen', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Ersetzen', value: true, primary: true }] });
@@ -1043,7 +1273,7 @@ async function replaceColorDialog(from) {
   if (settings.secondary === from) settings.secondary = to;
   afterPaint();
   updateColorUI();
-  toast(`${n} Pixel umgefärbt`);
+  toast(t('{n} Pixel umgefärbt', { n }));
 }
 
 /* ---------- Ebenen ---------- */
@@ -1059,7 +1289,7 @@ function layerCmd(cmd) {
     case 'layer-dup': {
       pushUndo();
       const L = doc.layers[cur.layer];
-      doc.layers.splice(cur.layer + 1, 0, { ...L, name: L.name + ' Kopie', frames: L.frames.map((f) => f.slice()) });
+      doc.layers.splice(cur.layer + 1, 0, { ...L, name: L.name + ' ' + t('Kopie'), frames: L.frames.map((f) => f.slice()) });
       cur.layer++;
       break;
     }
@@ -1109,8 +1339,8 @@ function layerCmd(cmd) {
 }
 function uniqueLayerName() {
   let i = doc.layers.length + 1;
-  while (doc.layers.some((l) => l.name === 'Ebene ' + i)) i++;
-  return 'Ebene ' + i;
+  while (doc.layers.some((l) => l.name === 'Ebene ' + i || l.name === 'Layer ' + i)) i++;
+  return t('Ebene') + ' ' + i;
 }
 
 /* ---------- Frames ---------- */
@@ -1211,7 +1441,8 @@ function renderLayers() {
     thumbInto(c, (cc) => cc.putImageData(bufToImageData(L.frames[cur.frame], doc.w, doc.h), 0, 0), 30);
     const name = document.createElement('span');
     name.className = 'name';
-    name.textContent = L.name;
+    name.textContent = layerLabel(L.name);
+    name.dataset.i18nSkip = '';
     name.title = 'Doppelklick zum Umbenennen';
     const vis = document.createElement('button');
     vis.className = 'vis';
@@ -1289,7 +1520,7 @@ function frameMenu(x, y) {
 
 function updateStatus() {
   $('#status-size').textContent = `${doc.w} × ${doc.h} px`;
-  $('#status-frame').textContent = `Frame ${cur.frame + 1}/${frameCount()} · ${doc.layers[cur.layer].name}`;
+  $('#status-frame').textContent = `Frame ${cur.frame + 1}/${frameCount()} · ${layerLabel(doc.layers[cur.layer].name)}`;
   $('#undo-state') && null;
 }
 function updateStatusPos(p) {
@@ -1445,6 +1676,7 @@ function renderPalette() {
     o.textContent = text;
     if (value === settings.paletteName) o.selected = true;
     parent.appendChild(o);
+    return o;
   };
   addOption(sel, USED, '★ Benutzte Farben (live)');
   const gPre = document.createElement('optgroup');
@@ -1452,8 +1684,8 @@ function renderPalette() {
   for (const name of Object.keys(PALETTES)) addOption(gPre, name, name);
   sel.appendChild(gPre);
   const gOwn = document.createElement('optgroup');
-  gOwn.label = `Eigene Paletten (${customPalettes.length}/${MAX_CUSTOM_PALETTES})`;
-  for (const c of customPalettes) addOption(gOwn, CUSTOM_PREFIX + c.id, `${c.name} (${c.colors.length})`);
+  gOwn.label = t('Eigene Paletten ({n}/{max})', { n: customPalettes.length, max: MAX_CUSTOM_PALETTES });
+  for (const c of customPalettes) addOption(gOwn, CUSTOM_PREFIX + c.id, `${c.name} (${c.colors.length})`).dataset.i18nSkip = '';
   if (!customPalettes.length) {
     const o = document.createElement('option');
     o.disabled = true;
@@ -1502,8 +1734,8 @@ const isCustomPalette = (name = settings.paletteName) => String(name).startsWith
 const currentCustom = () => customPalettes.find((c) => CUSTOM_PREFIX + c.id === settings.paletteName) || null;
 function nextPaletteName() {
   let i = customPalettes.length + 1;
-  while (customPalettes.some((c) => c.name === 'Eigene Palette ' + i)) i++;
-  return 'Eigene Palette ' + i;
+  while (customPalettes.some((c) => c.name === t('Eigene Palette') + ' ' + i)) i++;
+  return t('Eigene Palette') + ' ' + i;
 }
 function selectPalette(name) {
   settings.paletteName = name;
@@ -1518,7 +1750,7 @@ function selectPalette(name) {
 /** Legt eine neue eigene Palette an und wählt sie aus. Gibt null zurück, wenn das Limit erreicht ist. */
 function createCustomPalette(name, colors) {
   if (customPalettes.length >= MAX_CUSTOM_PALETTES) {
-    toast(`Maximal ${MAX_CUSTOM_PALETTES} eigene Paletten – lösch eine, um Platz zu machen`);
+    toast(t('Maximal {max} eigene Paletten – lösch eine, um Platz zu machen', { max: MAX_CUSTOM_PALETTES }));
     return null;
   }
   const pal = { id: newPaletteId(), name: (name || '').trim() || nextPaletteName(), colors: colors.slice() };
@@ -1538,7 +1770,7 @@ function paletteEdited() {
     return;
   }
   const pal = createCustomPalette(nextPaletteName(), settings.palette);
-  if (pal) toast(`Eigene Kopie „${pal.name}“ angelegt – die Vorlage bleibt unverändert`);
+  if (pal) toast(t('Eigene Kopie „{name}“ angelegt – die Vorlage bleibt unverändert', { name: pal.name }));
   else selectPalette(settings.paletteName); // Änderung verwerfen
 }
 async function askPaletteName(title, value, actions) {
@@ -1553,7 +1785,7 @@ async function newPaletteDialog() {
   const r = await askPaletteName('Neue Palette', nextPaletteName(), [{ label: 'Abbrechen', value: false }, { label: 'Anlegen', value: true, primary: true }]);
   if (!r) return;
   const pal = createCustomPalette(r.name, []);
-  if (pal) toast(`„${pal.name}“ angelegt – füge mit + die Primärfarbe hinzu oder übernimm Farben aus dem Bild`);
+  if (pal) toast(t('„{name}“ angelegt – füge mit + die Primärfarbe hinzu oder übernimm Farben aus dem Bild', { name: pal.name }));
 }
 async function renamePaletteDialog() {
   const custom = currentCustom();
@@ -1567,37 +1799,37 @@ async function renamePaletteDialog() {
 async function deletePaletteDialog() {
   const custom = currentCustom();
   if (!custom) return toast('Nur eigene Paletten lassen sich löschen');
-  const body = el(`<p>Die Palette <b></b> mit ${custom.colors.length} Farben wird gelöscht. Deine Bilder bleiben unverändert.</p>`);
-  body.querySelector('b').textContent = `„${custom.name}“`;
+  const body = el('<p data-i18n-skip></p>');
+  body.firstChild.textContent = t('Die Palette {name} mit {n} Farben wird gelöscht. Deine Bilder bleiben unverändert.', { name: `„${custom.name}“`, n: custom.colors.length });
   const ok = await modal({ title: 'Palette löschen?', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Löschen', value: true, primary: true }] });
   if (!ok) return;
   customPalettes = customPalettes.filter((c) => c !== custom);
   saveCustomPalettes();
   selectPalette('Bro 32');
-  toast(`„${custom.name}“ gelöscht`);
+  toast(t('„{name}“ gelöscht', { name: custom.name }));
 }
 async function paletteFromImageDialog() {
   const set = new Set();
   for (const L of doc.layers) for (const f of L.frames) for (const u of f) if (u >>> 24) set.add(u);
   if (!set.size) return toast('Das Bild enthält noch keine Farben');
-  if (set.size > 256) return toast(`Zu viele Farben (${set.size}) – maximal 256`);
+  if (set.size > 256) return toast(t('Zu viele Farben ({n}) – maximal 256', { n: set.size }));
   const colors = [...set].sort((a, b) => rgbToHsl(...unpack(a).slice(0, 3))[0] - rgbToHsl(...unpack(b).slice(0, 3))[0]);
   const custom = currentCustom();
   const defName = fileInfo.name && fileInfo.name !== 'unbenannt' ? baseName() : nextPaletteName();
   const actions = [{ label: 'Abbrechen', value: false }];
-  if (custom) actions.push({ label: `„${custom.name}“ ersetzen`, value: 'replace' });
+  if (custom) actions.push({ label: t('„{name}“ ersetzen', { name: custom.name }), value: 'replace' });
   actions.push({ label: 'Als neue Palette', value: 'new', primary: true });
-  const r = await askPaletteName(`${set.size} Farben aus dem Bild übernehmen`, defName, actions);
+  const r = await askPaletteName(t('{n} Farben aus dem Bild übernehmen', { n: set.size }), defName, actions);
   if (!r) return;
   if (r.action === 'replace' && custom) {
     custom.colors = colors;
     custom.name = r.name;
     saveCustomPalettes();
     selectPalette(CUSTOM_PREFIX + custom.id);
-    toast(`„${custom.name}“ mit ${set.size} Farben ersetzt`);
+    toast(t('„{name}“ mit {n} Farben ersetzt', { name: custom.name, n: set.size }));
   } else {
     const pal = createCustomPalette(r.name, colors);
-    if (pal) toast(`Neue Palette „${pal.name}“ mit ${set.size} Farben`);
+    if (pal) toast(t('Neue Palette „{name}“ mit {n} Farben', { name: pal.name, n: set.size }));
   }
 }
 /** Projektpalette beim Öffnen: passende Palette auswählen oder als eigene Palette anlegen. */
@@ -1608,7 +1840,7 @@ function adoptProjectPalette(colors, projectName) {
   if (custom) return selectPalette(CUSTOM_PREFIX + custom.id);
   const preset = Object.keys(PALETTES).find((k) => same(PALETTES[k].map(parseHex), colors));
   if (preset) return selectPalette(preset);
-  if (customPalettes.length < MAX_CUSTOM_PALETTES) createCustomPalette('Projekt ' + projectName.replace(/\.[^.]+$/, ''), colors);
+  if (customPalettes.length < MAX_CUSTOM_PALETTES) createCustomPalette(t('Projekt') + ' ' + projectName.replace(/\.[^.]+$/, ''), colors);
 }
 
 /* ---------- Werkzeugauswahl ---------- */
@@ -1616,10 +1848,12 @@ const TOOL_OPTIONS = {
   pen: ['size', 'pp'], eraser: ['size'], bucket: ['contig'], picker: [],
   line: ['size'], rect: ['size', 'fill'], ellipse: ['size', 'fill'],
   select: [], wand: ['contig'], move: [], dither: ['size'], shade: ['size', 'shade'], hand: [],
+  gradient: ['grad', 'contig'], spray: ['size', 'spray'], text: [],
 };
 const TOOL_NAMES = {
   pen: 'Stift', eraser: 'Radierer', bucket: 'Füllen', picker: 'Pipette', line: 'Linie', rect: 'Rechteck',
   ellipse: 'Ellipse', select: 'Auswahl', wand: 'Zauberstab', move: 'Verschieben', dither: 'Dithering', shade: 'Aufhellen/Abdunkeln', hand: 'Hand',
+  gradient: 'Verlauf', spray: 'Sprühdose', text: 'Text',
 };
 function setTool(t) {
   if (t !== 'move' && float) commitFloat();
@@ -1631,13 +1865,15 @@ function setTool(t) {
   $('#opt-pp').hidden = !opts.includes('pp');
   $('#opt-contig').hidden = !opts.includes('contig');
   $('#opt-shade').hidden = !opts.includes('shade');
+  $('#opt-grad').hidden = !opts.includes('grad');
+  $('#opt-spray').hidden = !opts.includes('spray');
   updateCursor();
   status(TOOL_NAMES[t]);
   requestRender();
 }
 function updateCursor() {
   const t = activeTool();
-  canvas.style.cursor = t === 'hand' ? 'grab' : t === 'move' ? 'move' : t === 'picker' ? 'copy' : 'crosshair';
+  canvas.style.cursor = t === 'hand' ? 'grab' : t === 'move' ? 'move' : t === 'picker' ? 'copy' : t === 'text' ? 'text' : 'crosshair';
 }
 function setBrushSize(s) {
   settings.size = clamp(s, 1, 16);
@@ -1665,12 +1901,13 @@ function modal({ title, body, actions }) {
     });
     const onKey = (e) => {
       if (e.key === 'Escape') { e.stopPropagation(); close(null); }
+      if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA' && !e.ctrlKey) { e.stopPropagation(); return; }
       if (e.key === 'Enter') { e.stopPropagation(); e.preventDefault(); const p = (actions || []).find((x) => x.primary); close(p ? p.value : true); }
       e.stopPropagation();
     };
     document.addEventListener('keydown', onKey, true);
     $('#modal-backdrop').hidden = false;
-    const first = b.querySelector('input');
+    const first = b.querySelector('input, textarea');
     if (first) setTimeout(() => { first.focus(); first.select && first.select(); }, 30);
   });
 }
@@ -1750,7 +1987,7 @@ function scaleOptions(def = 4) {
 async function dialogExportPNG() {
   commitFloat();
   const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
-    <div class="field"><label>Inhalt</label><select id="what"><option value="frame">Aktueller Frame (${cur.frame + 1})</option><option value="layer">Nur aktuelle Ebene</option></select></div>`);
+    <div class="field"><label>Inhalt</label><select id="what"><option value="frame">${t('Aktueller Frame ({n})', { n: cur.frame + 1 })}</option><option value="layer">Nur aktuelle Ebene</option></select></div>`);
   const ok = await modal({ title: 'Als PNG exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
@@ -1767,7 +2004,7 @@ async function dialogExportSheet() {
   const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
     <div class="field"><label>Anordnung</label><select id="lay"><option value="h">Horizontal (1 Zeile)</option><option value="v">Vertikal (1 Spalte)</option><option value="g">Raster</option></select></div>
     <div class="field"><label>Spalten (bei Raster)</label><input type="number" id="cols" min="1" max="${n}" value="${Math.ceil(Math.sqrt(n))}"></div>
-    <p class="hint">${n} Frame(s) · ${doc.w} × ${doc.h} px pro Frame</p>`);
+    <p class="hint">${t('{n} Frame(s) · {w} × {h} px pro Frame', { n, w: doc.w, h: doc.h })}</p>`);
   const ok = await modal({ title: 'Spritesheet exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
@@ -1794,7 +2031,7 @@ async function dialogExportGIF() {
   const fps = clamp(parseInt(body.querySelector('#gfps').value) || doc.fps, 1, 50);
   const loop = body.querySelector('#loop').value === '1';
   const bytes = buildGIF(s, fps, loop);
-  await saveBytes(bytes, baseName() + '.gif', [{ name: 'GIF-Animation', extensions: ['gif'] }], 'image/gif');
+  await saveBytes(bytes, baseName() + '.gif', [{ name: t('GIF-Animation'), extensions: ['gif'] }], 'image/gif');
 }
 
 function buildGIF(scale, fps, loop) {
@@ -1846,12 +2083,12 @@ const baseName = () => fileInfo.name.replace(/\.[^.]+$/, '') || 'sprite';
 async function saveCanvas(c, name) {
   const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  await saveBytes(bytes, name, [{ name: 'PNG-Bild', extensions: ['png'] }], 'image/png');
+  await saveBytes(bytes, name, [{ name: t('PNG-Bild'), extensions: ['png'] }], 'image/png');
 }
 async function saveBytes(bytes, name, filters, mime, path = null) {
   if (nativeApi) {
     const p = await nativeApi.saveFile({ defaultPath: path || name, filters, data: bytes, path });
-    if (p) toast('Gespeichert: ' + p.split(/[\\/]/).pop());
+    if (p) toast(t('Gespeichert: {name}', { name: p.split(/[\\/]/).pop() }));
     return p;
   }
   const a = document.createElement('a');
@@ -1859,7 +2096,7 @@ async function saveBytes(bytes, name, filters, mime, path = null) {
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast('Download gestartet: ' + name);
+  toast(t('Download gestartet: {name}', { name }));
   return name;
 }
 
@@ -1907,7 +2144,7 @@ function loadProject(text, name, path) {
     syncDocUI();
     zoomFit();
     afterStructureChange();
-    toast('Geöffnet: ' + fileInfo.name);
+    toast(t('Geöffnet: {name}', { name: fileInfo.name }));
   } catch (err) {
     modal({ title: 'Datei konnte nicht geöffnet werden', body: `<p>${err.message}</p>` });
   }
@@ -1916,7 +2153,7 @@ async function saveProject(saveAs = false) {
   commitFloat();
   const name = baseName() + '.pixelbro';
   const bytes = new TextEncoder().encode(serialize());
-  const p = await saveBytes(bytes, name, [{ name: 'Pixel-Bro-Projekt', extensions: ['pixelbro'] }], 'application/json', saveAs ? null : fileInfo.path);
+  const p = await saveBytes(bytes, name, [{ name: t('Pixel-Bro-Projekt'), extensions: ['pixelbro'] }], 'application/json', saveAs ? null : fileInfo.path);
   if (p) {
     fileInfo = { path: nativeApi ? p : null, name: p.split(/[\\/]/).pop() };
     dirty = false;
@@ -1926,13 +2163,13 @@ async function saveProject(saveAs = false) {
 }
 async function openProject() {
   if (nativeApi) {
-    const r = await nativeApi.openFile({ filters: [{ name: 'Pixel-Bro-Projekt', extensions: ['pixelbro', 'json'] }] });
+    const r = await nativeApi.openFile({ filters: [{ name: t('Pixel-Bro-Projekt'), extensions: ['pixelbro', 'json'] }] });
     if (r) loadProject(new TextDecoder().decode(r.data), r.name, r.path);
   } else $('#file-open').click();
 }
 async function importImage() {
   if (nativeApi) {
-    const r = await nativeApi.openFile({ filters: [{ name: 'Bilder', extensions: ['png', 'gif', 'jpg', 'jpeg', 'bmp', 'webp'] }] });
+    const r = await nativeApi.openFile({ filters: [{ name: t('Bilder'), extensions: ['png', 'gif', 'jpg', 'jpeg', 'bmp', 'webp'] }] });
     if (r) handleImageBlob(new Blob([r.data]), r.name);
   } else $('#file-import').click();
 }
@@ -1981,7 +2218,7 @@ async function handleImageBlob(blob, name) {
     }
     doc.layers[0].frames = frames;
     fileInfo.name = name;
-    toast(`${frames.length} Frames importiert`);
+    toast(t('{n} Frames importiert', { n: frames.length }));
   }
   markDirty();
   updateTitle();
@@ -2003,8 +2240,8 @@ function scheduleAutosave() {
 }
 function saveSettings() {
   try {
-    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate } = settings;
-    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate }));
+    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang } = settings;
+    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang }));
   } catch (e) { /* ignorieren */ }
 }
 function loadSettings() {
@@ -2031,10 +2268,25 @@ function toggleSetting(key, inputId) {
   syncMenuChecks();
 }
 function syncMenuChecks() {
-  const map = { 'toggle-grid': 'grid', 'toggle-tile': 'tile', 'toggle-onion': 'onion' };
+  const map = { 'toggle-grid': 'grid', 'toggle-center': 'center', 'toggle-tile': 'tile', 'toggle-onion': 'onion' };
   for (const [cmd, key] of Object.entries(map)) $$(`[data-cmd="${cmd}"]`).forEach((b) => b.classList.toggle('checked', !!settings[key]));
   $$('[data-cmd="toggle-tilegrid"]').forEach((b) => b.classList.toggle('checked', settings.tileGrid > 1));
   $$('[data-cmd="toggle-autoupdate"]').forEach((b) => b.classList.toggle('checked', !!settings.autoUpdate));
+  $$('[data-cmd="lang-de"]').forEach((b) => b.classList.toggle('checked', settings.lang !== 'en'));
+  $$('[data-cmd="lang-en"]').forEach((b) => b.classList.toggle('checked', settings.lang === 'en'));
+}
+
+/** Sprache umschalten – alles wird sofort übersetzt, Projekt und Einstellungen bleiben. */
+function setLanguage(lang) {
+  settings.lang = lang === 'en' ? 'en' : 'de';
+  I18N.set(settings.lang);
+  if (nativeApi && nativeApi.setLanguage) nativeApi.setLanguage(settings.lang);
+  saveSettings();
+  syncMenuChecks();
+  renderPalette();
+  afterStructureChange();
+  status(TOOL_NAMES[settings.tool] || '');
+  updateTitle();
 }
 
 const commands = {
@@ -2058,6 +2310,9 @@ const commands = {
   outline: addOutline,
   'clear-layer': () => { commitFloat(false); pushUndo(); curBuf().fill(0); afterPaint(); },
   'toggle-grid': () => toggleSetting('grid', '#opt-grid'),
+  'toggle-center': () => toggleSetting('center', '#opt-center'),
+  'lang-de': () => setLanguage('de'),
+  'lang-en': () => setLanguage('en'),
   'toggle-tile': () => { toggleSetting('tile', '#opt-tile'); toast(settings.tile ? 'Kachel-Modus an – Zeichnen wiederholt sich nahtlos' : 'Kachel-Modus aus'); },
   'toggle-onion': () => toggleSetting('onion', '#opt-onion'),
   'toggle-tilegrid': dialogTileGrid,
@@ -2083,16 +2338,17 @@ const commands = {
     title: 'Über Pixel Bro',
     body: `<div style="display:flex;gap:14px;align-items:center">
         <img src="icon.png" alt="" width="56" height="56" style="image-rendering:pixelated;border-radius:10px">
-        <div><b style="font-size:16px;color:var(--text)">Pixel Bro ${APP_VERSION}</b><br>Moderner Pixel-Art- und Animations-Editor auf Deutsch</div>
+        <div><b style="font-size:16px;color:var(--text)">Pixel Bro ${APP_VERSION}</b><br>Moderner Pixel-Art- und Animations-Editor auf Deutsch und Englisch</div>
       </div>
       <p>Entwickelt von <b style="color:var(--text)">Jens Niebisch</b><br>
         für <b style="color:var(--text)">Bro Kartell</b> – Multigaming Clan seit 2013</p>
       <p><a href="https://bro-kartell.com" target="_blank" rel="noopener">bro-kartell.com</a> ·
         <a href="https://bro-kartell.com/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
-      <p class="hint">© ${new Date().getFullYear()} Jens Niebisch · Bro Kartell. Alle Rechte vorbehalten.<br>
+      <p class="hint">© ${new Date().getFullYear()} <span>Jens Niebisch · Bro Kartell. Alle Rechte vorbehalten.</span><br>
         Projekte werden als <code>.pixelbro</code>-Datei gespeichert, die aktuelle Arbeit wird zusätzlich automatisch gesichert.</p>
-      ${nativeApi ? `<p class="hint">Updates: Pixel Bro fragt ${settings.autoUpdate ? 'beim Start' : 'nur auf Wunsch'} bei GitHub nach einer neuen Version
-        (abschaltbar unter Hilfe → Automatisch nach Updates suchen).</p>` : ''}`,
+      ${nativeApi ? `<p class="hint">${settings.autoUpdate
+        ? 'Updates: Pixel Bro fragt beim Start bei GitHub nach einer neuen Version (abschaltbar unter Hilfe → Automatisch nach Updates suchen).'
+        : 'Updates: Pixel Bro fragt nur auf Wunsch bei GitHub nach einer neuen Version (abschaltbar unter Hilfe → Automatisch nach Updates suchen).'}</p>` : ''}`,
   }),
   'layer-add': () => layerCmd('layer-add'),
   'layer-dup': () => layerCmd('layer-dup'),
@@ -2118,6 +2374,7 @@ function showShortcuts() {
     ['L / R / O', 'Linie / Rechteck / Ellipse'],
     ['M / W / V', 'Auswahl / Zauberstab / Verschieben'],
     ['D / U / H', 'Dithering / Aufhellen-Abdunkeln / Hand'],
+    ['J / K / S', 'Verlauf / Text / Sprühdose'],
     ['Rechtsklick', 'Mit Sekundärfarbe zeichnen'],
     ['Alt (halten)', 'Pipette'],
     ['Leertaste (halten)', 'Ansicht verschieben'],
@@ -2134,6 +2391,7 @@ function showShortcuts() {
     ['Enter / Esc', 'Verschieben bestätigen / Auswahl aufheben'],
     ['T', 'Kachel-Modus'],
     ['#', 'Pixelraster'],
+    ['Umschalt+M', 'Mittellinien'],
     ['Strg+Z / Strg+Y', 'Rückgängig / Wiederholen'],
     ['Strg+C / X / V', 'Kopieren / Ausschneiden / Einfügen'],
     ['Strg+S / Strg+Umschalt+S', 'Speichern / Speichern unter'],
@@ -2163,7 +2421,7 @@ $$('[data-cmd]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropa
 $$('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
 
 /* ---------- Tastatur ---------- */
-const TOOL_KEYS = { b: 'pen', p: 'pen', e: 'eraser', g: 'bucket', i: 'picker', l: 'line', r: 'rect', o: 'ellipse', m: 'select', w: 'wand', v: 'move', d: 'dither', u: 'shade', h: 'hand' };
+const TOOL_KEYS = { b: 'pen', p: 'pen', e: 'eraser', g: 'bucket', i: 'picker', l: 'line', r: 'rect', o: 'ellipse', m: 'select', w: 'wand', v: 'move', d: 'dither', u: 'shade', h: 'hand', j: 'gradient', s: 'spray', k: 'text' };
 document.addEventListener('keydown', (e) => {
   if (e.target.matches('input[type="text"], input[type="number"], select')) return;
   if (!$('#modal-backdrop').hidden) return;
@@ -2178,7 +2436,7 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (e.shiftKey) {
-    const map = { h: 'flip-h', v: 'flip-v', r: 'rotate', n: 'frame-dup', o: 'toggle-onion' };
+    const map = { h: 'flip-h', v: 'flip-v', r: 'rotate', n: 'frame-dup', o: 'toggle-onion', m: 'toggle-center' };
     if (map[k]) { e.preventDefault(); run(map[k]); return; }
   }
   if (e.key === 'F1') { e.preventDefault(); return run('shortcuts'); }
@@ -2242,6 +2500,10 @@ $('#shade-strength').addEventListener('input', (e) => { settings.shade = +e.targ
 $('#opt-mirror-x').addEventListener('change', (e) => { settings.mirrorX = e.target.checked; saveSettings(); });
 $('#opt-mirror-y').addEventListener('change', (e) => { settings.mirrorY = e.target.checked; saveSettings(); });
 $('#opt-grid').addEventListener('change', (e) => { settings.grid = e.target.checked; saveSettings(); syncMenuChecks(); requestRender(); });
+$('#opt-center').addEventListener('change', (e) => { settings.center = e.target.checked; saveSettings(); syncMenuChecks(); requestRender(); });
+$('#grad-steps').addEventListener('input', (e) => { settings.gradSteps = +e.target.value; $('#grad-steps-val').textContent = settings.gradSteps; saveSettings(); });
+$('#opt-grad-dither').addEventListener('change', (e) => { settings.gradDither = e.target.checked; saveSettings(); });
+$('#spray-density').addEventListener('input', (e) => { settings.sprayDensity = +e.target.value; $('#spray-density-val').textContent = settings.sprayDensity; saveSettings(); });
 $('#opt-onion').addEventListener('change', (e) => { settings.onion = e.target.checked; saveSettings(); syncMenuChecks(); requestRender(); });
 $('#opt-tile').addEventListener('change', (e) => { settings.tile = e.target.checked; syncMenuChecks(); requestRender(); });
 
@@ -2368,15 +2630,15 @@ function onUpdateStatus(st) {
       break;
     case 'none':
       hideUpdateBanner();
-      if (st.manual) toast(`Pixel Bro ist aktuell (Version ${st.version})`);
+      if (st.manual) toast(t('Pixel Bro ist aktuell (Version {v})', { v: st.version }));
       break;
     case 'error':
-      if (st.manual) toast('Update-Suche fehlgeschlagen: ' + st.message);
+      if (st.manual) toast(t('Update-Suche fehlgeschlagen: {msg}', { msg: st.message }));
       break;
     case 'downloading':
       if (st.version) updateBanner.dataset.version = st.version;
       showUpdateBanner({
-        title: updateBanner.dataset.version ? `Update ${updateBanner.dataset.version} wird geladen …` : 'Update wird geladen …',
+        title: updateBanner.dataset.version ? t('Update {v} wird geladen …', { v: updateBanner.dataset.version }) : 'Update wird geladen …',
         text: 'Du kannst einfach weiterarbeiten.',
         progress: st.percent || 0,
       });
@@ -2384,7 +2646,7 @@ function onUpdateStatus(st) {
     case 'ready':
       updateDismissed = false;
       showUpdateBanner({
-        title: `Version ${st.version} ist bereit`,
+        title: t('Version {v} ist bereit', { v: st.version }),
         text: 'Deine Arbeit wird vorher gesichert. „Später“ installiert beim Schließen.',
         actions: [
           { label: 'Jetzt neu starten', primary: true, onClick: installUpdateNow },
@@ -2394,7 +2656,7 @@ function onUpdateStatus(st) {
       break;
     case 'available-manual':
       showUpdateBanner({
-        title: `Version ${st.version} ist da`,
+        title: t('Version {v} ist da', { v: st.version }),
         text: st.kind === 'portable'
           ? 'Neue portable Version herunterladen und die alte Datei ersetzen.'
           : 'Tipp: Mit dem Installer aktualisiert sich Pixel Bro selbst.',
@@ -2432,6 +2694,8 @@ function init() {
   $('#brand-version').textContent = 'v' + APP_VERSION;
   $('#brand-version').title = 'Version ' + APP_VERSION;
   loadSettings();
+  I18N.set(settings.lang);
+  if (nativeApi && nativeApi.setLanguage) nativeApi.setLanguage(settings.lang);
   document.documentElement.dataset.theme = settings.theme;
   $('#opt-filled').checked = settings.filled;
   $('#opt-pixelperfect').checked = settings.pixelPerfect;
@@ -2442,6 +2706,10 @@ function init() {
   $('#opt-grid').checked = settings.grid;
   $('#opt-onion').checked = settings.onion;
   $('#opt-tile').checked = settings.tile;
+  $('#opt-center').checked = settings.center;
+  $('#grad-steps').value = settings.gradSteps; $('#grad-steps-val').textContent = settings.gradSteps;
+  $('#opt-grad-dither').checked = settings.gradDither;
+  $('#spray-density').value = settings.sprayDensity; $('#spray-density-val').textContent = settings.sprayDensity;
   setBrushSize(settings.size);
 
   let restored = false;

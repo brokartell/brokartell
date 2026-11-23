@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 – Neue Werkzeuge & Englisch
+- **Verlauf** (J): Linie ziehen – Übergang von Primär- zu Sekundärfarbe, wahlweise mit Dithering-Muster oder in harten Stufen (2–16). Füllt die Auswahl oder wie das Füllen-Werkzeug die Fläche unter dem Startpunkt. Umschalt rastet in 45°-Schritten ein
+- **Sprühdose** (S): sprüht zufällige Pixel im Pinselbereich, Dichte einstellbar – für Gras, Rauch oder Schmutz
+- **Text** (K): eingebaute 5 px hohe Pixel-Schrift mit Umlauten, Ziffern und Satzzeichen, mehrzeilig. Der Text lässt sich vor dem Festsetzen mit der Maus verschieben
+- **Mittellinien**: Schalter „Mitte“ neben „Raster“ (oder Umschalt+M) zeigt eine waagerechte und eine senkrechte Linie durch die Bildmitte
+- **Englisch** als zweite Sprache: Ansicht → English. Alle Menüs, Dialoge, Tooltips und Meldungen werden sofort umgestellt, Deutsch bleibt Standard
+
 ## 1.2.6
 - Rechte Seitenleiste: Bei vielen Ebenen scrollt nur noch die Ebenen-Liste, nicht mehr die ganze Leiste. Die Ebenen nutzen den Platz bis ganz unten
 - Deckkraft: Der Regler ist etwas kürzer, damit „100 %“ immer ins Feld passt

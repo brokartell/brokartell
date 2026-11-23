@@ -5,6 +5,7 @@ const fs = require('fs/promises');
 const updater = require('./updater');
 
 let win = null;
+let uiLang = 'de'; // Sprache der Oberfläche (kommt aus dem Fenster)
 
 function fileFromArgs(argv) {
   return argv.slice(1).find((a) => /\.pixelbro$/i.test(a)) || null;
@@ -46,16 +47,20 @@ function createWindow() {
   win.webContents.on('will-prevent-unload', (e) => {
     // Beim Neustart fürs Update nicht nachfragen – die Arbeit wurde vorher automatisch gesichert
     if (updater.isQuittingForUpdate()) { e.preventDefault(); return; }
+    const en = uiLang === 'en';
     const choice = dialog.showMessageBoxSync(win, {
       type: 'question',
-      buttons: ['Speichern …', 'Schließen', 'Abbrechen'],
+      buttons: en ? ['Save …', 'Close', 'Cancel'] : ['Speichern …', 'Schließen', 'Abbrechen'],
       defaultId: 0,
       cancelId: 2,
       noLink: true,
-      title: 'Pixel Bro schließen',
-      message: 'Dein Projekt ist noch nicht als Datei gespeichert.',
-      detail: 'Keine Sorge: Pixel Bro hat deine Arbeit automatisch gesichert und stellt sie beim nächsten Start wieder her.\n\n'
-        + '„Speichern …“ legt zusätzlich eine .pixelbro-Datei an, die du weitergeben oder später öffnen kannst.',
+      title: en ? 'Close Pixel Bro' : 'Pixel Bro schließen',
+      message: en ? 'Your project has not been saved as a file yet.' : 'Dein Projekt ist noch nicht als Datei gespeichert.',
+      detail: en
+        ? 'Don\u2019t worry: Pixel Bro has backed up your work automatically and restores it the next time you start it.\n\n'
+          + '\u201cSave \u2026\u201d also creates a .pixelbro file that you can share or open later.'
+        : 'Keine Sorge: Pixel Bro hat deine Arbeit automatisch gesichert und stellt sie beim nächsten Start wieder her.\n\n'
+          + '„Speichern …“ legt zusätzlich eine .pixelbro-Datei an, die du weitergeben oder später öffnen kannst.',
     });
     if (choice === 1) e.preventDefault();              // schließen
     else if (choice === 0) win.webContents.send('save-and-close'); // erst speichern, dann schließen
@@ -68,6 +73,8 @@ function createWindow() {
   });
   win.webContents.on('will-navigate', (e) => e.preventDefault());
 }
+
+ipcMain.on('set-language', (_e, lang) => { uiLang = lang === 'en' ? 'en' : 'de'; });
 
 ipcMain.handle('save-file', async (_e, { defaultPath, filters, data, path: target }) => {
   let p = target;

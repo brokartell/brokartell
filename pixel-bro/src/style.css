@@ -293,10 +293,11 @@ select {
 #modal-body .field { display: flex; flex-direction: column; gap: 5px; }
 #modal-body .field-row { display: flex; gap: 12px; }
 #modal-body .field-row > * { flex: 1; }
-#modal-body input[type="number"], #modal-body input[type="text"], #modal-body select {
+#modal-body input[type="number"], #modal-body input[type="text"], #modal-body select, #modal-body textarea {
   width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel-2); user-select: text;
 }
-#modal-body input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+#modal-body input:focus, #modal-body textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+#modal-body textarea { resize: vertical; min-height: 64px; font: 600 14px var(--mono); color: var(--text); text-transform: uppercase; }
 #modal-body .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 #modal-body .chip { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel-2); cursor: pointer; font-size: 12px; }
 #modal-body .chip:hover { border-color: var(--accent); color: var(--text); }
