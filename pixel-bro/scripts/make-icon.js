@@ -4,6 +4,7 @@ const zlib = require('zlib');
 const fs = require('fs');
 const path = require('path');
 
+// Icon von izec313, gezeichnet mit Pixel Bro (16 × 16 Pixel)
 const art = [
   '................',
   '..############..',
@@ -11,14 +12,14 @@ const art = [
   '.#aabbbbbbbbaa#.',
   '.#abbbbbbbbbba#.',
   '.#abbsssssbbba#.',
-  '.#abs......sba#.',
-  '.#ab..kkk.kkba#.',
-  '.#ab.kkkkkkk.a#.',
-  '.#ab..kk..kk.a#.',
-  '.#ab.........a#.',
-  '.#aab..mmm..aa#.',
-  '.#aaab.....aaa#.',
-  '.#aaaabbbbaaaa#.',
+  '.#abssssssssba#.',
+  '.#absskksskksa#.',
+  '.#abkkkkkkkkka#.',
+  '.#absskksskksa#.',
+  '.#absssssssssa#.',
+  '.#aabssmmmssaa#.',
+  '.#aaabsssssaaa#.',
+  '.#aaaassssaaaa#.',
   '..############..',
   '................',
 ];
@@ -26,11 +27,8 @@ const C = {
   '.': [0, 0, 0, 0], '#': [24, 20, 37, 255], a: [124, 92, 255, 255], b: [255, 122, 198, 255],
   s: [255, 205, 117, 255], k: [20, 20, 30, 255], m: [255, 255, 255, 255],
 };
-// Gesicht: Hautfarbe für "." innerhalb des Kopfes
 function px(x, y) {
-  const ch = art[y][x];
-  if (ch === '.' && y >= 6 && y <= 12 && x >= 3 && x <= 12) return [255, 205, 117, 255];
-  return C[ch];
+  return C[art[y][x]];
 }
 
 function png(size, out) {
