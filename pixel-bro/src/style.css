@@ -125,13 +125,19 @@ kbd { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
 .toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
 .toggle:hover { background: var(--panel-2); color: var(--text); }
 .toggle input { display: none; }
+/* Schalter: aus = grau, an = komplett lila */
+.toggle span { position: relative; padding-left: 34px; }
 .toggle span::before {
-  content: ""; display: inline-block; width: 26px; height: 14px; margin-right: 7px; vertical-align: -2px;
-  border-radius: 999px; background: var(--line-2); box-shadow: inset 0 0 0 2px var(--line-2);
-  transition: background .15s;
+  content: ""; position: absolute; left: 0; top: 50%; width: 26px; height: 14px; margin-top: -7px;
+  border-radius: 999px; background: var(--line-2); transition: background .15s;
+}
+.toggle span::after {
+  content: ""; position: absolute; left: 2px; top: 50%; width: 10px; height: 10px; margin-top: -5px;
+  border-radius: 50%; background: var(--text-3); transition: transform .15s, background .15s;
 }
 .toggle input:checked + span { color: var(--text); }
-.toggle input:checked + span::before { background: var(--accent); box-shadow: inset 12px 0 0 2px var(--accent), inset -2px 0 0 2px #fff, inset 0 0 0 2px var(--accent); }
+.toggle input:checked + span::before { background: var(--accent); }
+.toggle input:checked + span::after { transform: translateX(12px); background: var(--accent-2); }
 
 input[type="range"] { -webkit-appearance: none; appearance: none; width: 110px; height: 4px; border-radius: 4px; background: var(--line-2); outline: none; }
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--panel); cursor: pointer; }
@@ -169,8 +175,18 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 
 #stage { position: relative; overflow: hidden; background: var(--stage); }
 #canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+/* Scrollleisten der Zeichenfläche */
+.sbar { position: absolute; z-index: 2; border-radius: 999px; background: rgba(127, 127, 140, .10); }
+.sbar[hidden] { display: none; }
+.sbar-h { left: 6px; right: 20px; bottom: 4px; height: 10px; }
+.sbar-v { top: 6px; bottom: 20px; right: 4px; width: 10px; }
+.sbar-thumb { position: absolute; border-radius: 999px; background: var(--line-2); cursor: pointer; transition: background .12s; }
+.sbar-h .sbar-thumb { top: 1px; bottom: 1px; }
+.sbar-v .sbar-thumb { left: 1px; right: 1px; }
+.sbar-thumb:hover, .sbar-thumb.dragging { background: var(--accent); }
 #zoom-hud {
-  position: absolute; right: 14px; bottom: 14px; display: flex; align-items: center; gap: 2px; padding: 4px;
+  position: absolute; right: 26px; bottom: 26px; display: flex; align-items: center; gap: 2px; padding: 4px;
   background: color-mix(in srgb, var(--panel) 85%, transparent); backdrop-filter: blur(8px);
   border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
 }

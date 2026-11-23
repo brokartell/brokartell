@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -308,6 +308,82 @@ function render() {
     ctx.strokeStyle = 'rgba(255,255,255,.9)';
     ctx.strokeRect(x + 0.5, y + 0.5, s * z - 1, s * z - 1);
   }
+
+  updateScrollbars();
+}
+
+/* ---------- Scrollleisten der Zeichenfläche ---------- */
+const SCROLL_PAD = 48; // so weit darf man über den Bildrand hinaus scrollen
+const scrollbars = {
+  h: { el: $('#sbar-h'), axis: 'x' },
+  v: { el: $('#sbar-v'), axis: 'y' },
+};
+/** Liefert für eine Achse: sichtbare Größe, Gesamtgröße und aktuelle Scrollposition. */
+function scrollMetrics(axis) {
+  const copies = settings.tile ? 3 : 1;
+  const first = settings.tile ? -1 : 0;
+  const size = (axis === 'x' ? doc.w : doc.h) * view.zoom;
+  const origin = axis === 'x' ? view.ox : view.oy;
+  const visible = axis === 'x' ? stage.clientWidth : stage.clientHeight;
+  const contentStart = origin + first * size;      // linke/obere Kante des Inhalts
+  const total = size * copies + SCROLL_PAD * 2;
+  const pos = SCROLL_PAD - contentStart;            // 0 = ganz links/oben
+  return { visible, total, pos, max: Math.max(0, total - visible), first, size };
+}
+function setScrollPos(axis, pos) {
+  const m = scrollMetrics(axis);
+  pos = clamp(pos, 0, m.max);
+  const origin = SCROLL_PAD - pos - m.first * m.size;
+  if (axis === 'x') view.ox = Math.round(origin); else view.oy = Math.round(origin);
+  requestRender();
+}
+function updateScrollbars() {
+  for (const sb of Object.values(scrollbars)) {
+    const m = scrollMetrics(sb.axis);
+    const show = m.total > m.visible + 1;
+    sb.el.hidden = !show;
+    if (!show) continue;
+    const track = sb.axis === 'x' ? sb.el.clientWidth : sb.el.clientHeight;
+    const len = Math.max(28, track * m.visible / m.total);
+    const at = clamp(m.pos / m.max, 0, 1) * (track - len);
+    const thumb = sb.el.firstElementChild;
+    if (sb.axis === 'x') { thumb.style.width = len + 'px'; thumb.style.left = at + 'px'; }
+    else { thumb.style.height = len + 'px'; thumb.style.top = at + 'px'; }
+    sb.track = track; sb.len = len;
+  }
+}
+for (const sb of Object.values(scrollbars)) {
+  const thumb = sb.el.firstElementChild;
+  const coord = (e) => (sb.axis === 'x' ? e.clientX : e.clientY);
+  thumb.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    thumb.setPointerCapture(e.pointerId);
+    thumb.classList.add('dragging');
+    const start = coord(e), startPos = scrollMetrics(sb.axis).pos;
+    const move = (ev) => {
+      const m = scrollMetrics(sb.axis);
+      const free = Math.max(1, sb.track - sb.len);
+      setScrollPos(sb.axis, startPos + (coord(ev) - start) * m.max / free);
+    };
+    const up = () => {
+      thumb.classList.remove('dragging');
+      thumb.removeEventListener('pointermove', move);
+      thumb.removeEventListener('pointerup', up);
+      thumb.removeEventListener('pointercancel', up);
+    };
+    thumb.addEventListener('pointermove', move);
+    thumb.addEventListener('pointerup', up);
+    thumb.addEventListener('pointercancel', up);
+  });
+  // Klick in die Leiste blättert eine Seite in diese Richtung
+  sb.el.addEventListener('pointerdown', (e) => {
+    if (e.target !== sb.el) return;
+    const r = thumb.getBoundingClientRect();
+    const before = sb.axis === 'x' ? e.clientX < r.left : e.clientY < r.top;
+    const m = scrollMetrics(sb.axis);
+    setScrollPos(sb.axis, m.pos + (before ? -1 : 1) * m.visible * 0.85);
+  });
 }
 
 let selPathCache = { key: null, path: null };
@@ -1846,6 +1922,7 @@ function showShortcuts() {
     ['X', 'Primär- und Sekundärfarbe tauschen'],
     ['[ / ]', 'Pinsel kleiner / größer'],
     ['Mausrad', 'Zoomen'],
+    ['Umschalt + Mausrad', 'Waagerecht scrollen (oder die Scrollleisten nutzen)'],
     ['+ / − / 0', 'Zoom rein / raus / einpassen'],
     [', / .', 'Vorheriger / nächster Frame'],
     ['N / Umschalt+N', 'Neuer Frame / Frame duplizieren'],
@@ -1943,7 +2020,11 @@ canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const r = canvas.getBoundingClientRect();
-  if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomStep(e.deltaY < 0 ? 1 : -1, e.clientX - r.left, e.clientY - r.top);
+  if (e.shiftKey && !e.ctrlKey) {
+    // Umschalt + Mausrad: waagerecht scrollen
+    const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    setScrollPos('x', scrollMetrics('x').pos + d);
+  } else if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomStep(e.deltaY < 0 ? 1 : -1, e.clientX - r.left, e.clientY - r.top);
   else { view.ox -= e.deltaX; requestRender(); }
 }, { passive: false });
 new ResizeObserver(() => requestRender()).observe(stage);
