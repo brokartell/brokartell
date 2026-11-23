@@ -50,13 +50,9 @@ Entwickelt von **Jens Niebisch** für **[Bro Kartell](https://bro-kartell.com)**
 
 1. In `package.json` die `version` erhöhen (z. B. `1.0.3`) und in `src/app.js` die `APP_VERSION` anpassen.
 2. In `CHANGELOG.md` einen Abschnitt `## 1.0.3` mit den Neuerungen ergänzen.
-3. Committen und eine Versionsmarke hochladen:
+3. Die Änderung in `main` übernehmen (z. B. Pull-Request mergen).
 
-```bash
-git tag pixel-bro-v1.0.3
-git push origin pixel-bro-v1.0.3
-```
-
-Der Workflow **„Pixel Bro – Release veröffentlichen“** baut dann Installer, portable EXE und ZIP
-und erstellt das GitHub-Release. Die Download-Links auf der Homepage
-(`…/releases/latest/download/Pixel-Bro-Setup.exe`) zeigen automatisch auf die neueste Version.
+Der Workflow **„Pixel Bro – Release veröffentlichen“** merkt die neue Version, baut Installer,
+portable EXE und ZIP und erstellt das GitHub-Release. Ist die Version schon veröffentlicht, passiert nichts.
+Die Download-Links auf der Homepage (`…/releases/latest/download/Pixel-Bro-Setup.exe`)
+zeigen automatisch auf die neueste Version.
