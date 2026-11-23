@@ -118,7 +118,9 @@
     .more[open] summary{margin-bottom:10px}
     .links a[aria-current="page"]{color:var(--text)}
     @media (max-width: 900px){ .pbGrid,.pbFiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
-    @media (max-width: 760px){ .pbHero{grid-template-columns:1fr} .pbGrid,.pbFiles{grid-template-columns:1fr} }
+    .pbMobileOnly{display:none}
+    @media (max-width: 760px){ .pbHero{grid-template-columns:1fr} .pbGrid,.pbFiles{grid-template-columns:1fr}
+      .pbDesktopOnly{display:none} .pbMobileOnly{display:block} }
   </style>
 </head>
 
@@ -167,8 +169,9 @@
           </p>
           <div class="hero__actions">
             <a class="btn btn--primary" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Setup.exe">⬇ Download für Windows</a>
-            <a class="btn" href="pixel-bro/src/index.html" target="_blank" rel="noopener">▶ Im Browser testen</a>
+            <a class="btn pbDesktopOnly" href="pixel-bro/src/index.html" target="_blank" rel="noopener">▶ Im Browser testen</a>
           </div>
+          <p class="dlNote pbMobileOnly" style="margin-top:12px">🖥️ Pixel Bro ist für den PC gemacht – öffne diese Seite am Rechner zum Herunterladen.</p>
           <p class="dlNote" style="margin-top:12px">
             Windows 10 / 11 (64 Bit) · Kostenlos ·
             <a href="#downloads">weitere Downloads</a> ·
