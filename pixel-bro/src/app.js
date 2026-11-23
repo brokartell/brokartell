@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.1.4';
+const APP_VERSION = '1.1.5';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
