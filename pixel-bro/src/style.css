@@ -68,6 +68,10 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
 .brand { display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; border: 0; border-radius: 8px; background: none; cursor: pointer; }
 .brand:hover { background: var(--panel-2); }
 .brand-icon { width: 22px; height: 22px; image-rendering: pixelated; border-radius: 5px; }
+.brand-version {
+  padding: 1px 7px; border-radius: 999px; font: 600 10.5px/1.6 var(--mono);
+  color: var(--accent-2); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
 .brand-name { font-weight: 700; letter-spacing: .2px; background: linear-gradient(90deg, var(--accent-2), #ff7ac6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 #menubar { display: flex; gap: 2px; }
@@ -76,13 +80,14 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
 .menu-btn:hover, .menu.open .menu-btn { background: var(--panel-2); color: var(--text); }
 .menu-list {
   display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 50;
-  min-width: 260px; padding: 6px;
+  min-width: 300px; width: max-content; max-width: calc(100vw - 24px); padding: 6px;
   background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--radius); box-shadow: var(--shadow);
 }
 .menu.open .menu-list { display: block; animation: pop .12s ease-out; }
 .menu-list button {
   display: flex; justify-content: space-between; align-items: center; gap: 24px;
   width: 100%; padding: 7px 10px; border: 0; border-radius: 6px; background: none; cursor: pointer; text-align: left;
+  white-space: nowrap; /* Menütexte nie umbrechen */
 }
 .menu-list button:hover { background: var(--accent-soft); }
 .menu-list button.checked span::before { content: "✓ "; color: var(--accent-2); }

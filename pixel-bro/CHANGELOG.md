@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+- Versionsnummer immer sichtbar: kleines lila Schild neben „Pixel Bro“ oben links
+- Menüs breiter: Einträge wie „Animiertes GIF exportieren …“ brechen nicht mehr um
+
 ## 1.1.1
 - Schließen-Dialog verständlicher: „Dein Projekt ist noch nicht als Datei gespeichert“ mit den Knöpfen „Speichern …“, „Schließen“ und „Abbrechen“
 - „Speichern …“ legt direkt die .pixelbro-Datei an und schließt danach
