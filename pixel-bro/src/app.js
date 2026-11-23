@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.2.4';
+const APP_VERSION = '1.2.5';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1175,10 +1175,27 @@ function updatePanels() {
   refreshUsedPalette();
 }
 
-function thumbInto(c, drawFn) {
+const thumbSrc = document.createElement('canvas');
+/** Vorschaubild in Anzeigegröße zeichnen: kleine Bilder scharf vergrößern, große Bilder sauber verkleinern
+ *  (sonst fallen beim Verkleinern ganze Pixelreihen weg und das Bild wirkt verzerrt). */
+function thumbInto(c, drawFn, size) {
   const { w, h } = doc;
-  c.width = w; c.height = h;
-  drawFn(c.getContext('2d'));
+  thumbSrc.width = w; thumbSrc.height = h;
+  const sctx = thumbSrc.getContext('2d');
+  sctx.clearRect(0, 0, w, h);
+  drawFn(sctx);
+  const px = Math.round(size * (window.devicePixelRatio || 1));
+  const fit = Math.min(px / w, px / h);
+  const scale = fit >= 1 ? Math.floor(fit) : fit;
+  const dw = Math.max(1, Math.round(w * scale)), dh = Math.max(1, Math.round(h * scale));
+  c.width = dw; c.height = dh;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = scale < 1;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(thumbSrc, 0, 0, dw, dh);
+  c.classList.toggle('smooth', scale < 1);
+  const dpr = window.devicePixelRatio || 1;
+  c.style.width = Math.min(size, dw / dpr) + 'px'; c.style.height = Math.min(size, dh / dpr) + 'px';
 }
 
 function renderLayers() {
@@ -1191,7 +1208,7 @@ function renderLayers() {
     const row = document.createElement('div');
     row.className = 'layer' + (i === cur.layer ? ' active' : '') + (L.visible ? '' : ' hidden-layer');
     const c = document.createElement('canvas');
-    thumbInto(c, (cc) => cc.putImageData(bufToImageData(L.frames[cur.frame], doc.w, doc.h), 0, 0));
+    thumbInto(c, (cc) => cc.putImageData(bufToImageData(L.frames[cur.frame], doc.w, doc.h), 0, 0), 30);
     const name = document.createElement('span');
     name.className = 'name';
     name.textContent = L.name;
@@ -1233,7 +1250,7 @@ function renderFrames() {
     el.className = 'frame' + (f === cur.frame ? ' active' : '');
     el.draggable = true;
     const c = document.createElement('canvas');
-    thumbInto(c, (cc) => drawComposite(cc, f));
+    thumbInto(c, (cc) => drawComposite(cc, f), 68);
     const num = document.createElement('span');
     num.className = 'num';
     num.textContent = f + 1;
@@ -1303,9 +1320,17 @@ function previewLoop(t) {
     previewLast = t;
   }
   const box = previewCanvas.parentElement;
-  const s = Math.max(1, Math.floor(Math.min((box.clientWidth - 12) / doc.w, (box.clientHeight - 12) / doc.h)));
+  // Ganzes Bild zeigen: kleine Bilder ganzzahlig vergrößern, große Bilder passend verkleinern
+  const fit = Math.min((box.clientWidth - 12) / doc.w, (box.clientHeight - 12) / doc.h);
+  const s = fit >= 1 ? Math.floor(fit) : 1;
   if (previewCanvas.width !== doc.w * s || previewCanvas.height !== doc.h * s) {
     previewCanvas.width = doc.w * s; previewCanvas.height = doc.h * s;
+  }
+  const cssW = fit >= 1 ? doc.w * s : Math.max(1, Math.floor(doc.w * fit));
+  const cssH = fit >= 1 ? doc.h * s : Math.max(1, Math.floor(doc.h * fit));
+  if (previewCanvas.style.width !== cssW + 'px' || previewCanvas.style.height !== cssH + 'px') {
+    previewCanvas.style.width = cssW + 'px'; previewCanvas.style.height = cssH + 'px';
+    previewCanvas.classList.toggle('smooth', fit < 1);
   }
   if (comp.width !== doc.w || comp.height !== doc.h) { comp.width = doc.w; comp.height = doc.h; }
   const c = compositeCanvas(Math.min(previewFrame, frameCount() - 1));
@@ -1432,7 +1457,7 @@ function renderPalette() {
   if (!customPalettes.length) {
     const o = document.createElement('option');
     o.disabled = true;
-    o.textContent = 'Noch keine – mit „Neue Palette“ anlegen';
+    o.textContent = 'Noch keine';
     gOwn.appendChild(o);
   }
   sel.appendChild(gOwn);
