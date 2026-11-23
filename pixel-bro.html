@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bro Kartell">
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pixel Bro — Bro Kartell Games</title>
+  <meta name="description" content="Pixel Bro – kostenloser Pixel-Art- und Animations-Editor auf Deutsch von Bro Kartell Games. Download für Windows oder direkt im Browser testen." />
+  <meta name="theme-color" content="#0b0d14" />
+  <link rel="icon" href="pixel-bro/src/icon.png" />
+  <link rel="stylesheet" href="style.css?v=200" />
+  <style>
+        /* Screenshot-Galerie */
+    .shots{position:relative}
+    .shots .shots__img{display:none}
+    .shots .shots__img.is-active{display:block}
+    .shots__nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;
+      border:1px solid #ffffff40;background:linear-gradient(180deg,#f4f5f7,#c7cbd1);color:#111318;
+      font-size:26px;line-height:36px;padding:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5);
+      opacity:.85;transition:opacity .15s, transform .15s}
+    .shots__nav:hover{opacity:1;transform:translateY(calc(-50% - 2px))}
+    .shots__nav--prev{left:10px}
+    .shots__nav--next{right:10px}
+    .shots__dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px}
+    .shots__dots span{width:7px;height:7px;border-radius:50%;background:#ffffff55}
+    .shots__dots span.is-active{background:#e3e6ea}
+    /* Chrom-Look nur auf der Spieleseite (Akzente, Buttons, Schilder, Hintergrund) */
+    :root{--accent:#e3e6ea;--accent2:#9da1a9}
+    body::before{background:
+      radial-gradient(1200px 700px at 20% 10%, #ffffff0d, transparent 55%),
+      radial-gradient(900px 600px at 80% 30%, #c8d0e00a, transparent 55%),
+      radial-gradient(700px 500px at 50% 90%, #5aa1ff10, transparent 60%),
+      linear-gradient(180deg, var(--bg), var(--bg2))}
+    .dot{box-shadow:0 0 12px #ffffff55}
+    .btn--primary,.btn--primary:hover,.btn--primary:active{
+      background-image:linear-gradient(180deg,#f4f5f7 0%,#c7cbd1 100%) !important;
+      color:#111318 !important;border:1px solid #ffffff40 !important;
+      box-shadow:inset 0 1px 0 #ffffffcc,0 10px 30px rgba(0,0,0,.45) !important;
+      text-shadow:0 1px 0 #ffffff80 !important}
+    .btn--primary:hover{box-shadow:inset 0 1px 0 #ffffffcc,0 10px 30px rgba(0,0,0,.45) !important}
+
+    /* Nur fuer diese Seite – alles andere kommt aus style.css */
+    .gamesHead{padding:26px 22px;margin-top:18px}
+    .gamesHead h1{margin:14px 0 12px}
+    .gamesHead .sub{margin-bottom:12px;max-width:none}
+    .gamesHead h1 .muted{font-size:inherit;display:inline;font-weight:inherit;color:var(--accent)}
+    .signature{font-style:italic;color:var(--accent2)}
+    .journey{align-items:center;margin-top:6px}
+    .journey__arrow{color:var(--accent);font-weight:800}
+    @media (max-width: 600px){ .journey__arrow{display:none} }
+    .brand__logo{width:56px;height:44px}
+    /* Silber-Chrom statt Orange für das Bro-Kartell-Games-Logo */
+    .logoBox{background:
+      radial-gradient(600px 240px at 30% 20%, #ffffff14, transparent 60%),
+      radial-gradient(420px 240px at 80% 60%, #c8d0e012, transparent 60%),
+      linear-gradient(180deg, #0b0d14, #050608)}
+    .logoBig{filter:
+      drop-shadow(0 0 10px rgba(255,255,255,.22))
+      drop-shadow(0 0 24px rgba(190,200,220,.14))
+      drop-shadow(0 14px 28px rgba(0,0,0,.85))}
+    .logoBox:hover .logoBig{filter:
+      drop-shadow(0 0 14px rgba(255,255,255,.38))
+      drop-shadow(0 0 34px rgba(200,210,230,.24))
+      drop-shadow(0 18px 36px rgba(0,0,0,.9))}
+    .spin{background:conic-gradient(from 200deg, transparent,
+      rgba(255,255,255,.22), transparent, rgba(180,190,210,.16), transparent)}
+    .gameRow{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;padding:18px;margin-top:18px;align-items:start}
+    .gameRow__img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:14px;background:#07080c80;image-rendering:pixelated;display:block}
+    .gameRow__body{display:flex;flex-direction:column;gap:12px;padding:6px 4px}
+    .gameRow__top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .gameRow h2{margin:0;font-size:clamp(20px,2.4vw,28px);letter-spacing:-.3px}
+    .gameRow p{margin:0;color:var(--muted);line-height:1.55}
+    .gameRow--soon{opacity:.8}
+    .gameRow--soon .gameRow__img{filter:grayscale(.3)}
+    .soonBadge{display:inline-block;padding:10px 16px;border-radius:999px;border:1px dashed #ffffff3a;
+               color:var(--muted);font-weight:800;letter-spacing:.5px}
+    .more{border-top:1px solid var(--line);padding-top:10px}
+    .more summary{cursor:pointer;font-weight:700;color:var(--text)}
+    .more[open] summary{margin-bottom:10px}
+    .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;color:var(--muted)}
+    .keys kbd{border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;
+              padding:1px 8px;font-family:inherit;font-size:.85em;white-space:nowrap}
+    @media (max-width: 760px){ .gameRow{grid-template-columns:1fr} .gameRow__img{aspect-ratio:4/3} }
+    /* Pixel Bro (Werkzeug) */
+    .gameRow--tool .gameRow__img{aspect-ratio:16/10;object-fit:cover;object-position:left top;image-rendering:auto}
+    .gameRow--tool .gameRow__img.is-icon{object-fit:contain;image-rendering:pixelated;padding:18% 30%}
+    .dlNote{font-size:.9em;color:var(--muted)}
+    .dlNote a{color:var(--text)}
+
+    /* Pixel Bro – eigene Seite */
+    .pbHero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;padding:22px;margin-top:18px;align-items:center}
+    .pbHero h1{margin:14px 0 12px;font-size:clamp(30px,4.4vw,52px);letter-spacing:-.5px}
+    .pbHero h1 .muted{display:block;font-size:.42em;font-weight:700;color:var(--accent2);letter-spacing:0;margin-top:6px}
+    .pbHero__shot{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:left top;border-radius:14px;
+      display:block;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.55)}
+    .pbIcon{width:64px;height:64px;image-rendering:pixelated;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+    .pbHead{display:flex;align-items:center;gap:14px}
+    .dlNote{font-size:.92em;color:var(--muted);margin:0}
+    .dlNote a{color:var(--text)}
+    .pbGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
+    .pbGrid .card h3{margin:0 0 6px}
+    .pbGrid .card p{margin:0;color:var(--muted);line-height:1.5}
+    .pbFiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
+    .pbFile{display:flex;flex-direction:column;gap:8px}
+    .pbFile p{margin:0;color:var(--muted);line-height:1.5;flex:1}
+    .pbFile .btn{justify-content:center}
+    .section p.lead{color:var(--muted);line-height:1.6;margin:8px 0 0;max-width:70ch}
+    .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;color:var(--muted)}
+    .keys kbd{border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;
+              padding:1px 8px;font-family:inherit;font-size:.85em;white-space:nowrap}
+    .more{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+    .more summary{cursor:pointer;font-weight:700;color:var(--text)}
+    .more[open] summary{margin-bottom:10px}
+    .links a[aria-current="page"]{color:var(--text)}
+    @media (max-width: 900px){ .pbGrid,.pbFiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    @media (max-width: 760px){ .pbHero{grid-template-columns:1fr} .pbGrid,.pbFiles{grid-template-columns:1fr} }
+  </style>
+</head>
+
+<body>
+
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="games.html" aria-label="Bro Kartell Games">
+        <img class="brand__logo" src="assets/bro_kartell_games_logo.png" alt="Bro Kartell Games Logo"
+             onerror="this.style.display='none'">
+        <div class="brand__text">
+          <div class="brand__name">BRO KARTELL GAMES</div>
+          <div class="brand__tag">Game Studio • by Bro Kartell</div>
+        </div>
+      </a>
+
+      <nav class="links" aria-label="Navigation">
+        <a href="games.html">Unsere Spiele</a>
+        <a href="pixel-bro.html" aria-current="page">Pixel Bro</a>
+        <a href="games.html#kontakt">Kontakt</a>
+      </nav>
+
+      <div class="cta">
+        <a class="btn btn--primary" href="index.html">Bro Kartell</a>
+        <a class="btn btn--primary" href="https://www.youtube.com/@Bro-Kartell" target="_blank" rel="noreferrer">YouTube</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap">
+
+      <section class="panel pbHero">
+        <div>
+          <div class="kicker"><span class="dot"></span>Werkzeug • Kostenlos • Deutsch</div>
+          <div class="pbHead" style="margin-top:14px">
+            <img class="pbIcon" src="pixel-bro/src/icon.png" alt="Pixel Bro Logo">
+            <span class="badge">Version 1.0.2</span>
+          </div>
+          <h1>PIXEL BRO<span class="muted">Pixel-Art &amp; Animationen – made by Bro Kartell</span></h1>
+          <p class="sub">
+            Unser eigener Pixel-Art- und Animations-Editor, komplett auf Deutsch. Damit entstehen Sprites,
+            Tilesets und Animationen für unsere Spiele – und jetzt auch für deine.
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Setup.exe">⬇ Download für Windows</a>
+            <a class="btn" href="pixel-bro/src/index.html" target="_blank" rel="noopener">▶ Im Browser testen</a>
+          </div>
+          <p class="dlNote" style="margin-top:12px">
+            Windows 10 / 11 (64 Bit) · Kostenlos ·
+            <a href="#downloads">weitere Downloads</a> ·
+            <a href="https://github.com/brokartell/brokartell/releases" target="_blank" rel="noreferrer">alle Versionen</a>
+          </p>
+        </div>
+        <div>
+          <img class="pbHero__shot" src="pixel-bro/screens/editor.png"
+               alt="Pixel Bro: Editor mit animiertem Pixel-Charakter, Zeitleiste, Ebenen und Live-Palette">
+        </div>
+      </section>
+
+      <section class="panel section" id="funktionen">
+        <div class="section__head"><h2>Funktionen</h2></div>
+        <div class="pbGrid">
+          <div class="panel card">
+            <h3>✏️ Werkzeuge</h3>
+            <p>Stift mit Pixel-Perfect, Radierer, Füllen, Pipette, Linie, Rechteck, Ellipse, Dithering und Aufhellen/Abdunkeln.</p>
+          </div>
+          <div class="panel card">
+            <h3>🎞️ Animation</h3>
+            <p>Frames per Drag &amp; Drop sortieren, Live-Vorschau mit einstellbaren FPS und Zwiebelhaut.</p>
+          </div>
+          <div class="panel card">
+            <h3>📚 Ebenen</h3>
+            <p>Hinzufügen, duplizieren, sortieren, zusammenführen, ausblenden und Deckkraft einstellen.</p>
+          </div>
+          <div class="panel card">
+            <h3>🧱 Tilesets</h3>
+            <p>Kachel-Modus für nahtlose Tiles mit 3×3-Vorschau und einstellbares Kachelraster.</p>
+          </div>
+          <div class="panel card">
+            <h3>🎨 Farben</h3>
+            <p>PICO-8, Endesga 32, Game Boy &amp; mehr – plus Live-Palette, die alle benutzten Farben erkennt.</p>
+          </div>
+          <div class="panel card">
+            <h3>💾 Import &amp; Export</h3>
+            <p>Bilder und Spritesheets importieren, exportieren als PNG, Spritesheet oder animiertes GIF.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel section" id="downloads">
+        <div class="section__head"><h2>Downloads</h2></div>
+        <p class="lead">Alle Varianten enthalten dasselbe Programm. Die Links zeigen immer auf die neueste Version.</p>
+        <div class="pbFiles">
+          <div class="panel card pbFile">
+            <h3>Installer</h3>
+            <p>Empfohlen. Mit Startmenü- und Desktop-Verknüpfung, <code>.pixelbro</code>-Dateien öffnen per Doppelklick.</p>
+            <a class="btn btn--primary" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Setup.exe">⬇ Pixel-Bro-Setup.exe</a>
+          </div>
+          <div class="panel card pbFile">
+            <h3>Portable</h3>
+            <p>Eine einzelne EXE ohne Installation – perfekt für den USB-Stick.</p>
+            <a class="btn" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Portable.exe">⬇ Pixel-Bro-Portable.exe</a>
+          </div>
+          <div class="panel card pbFile">
+            <h3>ZIP</h3>
+            <p>Zum Entpacken. Danach einfach <b>Pixel Bro.exe</b> starten.</p>
+            <a class="btn" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Windows.zip">⬇ Pixel-Bro-Windows.zip</a>
+          </div>
+        </div>
+
+        <details class="more">
+          <summary>Windows-Warnung beim ersten Start?</summary>
+          <p class="lead">Pixel Bro ist ein Hobby-Projekt und nicht digital signiert. Windows SmartScreen zeigt deshalb evtl.
+             eine Warnung. Einfach auf <b>„Weitere Informationen“</b> und dann <b>„Trotzdem ausführen“</b> klicken.</p>
+        </details>
+        <details class="more">
+          <summary>Wichtige Tastenkürzel</summary>
+          <div class="keys">
+            <span><kbd>B</kbd> <kbd>E</kbd> <kbd>G</kbd> <kbd>I</kbd></span><span>Stift · Radierer · Füllen · Pipette</span>
+            <span><kbd>Rechtsklick</kbd></span><span>Mit der Zweitfarbe zeichnen</span>
+            <span><kbd>Strg</kbd> + <kbd>Z</kbd> / <kbd>Y</kbd></span><span>Rückgängig · Wiederholen</span>
+            <span><kbd>N</kbd></span><span>Neuer Frame</span>
+            <span><kbd>T</kbd></span><span>Kachel-Modus</span>
+            <span><kbd>F1</kbd></span><span>Alle Tastenkürzel in der App</span>
+          </div>
+        </details>
+        <details class="more">
+          <summary>Changelog</summary>
+          <div class="changelog">
+            <details open class="cl">
+              <summary><b>v1.0.2</b> <span class="cl-title">• Live-Palette</span></summary>
+              <ul>
+                <li>Palette „Benutzte Farben“ erkennt alle Farben im Sprite automatisch</li>
+                <li>Doppelklick auf eine Farbe ersetzt sie überall</li>
+              </ul>
+            </details>
+            <details class="cl">
+              <summary><b>v1.0.1</b> <span class="cl-title">• Über-Dialog</span></summary>
+              <ul><li>Entwickler, Homepage und Impressum in der App</li></ul>
+            </details>
+            <details class="cl">
+              <summary><b>v1.0</b> <span class="cl-title">• Release</span></summary>
+              <ul><li>Pixel Bro veröffentlicht</li></ul>
+            </details>
+          </div>
+        </details>
+        <details class="more">
+          <summary>Credits</summary>
+          <ul class="list">
+            <li>Idee &amp; Umsetzung: izec313</li>
+            <li>Gebaut mit Electron</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="panel section" id="kontakt">
+        <div class="section__head"><h2>Feedback &amp; Bugs</h2></div>
+        <div class="panel card" style="margin-top:14px">
+          <h3>Bug gefunden oder Idee für Pixel Bro?</h3>
+          <p>Schreib uns – neue Werkzeuge und Wünsche nehmen wir gern mit in die nächste Version.</p>
+          <div class="row" style="margin-top:12px">
+            <a class="btn btn--primary" id="gamesMail" href="#">E-Mail an Bro Kartell Games</a>
+            <span class="badge">games[@]bro-kartell.com</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        © <span id="year"></span> Bro Kartell - Multigaming Clan seit 4 Okt. 2013
+        <a href="impressum.html"> • Impressum</a>
+        <a href="datenschutz.html"> • Datenschutz</a>
+      </footer>
+    </div>
+  </main>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script src="script.js?v=199"></script>
+  <script>
+    (() => {
+      const btn = document.getElementById("gamesMail");
+      if (btn) btn.href = `mailto:${"games"}@${"bro-kartell.com"}?subject=Pixel%20Bro%20Feedback`;
+    })();
+  </script>
+
+</body>
+</html>
