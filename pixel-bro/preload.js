@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('native', {
   openFile: (opts) => ipcRenderer.invoke('open-file', opts),
   onOpenPath: (cb) => ipcRenderer.on('open-path', (_e, p, data) => cb(p, data)),
   onSaveAndClose: (cb) => ipcRenderer.on('save-and-close', () => cb()),
+  setLanguage: (lang) => ipcRenderer.send('set-language', lang),
   // Updates
   updateInfo: () => ipcRenderer.invoke('update-info'),
   checkForUpdates: (manual) => ipcRenderer.invoke('update-check', !!manual),

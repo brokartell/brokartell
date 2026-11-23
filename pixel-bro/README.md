@@ -1,12 +1,13 @@
 # Pixel Bro
 
-Moderner Pixel-Art- und Animations-Editor für Windows – komplett auf Deutsch.
+Moderner Pixel-Art- und Animations-Editor für Windows – auf Deutsch, umschaltbar auf Englisch.
 Inspiriert von Tools wie Piskel und Pyxel Edit, aber mit frischer, dunkler (oder heller) Oberfläche.
 
 ## Funktionen
 
 - **Werkzeuge:** Stift (mit Pixel-Perfect), Radierer, Füllen, Pipette, Linie, Rechteck, Ellipse,
-  Auswahl, Zauberstab, Verschieben, Dithering, Aufhellen/Abdunkeln, Hand
+  Auswahl, Zauberstab, Verschieben, Dithering, Aufhellen/Abdunkeln, Hand, Verlauf (mit Dithering),
+  Sprühdose, Text (5-px-Pixel-Schrift)
 - **Zeichnen:** Pinselgröße 1–16 px, Spiegel-Zeichnen horizontal/vertikal, Rechtsklick = Sekundärfarbe
 - **Ebenen:** hinzufügen, duplizieren, sortieren, zusammenführen, ein-/ausblenden, Deckkraft, umbenennen
 - **Animation:** Frames hinzufügen/duplizieren/löschen, per Drag & Drop sortieren, Live-Vorschau mit FPS, Zwiebelhaut
@@ -17,6 +18,8 @@ Inspiriert von Tools wie Piskel und Pyxel Edit, aber mit frischer, dunkler (oder
 - **Import:** PNG/JPG/GIF als neues Sprite, als Ebene oder Spritesheet in Frames zerlegen
 - **Export:** PNG (skaliert), Spritesheet (horizontal/vertikal/Raster), animiertes GIF
 - **Projekte:** `.pixelbro`-Dateien, Doppelklick im Explorer öffnet sie, automatische Sicherung
+- **Ansicht:** Pixelraster, Mittellinien, Kachelraster, Zwiebelhaut, helles/dunkles Design
+- **Sprachen:** Deutsch und Englisch (Ansicht → English), Wörterbuch in `src/i18n.js`
 - Rückgängig/Wiederholen, Zwischenablage, alle wichtigen Tastenkürzel (F1)
 - **Automatische Updates** (Installer-Version) aus den GitHub-Releases, Hinweis bei portable/ZIP
 
