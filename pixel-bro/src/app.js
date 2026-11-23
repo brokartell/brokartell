@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null;
-const APP_VERSION = '1.0.1'; // Electron-Brücke (preload.js)
+const APP_VERSION = '1.0.2'; // Electron-Brücke (preload.js)
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -938,6 +938,32 @@ function replaceColor() {
   afterPaint();
   toast(`${n} Pixel ersetzt (Primär → Sekundär)`);
 }
+/** Ersetzt eine Farbe in allen Ebenen und Frames (Doppelklick in der Live-Palette). */
+async function replaceColorDialog(from) {
+  const body = el(`
+    <div class="field-row" style="align-items:center">
+      <div class="field"><label>Alte Farbe</label><div class="color-preview" style="background:${cssColor(from)}"></div><span class="mono">${toHex(from, true).toUpperCase()}</span></div>
+      <div class="field" style="flex:0;font-size:22px;padding-top:14px">→</div>
+      <div class="field"><label>Neue Farbe</label><input type="color" id="rc-new" value="${toHex(from).slice(0, 7)}"><span class="mono" id="rc-hex">${toHex(from).toUpperCase()}</span></div>
+    </div>
+    <p class="hint">Betrifft ${usedCounts.get(from) || 0} Pixel in allen Ebenen und Frames. Die Deckkraft bleibt erhalten.</p>`);
+  const inp = body.querySelector('#rc-new');
+  inp.oninput = () => { body.querySelector('#rc-hex').textContent = inp.value.toUpperCase(); };
+  const ok = await modal({ title: 'Farbe überall ersetzen', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Ersetzen', value: true, primary: true }] });
+  if (!ok) return;
+  const [r, g, b] = unpack(parseHex(inp.value));
+  const to = pack(r, g, b, unpack(from)[3]);
+  if (to === from) return;
+  commitFloat(false);
+  pushUndo();
+  let n = 0;
+  for (const L of doc.layers) for (const f of L.frames) for (let i = 0; i < f.length; i++) if (f[i] === from) { f[i] = to; n++; }
+  if (settings.primary === from) settings.primary = to;
+  if (settings.secondary === from) settings.secondary = to;
+  afterPaint();
+  updateColorUI();
+  toast(`${n} Pixel umgefärbt`);
+}
 
 /* ---------- Ebenen ---------- */
 function layerCmd(cmd) {
@@ -1065,6 +1091,7 @@ function updatePanels() {
   renderLayers();
   renderFrames();
   updateStatus();
+  refreshUsedPalette();
 }
 
 function thumbInto(c, drawFn) {
@@ -1240,17 +1267,65 @@ function renderRecent() {
     box.appendChild(b);
   }
 }
+/* Live-Palette „Benutzte Farben“: erkennt automatisch alle Farben im Sprite */
+const USED = 'Benutzte Farben';
+let usedKey = null;
+let usedCounts = new Map();
+const isLivePalette = () => settings.paletteName === USED;
+function usedColors() {
+  const m = new Map();
+  for (const L of doc.layers) for (const f of L.frames) {
+    for (let i = 0; i < f.length; i++) { const u = f[i]; if (u >>> 24) m.set(u, (m.get(u) || 0) + 1); }
+  }
+  return m;
+}
+function colorSortKey(u) {
+  const [r, g, b] = unpack(u);
+  const [h, sat, l] = rgbToHsl(r, g, b);
+  return sat < 0.12 ? [-1, l] : [Math.round(h * 12), l]; // Grautöne zuerst, dann nach Farbton
+}
+function refreshUsedPalette(force = false) {
+  if (!isLivePalette() || !doc) return;
+  usedCounts = usedColors();
+  const colors = [...usedCounts.keys()].sort((a, b) => {
+    const ka = colorSortKey(a), kb = colorSortKey(b);
+    return ka[0] - kb[0] || ka[1] - kb[1];
+  });
+  const key = colors.join(',');
+  if (force || key !== usedKey) {
+    usedKey = key;
+    settings.palette = colors;
+    renderPalette();
+  } else {
+    $$('#palette .swatch').forEach((sw) => { sw.title = swatchTitle(Number(sw.dataset.color)); });
+  }
+}
+function swatchTitle(c) {
+  const hex = toHex(c, true).toUpperCase();
+  if (!isLivePalette()) return hex;
+  return `${hex} · ${usedCounts.get(c) || 0} Pixel`;
+}
+
 function renderPalette() {
   const box = $('#palette');
   box.innerHTML = '';
+  const live = isLivePalette();
+  $('#palette-hint').textContent = live
+    ? 'Erkennt automatisch alle Farben im Sprite · Klick: Primär · Rechtsklick: Sekundär · Doppelklick: Farbe überall ersetzen'
+    : 'Klick: Primär · Rechtsklick: Sekundär · Strg+Klick: entfernen';
+  $('#palette-count').textContent = live ? String(settings.palette.length) : '';
+  if (live && !settings.palette.length) {
+    box.innerHTML = '<p class="hint palette-empty">Noch keine Farben benutzt – fang einfach an zu zeichnen.</p>';
+  }
   settings.palette.forEach((c, idx) => {
     const b = document.createElement('button');
     b.className = 'swatch';
     b.dataset.color = c;
     b.style.background = cssColor(c);
-    b.title = toHex(c, true).toUpperCase();
+    b.title = swatchTitle(c);
+    if (live) b.ondblclick = () => replaceColorDialog(c);
     b.onclick = (e) => {
-      if (e.ctrlKey) { settings.palette.splice(idx, 1); paletteEdited(); return; }
+      if (e.ctrlKey && !live) { settings.palette.splice(idx, 1); paletteEdited(); return; }
       settings.primary = c; updateColorUI();
     };
     b.oncontextmenu = (e) => { e.preventDefault(); settings.secondary = c; updateColorUI(); };
@@ -1258,9 +1333,10 @@ function renderPalette() {
   });
   const sel = $('#palette-select');
   sel.innerHTML = '';
-  for (const name of [...Object.keys(PALETTES), 'Eigene Palette']) {
+  for (const name of [USED, ...Object.keys(PALETTES), 'Eigene Palette']) {
     const o = document.createElement('option');
-    o.value = o.textContent = name;
+    o.value = name;
+    o.textContent = name === USED ? '★ Benutzte Farben (live)' : name;
     if (name === settings.paletteName) o.selected = true;
     sel.appendChild(o);
   }
@@ -1562,7 +1638,7 @@ function loadProject(text, name, path) {
     float = null; sel = null;
     doc = r.doc;
     cur = { layer: doc.layers.length - 1, frame: 0 };
-    if (r.palette && r.palette.length) { settings.palette = r.palette.map(parseHex).filter((x) => x !== null); settings.paletteName = 'Eigene Palette'; renderPalette(); }
+    if (r.palette && r.palette.length && !isLivePalette()) { settings.palette = r.palette.map(parseHex).filter((x) => x !== null); settings.paletteName = 'Eigene Palette'; renderPalette(); }
     fileInfo = { path: path || null, name: name || 'unbenannt.pixelbro' };
     dirty = false;
     updateTitle();
@@ -1672,6 +1748,7 @@ function loadSettings() {
       const p = JSON.parse(localStorage.getItem('pixelbro.customPalette') || 'null');
       if (p) settings.palette = p;
     } else if (PALETTES[settings.paletteName]) settings.palette = PALETTES[settings.paletteName].map(parseHex);
+    else if (settings.paletteName === USED) settings.palette = [];
   } catch (e) { /* ignorieren */ }
 }
 
@@ -1928,12 +2005,14 @@ $('#alpha-input').addEventListener('input', (e) => {
 $('#palette-select').addEventListener('change', (e) => {
   const name = e.target.value;
   settings.paletteName = name;
+  if (name === USED) { refreshUsedPalette(true); saveSettings(); return; }
   if (PALETTES[name]) settings.palette = PALETTES[name].map(parseHex);
   else settings.palette = JSON.parse(localStorage.getItem('pixelbro.customPalette') || '[]');
   renderPalette();
   saveSettings();
 });
 $('#pal-add').addEventListener('click', () => {
+  if (isLivePalette()) settings.palette = settings.palette.slice(); // wird zur eigenen Palette
   if (settings.palette.includes(settings.primary)) return toast('Farbe ist bereits in der Palette');
   settings.palette.push(settings.primary);
   paletteEdited();
