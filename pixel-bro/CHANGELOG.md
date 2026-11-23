@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.5
+- Update ohne Fehlermeldung: Hält z. B. ein Virenscanner beim Update eine Programmdatei fest, erscheint nicht mehr „Die alten Anwendungsdateien konnten nicht deinstalliert werden …: 2“ – der Installer überschreibt die Dateien einfach
+
 ## 1.1.4
 - Neue Palette **„GB Studio“** mit den vier Standardfarben von GB Studio (#071821, #306850, #86C06C, #E0F8CF) – passt zu Sprites für GB-Studio-Spiele
 - Die bisherige Palette „Game Boy“ (klassisches Erbsengrün) bleibt erhalten

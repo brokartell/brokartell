@@ -42,6 +42,11 @@ jobs:
           test -f dist/Pixel-Bro-Setup.exe.blockmap
           test -f dist/win-unpacked/resources/app-update.yml && cat dist/win-unpacked/resources/app-update.yml
 
+      - name: Update mit gesperrter Datei testen (Virenscanner nachgestellt)
+        shell: pwsh
+        timeout-minutes: 10
+        run: ./scripts/test-update-locked.ps1
+
       - name: Ergebnisse hochladen
         uses: actions/upload-artifact@v4
         with:
