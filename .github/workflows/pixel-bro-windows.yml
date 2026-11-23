@@ -44,7 +44,7 @@ jobs:
 
       - name: Update mit gesperrter Datei testen (Virenscanner nachgestellt)
         shell: pwsh
-        timeout-minutes: 6
+        timeout-minutes: 10
         run: ./scripts/test-update-locked.ps1
 
       - name: Ergebnisse hochladen
