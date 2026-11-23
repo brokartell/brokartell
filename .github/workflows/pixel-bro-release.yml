@@ -28,13 +28,13 @@ jobs:
       run:
         working-directory: pixel-bro
         shell: bash
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Version prüfen
         id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG="pixel-bro-v$VERSION"
@@ -72,6 +72,8 @@ jobs:
 
       - name: GitHub-Release erstellen
         if: steps.version.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}   # nur hier, sonst will electron-builder selbst veröffentlichen
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             dist/Pixel-Bro-Setup.exe \
