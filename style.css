@@ -1,3 +1,6 @@
+/* Die Seite ist schon dunkel: Browser sollen sie nicht automatisch umfärben */
+:root{color-scheme:dark}
+
 html{ background: #0b0d14; }
 
 :root{
