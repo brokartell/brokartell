@@ -34,9 +34,15 @@ function Test-LockedUpdate($setup, $label, $timeoutSec) {
   Write-Host '1) Installation (still, nur für mich)'
   $p = Start-Process $setup -ArgumentList '/S', '/currentuser' -PassThru -Wait
   $dir = Get-InstallDir
-  if (!$dir -or !(Test-Path (Join-Path $dir 'Pixel Bro.exe'))) {
-    Write-Host "   Erster Versuch ohne Ergebnis (Code $($p.ExitCode)) – noch einmal"
-    Start-Sleep -Seconds 5
+  # Nach dem Vergleichstest laufen manchmal noch Reste (abgebrochener Installer, Deinstaller-Kopie) –
+  # dann stürzt der nächste stille Installer sofort ab. Aufräumen und bis zu 3× erneut versuchen.
+  for ($try = 2; $try -le 4 -and (!$dir -or !(Test-Path (Join-Path $dir 'Pixel Bro.exe'))); $try++) {
+    Write-Host "   Kein Ergebnis (Code $($p.ExitCode)) – räume auf und versuche es erneut ($try. Versuch)"
+    Get-Process | Where-Object { $_.ProcessName -match 'Pixel|Un_|nsis|Setup' } |
+      ForEach-Object { Write-Host "     läuft noch: $($_.ProcessName) ($($_.Id))"; Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
+    Get-ChildItem $env:TEMP -Filter '~nsu*' -Directory -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    Get-ChildItem $env:TEMP -Filter 'ns*.tmp' -Directory -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 10
     $p = Start-Process $setup -ArgumentList '/S', '/currentuser' -PassThru -Wait
     $dir = Get-InstallDir
   }
@@ -57,7 +63,11 @@ function Test-LockedUpdate($setup, $label, $timeoutSec) {
   Write-Host '3) Update wie bei der automatischen Aktualisierung (--updated /S)'
   $u = Start-Process $setup -ArgumentList '--updated', '/S' -PassThru
   $finished = $u.WaitForExit($timeoutSec * 1000)
-  if (!$finished) { Stop-Process -Id $u.Id -Force -ErrorAction SilentlyContinue; Stop-PixelBro }
+  if (!$finished) {
+    Stop-Process -Id $u.Id -Force -ErrorAction SilentlyContinue
+    Get-Process | Where-Object { $_.ProcessName -match 'Setup|Un_' } | Stop-Process -Force -ErrorAction SilentlyContinue
+    Stop-PixelBro
+  }
   Receive-Job $job -Wait -AutoRemoveJob -ErrorAction SilentlyContinue | Out-Null
   $result = if ($finished) { "beendet mit Code $($u.ExitCode)" } else { "HÄNGT (Fehlermeldung wartet auf OK)" }
   Write-Host "   Ergebnis: $result"
