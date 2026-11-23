@@ -2,7 +2,7 @@
 # Pixel Bro wird installiert, eine Programmdatei ist gesperrt (wie bei einem Virenscanner, der sie gerade prüft),
 # dann läuft das Update wie bei der automatischen Aktualisierung (--updated /S).
 #
-#   A) Vergleich: Update mit dem Installer des letzten Releases (ohne Lösung) – hier sollte der Fehler auftreten
+#   A) Vergleich: Update mit dem Installer von 1.1.4 (letzte Version ohne Lösung) – hier sollte der Fehler auftreten
 #   B) Update mit dem neu gebauten Installer (mit Lösung) – muss ohne Meldung durchlaufen
 #
 # Nur B entscheidet über Erfolg oder Misserfolg; A ist zur Kontrolle, ob der Test den Fehler wirklich nachstellt.
@@ -34,6 +34,12 @@ function Test-LockedUpdate($setup, $label, $timeoutSec) {
   Write-Host '1) Installation (still, nur für mich)'
   $p = Start-Process $setup -ArgumentList '/S', '/currentuser' -PassThru -Wait
   $dir = Get-InstallDir
+  if (!$dir -or !(Test-Path (Join-Path $dir 'Pixel Bro.exe'))) {
+    Write-Host "   Erster Versuch ohne Ergebnis (Code $($p.ExitCode)) – noch einmal"
+    Start-Sleep -Seconds 5
+    $p = Start-Process $setup -ArgumentList '/S', '/currentuser' -PassThru -Wait
+    $dir = Get-InstallDir
+  }
   Write-Host "   Exit-Code: $($p.ExitCode) · Ordner: $dir"
   if (!$dir -or !(Test-Path (Join-Path $dir 'Pixel Bro.exe'))) { throw "Pixel Bro wurde nicht installiert" }
 
@@ -62,14 +68,21 @@ function Remove-PixelBro($dir) {
   Stop-PixelBro
   $un = Get-ChildItem $dir -Filter 'Uninstall*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($un) { Start-Process $un.FullName -ArgumentList '/S', '/currentuser' -Wait -ErrorAction SilentlyContinue }
-  Start-Sleep -Seconds 2
+  # Der NSIS-Deinstaller kopiert sich selbst und läuft im Hintergrund weiter – warten, bis er wirklich fertig ist
+  for ($i = 0; $i -lt 60; $i++) {
+    $busy = Get-Process | Where-Object { $_.ProcessName -like 'Un_*' -or $_.ProcessName -like 'Uninstall*' -or $_.ProcessName -like 'Pixel*' }
+    if (!$busy -and !(Get-InstallDir)) { break }
+    Start-Sleep -Seconds 1
+  }
+  Stop-PixelBro
   Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue
+  Start-Sleep -Seconds 2
 }
 
-# A) Vergleich mit dem letzten Release (ohne Lösung)
-Write-Host 'Lade Installer des letzten Releases …'
-Invoke-WebRequest 'https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Setup.exe' -OutFile $oldSetup
-$a = Test-LockedUpdate $oldSetup 'A) Letztes Release (ohne Lösung)' 90
+# A) Vergleich mit 1.1.4 – der letzten Version ohne Lösung (ab 1.1.5 ist die Lösung in jedem Release enthalten)
+Write-Host 'Lade Installer von Version 1.1.4 …'
+Invoke-WebRequest 'https://github.com/brokartell/brokartell/releases/download/pixel-bro-v1.1.4/Pixel-Bro-Setup.exe' -OutFile $oldSetup
+$a = Test-LockedUpdate $oldSetup 'A) Version 1.1.4 (ohne Lösung)' 90
 Remove-PixelBro $a.Dir
 if (!$a.Finished -or $a.ExitCode -ne 0) {
   Write-Host 'Kontrolle: Fehler ohne Lösung nachgestellt ✔'
