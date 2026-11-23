@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1737,6 +1737,7 @@ async function saveProject(saveAs = false) {
     dirty = false;
     updateTitle();
   }
+  return p;
 }
 async function openProject() {
   if (nativeApi) {
@@ -2145,6 +2146,7 @@ stage.addEventListener('drop', async (e) => {
 });
 
 window.addEventListener('beforeunload', (e) => {
+  autosaveNow(); // letzte Striche sofort sichern, nicht erst nach der Wartezeit
   if (dirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
@@ -2290,6 +2292,14 @@ function init() {
 
   if (nativeApi && nativeApi.onOpenPath) {
     nativeApi.onOpenPath((path, data) => loadProject(new TextDecoder().decode(data), path.split(/[\\/]/).pop(), path));
+  }
+
+  // Schließen-Dialog → „Speichern …“: erst speichern, dann schließen
+  if (nativeApi && nativeApi.onSaveAndClose) {
+    nativeApi.onSaveAndClose(async () => {
+      const p = await saveProject(false);
+      if (p) window.close();
+    });
   }
 
   // Updates: nur in der Windows-App
