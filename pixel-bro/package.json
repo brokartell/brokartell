@@ -59,7 +59,8 @@
     "portable": {
       "artifactName": "Pixel-Bro-Portable.${ext}"
     },
-    "afterPack": "scripts/after-pack.js"
+    "afterPack": "scripts/after-pack.js",
+    "publish": null
   },
   "homepage": "https://bro-kartell.com"
 }
