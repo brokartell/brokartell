@@ -10,7 +10,7 @@
   "scripts": {
     "start": "electron .",
     "icon": "node scripts/make-icon.js",
-    "dist": "electron-builder --win nsis portable --x64",
+    "dist": "electron-builder --win nsis portable zip --x64 --publish never",
     "dist:zip": "electron-builder --win zip --x64"
   },
   "devDependencies": {
@@ -41,7 +41,7 @@
     ],
     "win": {
       "icon": "build/icon.ico",
-      "artifactName": "Pixel-Bro-${version}-Windows-${arch}.${ext}",
+      "artifactName": "Pixel-Bro-Windows.${ext}",
       "signAndEditExecutable": false
     },
     "nsis": {
@@ -54,10 +54,10 @@
       "installerLanguages": [
         "de_DE"
       ],
-      "artifactName": "Pixel-Bro-Setup-${version}.${ext}"
+      "artifactName": "Pixel-Bro-Setup.${ext}"
     },
     "portable": {
-      "artifactName": "Pixel-Bro-${version}-portable.${ext}"
+      "artifactName": "Pixel-Bro-Portable.${ext}"
     },
     "afterPack": "scripts/after-pack.js"
   },

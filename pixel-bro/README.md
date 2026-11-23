@@ -34,7 +34,7 @@ Auf Windows:
 npm run dist
 ```
 
-Erzeugt in `dist/` den Installer (`Pixel-Bro-Setup-1.0.2.exe`) und eine portable EXE.
+Erzeugt in `dist/` den Installer (`Pixel-Bro-Setup.exe`), eine portable EXE und eine ZIP.
 Unter Linux ohne Wine geht nur `npm run dist:zip` (ZIP zum Entpacken).
 
 Alternativ baut der GitHub-Workflow **„Pixel Bro – Windows-Build“** alles automatisch bei jedem Push;
@@ -45,3 +45,18 @@ Die App läuft auch direkt im Browser: `src/index.html` öffnen.
 ---
 
 Entwickelt von **Jens Niebisch** für **[Bro Kartell](https://bro-kartell.com)** – Multigaming Clan seit 2013.
+
+## Neue Version veröffentlichen
+
+1. In `package.json` die `version` erhöhen (z. B. `1.0.3`) und in `src/app.js` die `APP_VERSION` anpassen.
+2. In `CHANGELOG.md` einen Abschnitt `## 1.0.3` mit den Neuerungen ergänzen.
+3. Committen und eine Versionsmarke hochladen:
+
+```bash
+git tag pixel-bro-v1.0.3
+git push origin pixel-bro-v1.0.3
+```
+
+Der Workflow **„Pixel Bro – Release veröffentlichen“** baut dann Installer, portable EXE und ZIP
+und erstellt das GitHub-Release. Die Download-Links auf der Homepage
+(`…/releases/latest/download/Pixel-Bro-Setup.exe`) zeigen automatisch auf die neueste Version.

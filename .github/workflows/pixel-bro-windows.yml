@@ -1,7 +1,9 @@
-name: Pixel Bro – Windows-Build
+name: Pixel Bro – Windows-Build (Test)
 
 on:
   push:
+    branches:
+      - '**'          # nur Branches – Versionsmarken baut der Release-Workflow
     paths:
       - 'pixel-bro/**'
       - '.github/workflows/pixel-bro-windows.yml'

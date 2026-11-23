@@ -1,0 +1,59 @@
+name: Pixel Bro – Release veröffentlichen
+
+# Startet, sobald eine Versionsmarke wie "pixel-bro-v1.0.2" hochgeladen wird.
+on:
+  push:
+    tags:
+      - 'pixel-bro-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: pixel-bro
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pixel-bro/package-lock.json
+
+      - name: Version prüfen
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#pixel-bro-v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$VERSION" != "$PKG" ]; then
+            echo "::error::Tag $TAG passt nicht zur Version $PKG in package.json"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Release-Text aus CHANGELOG.md erzeugen
+        run: bash scripts/release-notes.sh "${{ steps.version.outputs.version }}" > release-notes.md
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Installer, portable EXE und ZIP bauen
+        run: npx electron-builder --win nsis portable zip --x64 --publish never
+
+      - name: GitHub-Release erstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/Pixel-Bro-Setup.exe \
+            dist/Pixel-Bro-Portable.exe \
+            dist/Pixel-Bro-Windows.zip \
+            --title "Pixel Bro ${{ steps.version.outputs.version }}" \
+            --notes-file release-notes.md \
+            --latest
