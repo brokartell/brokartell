@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1
+- Neues App-Icon – gezeichnet von izec313 mit Pixel Bro selbst (Programm, Taskleiste, Startmenü, Installer)
+
 ## 1.2.0
 - **Mehrere eigene Paletten:** bis zu 20 eigene Paletten, jede mit eigenem Namen
 - Neue Knöpfe neben dem Paletten-Auswahlfeld: Neue Palette, Umbenennen, Löschen
