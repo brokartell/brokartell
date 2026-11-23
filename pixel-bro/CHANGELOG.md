@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4
+- Neue Palette **„GB Studio“** mit den vier Standardfarben von GB Studio (#071821, #306850, #86C06C, #E0F8CF) – passt zu Sprites für GB-Studio-Spiele
+- Die bisherige Palette „Game Boy“ (klassisches Erbsengrün) bleibt erhalten
+
 ## 1.1.3
 - Automatisches Update: Der Installer startet erst ein paar Sekunden, nachdem sich Pixel Bro komplett beendet hat. Das verhindert die Meldung „Die alten Anwendungsdateien konnten nicht deinstalliert werden …: 2“
 - Gilt für „Jetzt neu starten“ und für „Später“ (Installation beim Schließen)
