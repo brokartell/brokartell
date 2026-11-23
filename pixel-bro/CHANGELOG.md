@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+- Automatisches Update: Der Installer startet erst ein paar Sekunden, nachdem sich Pixel Bro komplett beendet hat. Das verhindert die Meldung „Die alten Anwendungsdateien konnten nicht deinstalliert werden …: 2“
+- Gilt für „Jetzt neu starten“ und für „Später“ (Installation beim Schließen)
+
 ## 1.1.2
 - Versionsnummer immer sichtbar: kleines lila Schild neben „Pixel Bro“ oben links
 - Menüs breiter: Einträge wie „Animiertes GIF exportieren …“ brechen nicht mehr um

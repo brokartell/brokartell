@@ -56,9 +56,51 @@ async function fetchLatestVersion() {
   return m[1];
 }
 
+/*
+ * Wartezeit vor dem Installer (Windows)
+ * electron-updater startet den Installer genau in dem Moment, in dem Pixel Bro sich beendet.
+ * Dann laufen oft noch Teile des Programms (oder ein Virenscanner prüft die Dateien) und der
+ * Deinstaller der alten Version meldet „Die alten Anwendungsdateien konnten nicht deinstalliert
+ * werden …: 2“. Deshalb startet ein unsichtbarer Helfer den Installer erst nach ein paar Sekunden.
+ */
+const INSTALL_DELAY_SECONDS = 3;
+
+/** Ein Argument für die Windows-Kommandozeile – Anführungszeichen nur, wenn nötig (NSIS erkennt "/S" sonst nicht). */
+function winArg(a) {
+  a = String(a);
+  if (/^\/D=/i.test(a)) return a;                 // NSIS: /D= muss ohne Anführungszeichen am Ende stehen
+  return /[\s"&|<>^]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a;
+}
+/** Baut den Befehl: erst warten, dann den Installer starten. */
+function delayedInstallCommand(cmd, args, seconds = INSTALL_DELAY_SECONDS) {
+  const wait = `ping -n ${seconds + 1} 127.0.0.1 >nul`;
+  return `${wait} & "${cmd}" ${args.map(winArg).join(' ')}`.trim();
+}
+function spawnDelayed(cmd, args = [], env = undefined) {
+  const { spawn } = require('child_process');
+  return new Promise((resolve, reject) => {
+    try {
+      const line = delayedInstallCommand(cmd, args);
+      const p = spawn('cmd.exe', ['/d', '/s', '/c', `"${line}"`], {
+        detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true, env,
+      });
+      p.on('error', reject);
+      p.unref();
+      if (p.pid !== undefined) resolve(true);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 function setupAutoUpdater() {
   if (autoUpdater) return autoUpdater;
   ({ autoUpdater } = require('electron-updater'));
+  if (process.platform === 'win32' && typeof autoUpdater.spawnLog === 'function') {
+    // Installer (auch über elevate.exe) erst nach kurzer Wartezeit starten – gilt für
+    // „Jetzt neu starten“ und für „Später“ (Installation beim Schließen)
+    autoUpdater.spawnLog = (cmd, args = [], env = undefined) => spawnDelayed(cmd, args, env);
+  }
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;  // „Später“ → wird beim Schließen installiert
   autoUpdater.allowDowngrade = false;
@@ -138,4 +180,6 @@ module.exports = {
   init,
   isQuittingForUpdate: () => quittingForUpdate,
   compareVersions,
+  delayedInstallCommand, // für Tests
+  spawnDelayed,          // für Tests
 };

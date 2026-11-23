@@ -27,6 +27,9 @@ jobs:
       - name: Abhängigkeiten installieren
         run: npm ci
 
+      - name: Update-Wartezeit testen (Installer startet verzögert)
+        run: node scripts/test-delayed-install.js
+
       - name: Installer, portable EXE und ZIP bauen
         run: npx electron-builder --win nsis portable zip --x64 --publish never
 
