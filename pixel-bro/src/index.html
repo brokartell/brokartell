@@ -79,6 +79,10 @@
           <button class="menu-btn">Hilfe</button>
           <div class="menu-list">
             <button data-cmd="shortcuts"><span>Tastenkürzel</span><kbd>F1</kbd></button>
+            <hr class="desktop-only">
+            <button data-cmd="update-check" class="desktop-only"><span>Nach Updates suchen …</span></button>
+            <button data-cmd="toggle-autoupdate" class="desktop-only"><span>Automatisch nach Updates suchen</span></button>
+            <hr>
             <button data-cmd="about"><span>Über Pixel Bro</span></button>
           </div>
         </div>
@@ -252,6 +256,17 @@
     </div>
   </div>
   <div id="toast"></div>
+
+  <!-- Update-Hinweis -->
+  <div id="update-banner" role="status" hidden>
+    <div class="ub-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></div>
+    <div class="ub-body">
+      <b id="ub-title"></b>
+      <span id="ub-text"></span>
+      <div class="ub-progress" id="ub-progress" hidden><div id="ub-bar"></div></div>
+    </div>
+    <div class="ub-actions" id="ub-actions"></div>
+  </div>
   <input type="file" id="file-open" accept=".pixelbro,.json" hidden>
   <input type="file" id="file-import" accept="image/*" hidden>
 

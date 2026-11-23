@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+- **Automatische Updates:** Die installierte Version sucht beim Start nach einer neuen Version, lädt sie im Hintergrund und installiert sie nach einem Klick auf „Jetzt neu starten“ (oder beim Schließen)
+- Portable EXE und ZIP zeigen einen Hinweis mit Download-Link, wenn es eine neue Version gibt
+- Hilfe → „Nach Updates suchen“ und „Automatisch nach Updates suchen“ (abschaltbar)
+- Hinweis: Diese Version einmal von Hand installieren – ab dann aktualisiert sich Pixel Bro selbst
+
 ## 1.0.3
 - Scrollleisten an der Zeichenfläche (waagerecht und senkrecht): Beim Reinzoomen kann man das Bild verschieben, ohne rauszuzoomen
 - Umschalt + Mausrad scrollt waagerecht

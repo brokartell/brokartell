@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
+const updater = require('./updater');
 
 let win = null;
 
@@ -39,9 +40,12 @@ function createWindow() {
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
   win.once('ready-to-show', () => { win.maximize(); win.show(); });
   win.webContents.once('did-finish-load', () => sendOpenPath(fileFromArgs(process.argv)));
+  updater.init(win);
 
   // Ungespeicherte Änderungen beim Schließen abfragen
   win.webContents.on('will-prevent-unload', (e) => {
+    // Beim Neustart fürs Update nicht nachfragen – die Arbeit wurde vorher automatisch gesichert
+    if (updater.isQuittingForUpdate()) { e.preventDefault(); return; }
     const choice = dialog.showMessageBoxSync(win, {
       type: 'question',
       buttons: ['Ohne Speichern schließen', 'Abbrechen'],

@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.1.0';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -89,6 +89,7 @@ const settings = {
   paletteName: 'Bro 32',
   theme: 'dark',
   playing: true,
+  autoUpdate: true,
 };
 
 const view = { zoom: 16, ox: 0, oy: 0 };
@@ -1804,6 +1805,10 @@ async function handleImageBlob(blob, name) {
 
 /* ---------- Autosave & Einstellungen ---------- */
 let autosaveTimer = null;
+function autosaveNow() {
+  clearTimeout(autosaveTimer);
+  try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ name: fileInfo.name, path: fileInfo.path, data: serialize() })); } catch (e) { /* Speicher voll */ }
+}
 function scheduleAutosave() {
   clearTimeout(autosaveTimer);
   autosaveTimer = setTimeout(() => {
@@ -1812,8 +1817,8 @@ function scheduleAutosave() {
 }
 function saveSettings() {
   try {
-    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme } = settings;
-    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme }));
+    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate } = settings;
+    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate }));
   } catch (e) { /* ignorieren */ }
 }
 function loadSettings() {
@@ -1840,6 +1845,7 @@ function syncMenuChecks() {
   const map = { 'toggle-grid': 'grid', 'toggle-tile': 'tile', 'toggle-onion': 'onion' };
   for (const [cmd, key] of Object.entries(map)) $$(`[data-cmd="${cmd}"]`).forEach((b) => b.classList.toggle('checked', !!settings[key]));
   $$('[data-cmd="toggle-tilegrid"]').forEach((b) => b.classList.toggle('checked', settings.tileGrid > 1));
+  $$('[data-cmd="toggle-autoupdate"]').forEach((b) => b.classList.toggle('checked', !!settings.autoUpdate));
 }
 
 const commands = {
@@ -1877,6 +1883,13 @@ const commands = {
     requestRender();
   },
   shortcuts: showShortcuts,
+  'update-check': () => checkForUpdates(true),
+  'toggle-autoupdate': () => {
+    settings.autoUpdate = !settings.autoUpdate;
+    saveSettings();
+    syncMenuChecks();
+    toast(settings.autoUpdate ? 'Pixel Bro sucht beim Start automatisch nach Updates' : 'Automatische Update-Suche ist aus');
+  },
   about: () => modal({
     title: 'Über Pixel Bro',
     body: `<div style="display:flex;gap:14px;align-items:center">
@@ -1888,7 +1901,9 @@ const commands = {
       <p><a href="https://bro-kartell.com" target="_blank" rel="noopener">bro-kartell.com</a> ·
         <a href="https://bro-kartell.com/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
       <p class="hint">© ${new Date().getFullYear()} Jens Niebisch · Bro Kartell. Alle Rechte vorbehalten.<br>
-        Projekte werden als <code>.pixelbro</code>-Datei gespeichert, die aktuelle Arbeit wird zusätzlich automatisch gesichert.</p>`,
+        Projekte werden als <code>.pixelbro</code>-Datei gespeichert, die aktuelle Arbeit wird zusätzlich automatisch gesichert.</p>
+      ${nativeApi ? `<p class="hint">Updates: Pixel Bro fragt ${settings.autoUpdate ? 'beim Start' : 'nur auf Wunsch'} bei GitHub nach einer neuen Version
+        (abschaltbar unter Hilfe → Automatisch nach Updates suchen).</p>` : ''}`,
   }),
   'layer-add': () => layerCmd('layer-add'),
   'layer-dup': () => layerCmd('layer-dup'),
@@ -2133,6 +2148,97 @@ window.addEventListener('beforeunload', (e) => {
   if (dirty) { e.preventDefault(); e.returnValue = ''; }
 });
 
+/* ---------- Updates (nur Windows-App) ---------- */
+const updateBanner = $('#update-banner');
+let updateKind = null;
+let updateDismissed = false;
+
+function checkForUpdates(manual) {
+  if (!nativeApi || !nativeApi.checkForUpdates) {
+    if (manual) toast('Die Browser-Version ist immer auf dem neuesten Stand');
+    return;
+  }
+  if (manual) updateDismissed = false;
+  nativeApi.checkForUpdates(manual);
+}
+
+function showUpdateBanner({ title, text, progress = null, actions = [] }) {
+  if (updateDismissed) return;
+  $('#ub-title').textContent = title;
+  $('#ub-text').textContent = text;
+  $('#ub-progress').hidden = progress === null;
+  if (progress !== null) $('#ub-bar').style.width = clamp(progress, 0, 100) + '%';
+  const box = $('#ub-actions');
+  box.innerHTML = '';
+  for (const a of actions) {
+    const b = document.createElement('button');
+    b.className = 'btn' + (a.primary ? ' primary' : '');
+    b.textContent = a.label;
+    b.onclick = a.onClick;
+    box.appendChild(b);
+  }
+  updateBanner.hidden = false;
+}
+function hideUpdateBanner(dismiss = false) {
+  updateBanner.hidden = true;
+  if (dismiss) updateDismissed = true;
+}
+
+function onUpdateStatus(st) {
+  switch (st.state) {
+    case 'checking':
+      if (st.manual) toast('Suche nach Updates …');
+      break;
+    case 'none':
+      hideUpdateBanner();
+      if (st.manual) toast(`Pixel Bro ist aktuell (Version ${st.version})`);
+      break;
+    case 'error':
+      if (st.manual) toast('Update-Suche fehlgeschlagen: ' + st.message);
+      break;
+    case 'downloading':
+      if (st.version) updateBanner.dataset.version = st.version;
+      showUpdateBanner({
+        title: updateBanner.dataset.version ? `Update ${updateBanner.dataset.version} wird geladen …` : 'Update wird geladen …',
+        text: 'Du kannst einfach weiterarbeiten.',
+        progress: st.percent || 0,
+      });
+      break;
+    case 'ready':
+      updateDismissed = false;
+      showUpdateBanner({
+        title: `Version ${st.version} ist bereit`,
+        text: 'Pixel Bro startet kurz neu, deine Arbeit wird vorher gesichert. Mit „Später“ wird das Update beim Schließen installiert.',
+        actions: [
+          { label: 'Jetzt neu starten', primary: true, onClick: installUpdateNow },
+          { label: 'Später', onClick: () => hideUpdateBanner(true) },
+        ],
+      });
+      break;
+    case 'available-manual':
+      showUpdateBanner({
+        title: `Version ${st.version} ist da`,
+        text: st.kind === 'portable'
+          ? 'Lade die neue portable Version herunter und ersetze damit die alte Datei.'
+          : 'Lade die neue Version herunter. Tipp: Mit dem Installer aktualisiert sich Pixel Bro künftig selbst.',
+        actions: [
+          { label: 'Herunterladen', primary: true, onClick: () => { nativeApi.openDownloadPage(); hideUpdateBanner(true); } },
+          { label: 'Später', onClick: () => hideUpdateBanner(true) },
+        ],
+      });
+      break;
+  }
+}
+
+async function installUpdateNow() {
+  commitFloat();
+  autosaveNow();
+  saveSettings();
+  showUpdateBanner({ title: 'Update wird installiert …', text: 'Pixel Bro startet gleich neu.' });
+  const ok = await nativeApi.installUpdate();
+  if (!ok) { hideUpdateBanner(); toast('Update konnte nicht gestartet werden'); }
+}
+
 /* ---------- Toast & Status ---------- */
 let toastTimer;
 function toast(msg) {
@@ -2184,6 +2290,14 @@ function init() {
 
   if (nativeApi && nativeApi.onOpenPath) {
     nativeApi.onOpenPath((path, data) => loadProject(new TextDecoder().decode(data), path.split(/[\\/]/).pop(), path));
+  }
+
+  // Updates: nur in der Windows-App
+  if (nativeApi && nativeApi.onUpdateStatus) {
+    document.body.classList.add('is-desktop');
+    nativeApi.onUpdateStatus(onUpdateStatus);
+    nativeApi.updateInfo().then((info) => { updateKind = info.kind; }).catch(() => {});
+    if (settings.autoUpdate) setTimeout(() => checkForUpdates(false), 4000);
   }
 }
 init();

@@ -313,3 +313,26 @@ select {
 .palette-empty { grid-column: 1 / -1; padding: 10px 2px; }
 .color-preview { width: 100%; height: 40px; border-radius: 8px; border: 1px solid var(--line-2); }
 #modal-body input[type="color"] { width: 100%; height: 40px; padding: 0; border: 1px solid var(--line-2); border-radius: 8px; background: none; cursor: pointer; }
+
+/* Nur in der Windows-App */
+body:not(.is-desktop) .desktop-only { display: none; }
+
+/* Update-Hinweis unten rechts */
+#update-banner {
+  position: fixed; right: 16px; bottom: 140px; z-index: 150; width: 340px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; padding: 14px;
+  background: var(--panel); border: 1px solid var(--accent); border-radius: 14px;
+  box-shadow: var(--shadow), 0 0 0 4px var(--accent-soft); animation: pop .2s ease-out;
+}
+#update-banner[hidden] { display: none; }
+.ub-icon { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: #fff; }
+.ub-icon svg { width: 18px; height: 18px; }
+.ub-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ub-body b { font-size: 14px; }
+.ub-body span { color: var(--text-2); font-size: 12px; }
+.ub-progress { height: 6px; margin-top: 6px; border-radius: 999px; background: var(--line-2); overflow: hidden; }
+.ub-progress div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.ub-body { flex-basis: calc(100% - 46px); }
+.ub-actions { display: flex; gap: 8px; width: 100%; padding-left: 46px; }
+.ub-actions:empty { display: none; }
+.ub-actions .btn { height: 30px; padding: 0 12px; font-size: 12px; justify-content: center; }
