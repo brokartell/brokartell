@@ -148,7 +148,7 @@ input[type="range"] { -webkit-appearance: none; appearance: none; width: 110px; 
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--panel); cursor: pointer; }
 
 /* ---------- Arbeitsbereich ---------- */
-#workspace { display: grid; grid-template-columns: 60px 1fr 290px; min-height: 0; }
+#workspace { display: grid; grid-template-columns: 60px 1fr 330px; min-height: 0; }
 
 #toolbar {
   display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0;
@@ -324,8 +324,9 @@ body:not(.is-desktop) .desktop-only { display: none; }
 
 /* Update-Hinweis unten rechts */
 #update-banner {
-  position: fixed; right: 16px; bottom: 140px; z-index: 150; width: 340px;
-  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; padding: 14px;
+  /* unten rechts über der Zeitleiste – verdeckt weder Zeichenfläche noch Ebenen */
+  position: fixed; right: 16px; bottom: 34px; z-index: 150; width: min(470px, calc(100vw - 32px)); max-height: 90px;
+  display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; padding: 10px 12px;
   background: var(--panel); border: 1px solid var(--accent); border-radius: 14px;
   box-shadow: var(--shadow), 0 0 0 4px var(--accent-soft); animation: pop .2s ease-out;
 }
@@ -337,8 +338,8 @@ body:not(.is-desktop) .desktop-only { display: none; }
 .ub-body span { color: var(--text-2); font-size: 12px; }
 .ub-progress { height: 6px; margin-top: 6px; border-radius: 999px; background: var(--line-2); overflow: hidden; }
 .ub-progress div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
-.ub-body { flex-basis: calc(100% - 46px); }
-.ub-actions { display: flex; gap: 8px; width: 100%; padding-left: 46px; }
+.ub-body { flex: 1; }
+.ub-actions { display: flex; flex-direction: column; gap: 6px; flex: none; }
 .ub-actions:empty { display: none; }
 .ub-actions .btn { height: 30px; padding: 0 12px; font-size: 12px; justify-content: center; }
 

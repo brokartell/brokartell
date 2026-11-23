@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.2.2';
+const APP_VERSION = '1.2.3';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2355,7 +2355,7 @@ function onUpdateStatus(st) {
       updateDismissed = false;
       showUpdateBanner({
         title: `Version ${st.version} ist bereit`,
-        text: 'Pixel Bro startet kurz neu, deine Arbeit wird vorher gesichert. Mit „Später“ wird das Update beim Schließen installiert.',
+        text: 'Deine Arbeit wird vorher gesichert. „Später“ installiert beim Schließen.',
         actions: [
           { label: 'Jetzt neu starten', primary: true, onClick: installUpdateNow },
           { label: 'Später', onClick: () => hideUpdateBanner(true) },
@@ -2366,8 +2366,8 @@ function onUpdateStatus(st) {
       showUpdateBanner({
         title: `Version ${st.version} ist da`,
         text: st.kind === 'portable'
-          ? 'Lade die neue portable Version herunter und ersetze damit die alte Datei.'
-          : 'Lade die neue Version herunter. Tipp: Mit dem Installer aktualisiert sich Pixel Bro künftig selbst.',
+          ? 'Neue portable Version herunterladen und die alte Datei ersetzen.'
+          : 'Tipp: Mit dem Installer aktualisiert sich Pixel Bro selbst.',
         actions: [
           { label: 'Herunterladen', primary: true, onClick: () => { nativeApi.openDownloadPage(); hideUpdateBanner(true); } },
           { label: 'Später', onClick: () => hideUpdateBanner(true) },
