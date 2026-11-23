@@ -2,7 +2,8 @@
 # Erzeugt die Release-Beschreibung für eine Version aus CHANGELOG.md.
 set -euo pipefail
 VERSION="$1"
-NOTES=$(awk -v v="## $VERSION" '$0 == v {f=1; next} /^## / {f=0} f' CHANGELOG.md)
+# Überschrift „## 1.3.0“ oder mit Titel „## 1.3.0 – Neue Werkzeuge“
+NOTES=$(awk -v v="## $VERSION" '$0 == v || index($0, v " ") == 1 {f=1; next} /^## / {f=0} f' CHANGELOG.md)
 if [ -z "${NOTES//[[:space:]]/}" ]; then
   echo "Kein Eintrag für Version $VERSION in CHANGELOG.md" >&2
   exit 1
