@@ -48,10 +48,14 @@ Commits/Pushes nur, wenn der Auftrag das verlangt; dann auf dem vorgegebenen Arb
 
 Nach **jeder** Änderung an der Website einen Eintrag in Notion anlegen:
 
-- Suche mit `notion-search` nach der Datenbank **„bro-kartell.com – Änderungen“**.
-- Falls sie nicht existiert, lege sie einmalig mit `notion-create-database` an:
+- Datenbank **„bro-kartell.com – Änderungen“** (liegt unter der Notion-Seite „Homepage bro-kartell.com“):
+  - Datenbank: https://app.notion.com/p/42144b622a718132b746ec11edb54e33
+  - Data Source: `collection://42144b62-2a71-8116-bb81-000b84dbfccd` → als `data_source_id` in `notion-create-pages` verwenden
+  - Spalten: `Änderung` (Titel), `Datum`, `Beschreibung`, `Bereich` (Clan / Studio / Changelog / Allgemein), `Version`
+- Falls die Datenbank nicht mehr erreichbar ist: mit `notion-search` danach suchen; nur wenn sie wirklich fehlt, neu anlegen mit
   `CREATE TABLE ("Änderung" TITLE, "Datum" DATE, "Beschreibung" RICH_TEXT, "Bereich" SELECT('Clan':blue, 'Studio':purple, 'Changelog':green, 'Allgemein':gray), "Version" RICH_TEXT)`
-- Vor dem Anlegen eines Eintrags die Datenbank mit `notion-fetch` abrufen und die `collection://`-ID als `data_source_id` verwenden.
+  unter der Seite „Homepage bro-kartell.com“, und das melden.
+- Die Notion-Seite „Homepage bro-kartell.com“ enthält außerdem Hintergrundinfos zur Website (z. B. Domain-Einrichtung, Spickzettel) – bei Bedarf mit `notion-fetch` nachlesen.
 - Eintrag mit `notion-create-pages`:
   - **Änderung:** was geändert wurde (kurz, z. B. „Neue Wallpaper-Filter“)
   - **Datum:** heutiges Datum (`date:Datum:start` = JJJJ-MM-TT)
