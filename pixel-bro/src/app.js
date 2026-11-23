@@ -6,7 +6,7 @@
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const native = window.native || null; // Electron-Brücke (preload.js)
+const nativeApi = window.native || null; // Electron-Brücke (preload.js)
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1510,8 +1510,8 @@ async function saveCanvas(c, name) {
   await saveBytes(bytes, name, [{ name: 'PNG-Bild', extensions: ['png'] }], 'image/png');
 }
 async function saveBytes(bytes, name, filters, mime, path = null) {
-  if (native) {
-    const p = await native.saveFile({ defaultPath: path || name, filters, data: bytes, path });
+  if (nativeApi) {
+    const p = await nativeApi.saveFile({ defaultPath: path || name, filters, data: bytes, path });
     if (p) toast('Gespeichert: ' + p.split(/[\\/]/).pop());
     return p;
   }
@@ -1579,20 +1579,20 @@ async function saveProject(saveAs = false) {
   const bytes = new TextEncoder().encode(serialize());
   const p = await saveBytes(bytes, name, [{ name: 'Pixel-Bro-Projekt', extensions: ['pixelbro'] }], 'application/json', saveAs ? null : fileInfo.path);
   if (p) {
-    fileInfo = { path: native ? p : null, name: p.split(/[\\/]/).pop() };
+    fileInfo = { path: nativeApi ? p : null, name: p.split(/[\\/]/).pop() };
     dirty = false;
     updateTitle();
   }
 }
 async function openProject() {
-  if (native) {
-    const r = await native.openFile({ filters: [{ name: 'Pixel-Bro-Projekt', extensions: ['pixelbro', 'json'] }] });
+  if (nativeApi) {
+    const r = await nativeApi.openFile({ filters: [{ name: 'Pixel-Bro-Projekt', extensions: ['pixelbro', 'json'] }] });
     if (r) loadProject(new TextDecoder().decode(r.data), r.name, r.path);
   } else $('#file-open').click();
 }
 async function importImage() {
-  if (native) {
-    const r = await native.openFile({ filters: [{ name: 'Bilder', extensions: ['png', 'gif', 'jpg', 'jpeg', 'bmp', 'webp'] }] });
+  if (nativeApi) {
+    const r = await nativeApi.openFile({ filters: [{ name: 'Bilder', extensions: ['png', 'gif', 'jpg', 'jpeg', 'bmp', 'webp'] }] });
     if (r) handleImageBlob(new Blob([r.data]), r.name);
   } else $('#file-import').click();
 }
@@ -1779,8 +1779,18 @@ function showShortcuts() {
 function closeMenus() { $$('.menu.open').forEach((m) => m.classList.remove('open')); const c = $('#ctx-menu'); if (c) c.remove(); }
 $$('.menu').forEach((m) => {
   const btn = $('.menu-btn', m);
-  btn.addEventListener('click', (e) => { e.stopPropagation(); const open = m.classList.contains('open'); closeMenus(); if (!open) m.classList.add('open'); });
-  btn.addEventListener('mouseenter', () => { if ($('.menu.open') && !m.classList.contains('open')) { closeMenus(); m.classList.add('open'); } });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Wurde das Menü gerade per Überfahren geöffnet, soll der Klick es nicht wieder schließen
+    const open = m.classList.contains('open') && !m.dataset.hoverOpened;
+    delete m.dataset.hoverOpened;
+    closeMenus();
+    if (!open) m.classList.add('open');
+  });
+  btn.addEventListener('mouseenter', () => {
+    if ($('.menu.open') && !m.classList.contains('open')) { closeMenus(); m.classList.add('open'); m.dataset.hoverOpened = '1'; }
+  });
+  btn.addEventListener('mouseleave', () => { delete m.dataset.hoverOpened; });
 });
 document.addEventListener('click', (e) => { if (!e.target.closest('.menu')) closeMenus(); });
 $$('[data-cmd]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); run(b.dataset.cmd); }));
@@ -2004,8 +2014,8 @@ function init() {
   requestAnimationFrame(previewLoop);
   if (restored) setTimeout(() => toast('Letzte Sitzung wiederhergestellt'), 400);
 
-  if (native && native.onOpenPath) {
-    native.onOpenPath((path, data) => loadProject(new TextDecoder().decode(data), path.split(/[\\/]/).pop(), path));
+  if (nativeApi && nativeApi.onOpenPath) {
+    nativeApi.onOpenPath((path, data) => loadProject(new TextDecoder().decode(data), path.split(/[\\/]/).pop(), path));
   }
 }
 init();

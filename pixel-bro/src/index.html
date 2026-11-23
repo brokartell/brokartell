@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'">
   <title>Pixel Bro</title>
   <link rel="icon" href="icon.png">
   <link rel="stylesheet" href="style.css">
@@ -11,10 +12,10 @@
   <div id="app">
     <!-- Kopfzeile -->
     <header id="topbar">
-      <div class="brand">
+      <button class="brand" data-cmd="about" title="Über Pixel Bro">
         <img src="icon.png" alt="" class="brand-icon">
         <span class="brand-name">Pixel Bro</span>
-      </div>
+      </button>
       <nav id="menubar">
         <div class="menu" data-menu="datei">
           <button class="menu-btn">Datei</button>
