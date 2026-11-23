@@ -1,0 +1,64 @@
+{
+  "name": "pixel-bro",
+  "productName": "Pixel Bro",
+  "version": "1.0.0",
+  "description": "Moderner Pixel-Art- und Animations-Editor auf Deutsch",
+  "author": "Bro Kartell",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "icon": "node scripts/make-icon.js",
+    "dist": "electron-builder --win nsis portable --x64",
+    "dist:zip": "electron-builder --win zip --x64"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "resedit": "1.7.2"
+  },
+  "build": {
+    "appId": "de.brokartell.pixelbro",
+    "productName": "Pixel Bro",
+    "copyright": "© Bro Kartell",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "pixelbro",
+        "name": "Pixel-Bro-Projekt",
+        "description": "Pixel-Bro-Projekt",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "artifactName": "Pixel-Bro-${version}-Windows-${arch}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Pixel Bro",
+      "language": "1031",
+      "installerLanguages": [
+        "de_DE"
+      ],
+      "artifactName": "Pixel-Bro-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Pixel-Bro-${version}-portable.${ext}"
+    },
+    "afterPack": "scripts/after-pack.js"
+  }
+}
