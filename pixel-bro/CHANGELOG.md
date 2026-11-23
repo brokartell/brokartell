@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.4
+- Fehler behoben: Gelöschte eigene Paletten kamen nach einem Neustart wieder zurück (die einmalige Übernahme der alten „Eigene Palette“ lief bei jeder leeren Palettenliste erneut)
+
 ## 1.2.3
 - Rechte Seitenleiste etwas breiter: Paletten-Auswahl zeigt auch „GB Studio – Hintergründe“ vollständig
 - Update-Hinweis sitzt jetzt unten rechts über der Zeitleiste und verdeckt weder Zeichenfläche noch Ebenen

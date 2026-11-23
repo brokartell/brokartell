@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.2.3';
+const APP_VERSION = '1.2.4';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1453,14 +1453,19 @@ const CUSTOM_PREFIX = 'custom:';
 let customPalettes = []; // [{ id, name, colors: [u32] }]
 
 function loadCustomPalettes() {
-  try { customPalettes = JSON.parse(localStorage.getItem('pixelbro.customPalettes') || 'null') || []; } catch (e) { customPalettes = []; }
-  // Übernahme der alten einzelnen „Eigene Palette“
-  if (!customPalettes.length) {
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem('pixelbro.customPalettes') || 'null'); } catch (e) { stored = null; }
+  customPalettes = Array.isArray(stored) ? stored : [];
+  // Übernahme der alten einzelnen „Eigene Palette“ (vor 1.2.0) – nur ein einziges Mal:
+  // nur wenn es die neue Liste noch gar nicht gibt, danach wird die alte Palette gelöscht.
+  // (Bis 1.2.3 lief das bei jeder leeren Liste – gelöschte Paletten kamen beim Neustart zurück.)
+  if (stored === null) {
     try {
       const old = JSON.parse(localStorage.getItem('pixelbro.customPalette') || 'null');
       if (Array.isArray(old) && old.length) customPalettes.push({ id: newPaletteId(), name: 'Eigene Palette 1', colors: old });
     } catch (e) { /* ignorieren */ }
   }
+  try { localStorage.removeItem('pixelbro.customPalette'); } catch (e) { /* ignorieren */ }
   customPalettes = customPalettes.filter((c) => c && c.id && Array.isArray(c.colors));
   saveCustomPalettes();
 }
