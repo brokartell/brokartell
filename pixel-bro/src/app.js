@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -60,8 +60,10 @@ const PALETTES = {
   'Endesga 32': ['be4a2f', 'd77643', 'ead4aa', 'e4a672', 'b86f50', '733e39', '3e2731', 'a22633', 'e43b44', 'f77622', 'feae34', 'fee761', '63c74d', '3e8948', '265c42', '193c3e', '124e89', '0099db', '2ce8f5', 'ffffff', 'c0cbdc', '8b9bb4', '5a6988', '3a4466', '262b44', '181425', 'ff0044', '68386c', 'b55088', 'f6757a', 'e8b796', 'c28569'],
   'Sweetie 16': ['1a1c2c', '5d275d', 'b13e53', 'ef7d57', 'ffcd75', 'a7f070', '38b764', '257179', '29366f', '3b5dc9', '41a6f6', '73eff7', 'f4f4f4', '94b0c2', '566c86', '333c57'],
   'Game Boy': ['0f380f', '306230', '8bac0f', '9bbc0f'],
-  // Standardpalette von GB Studio (dunkel → hell), passend zu First Strike & Co.
-  'GB Studio': ['071821', '306850', '86c06c', 'e0f8cf'],
+  // GB Studio (laut gbstudio.dev): Sprites = 3 Farben + #65FF00 für Transparenz, kein #306850
+  'GB Studio – Sprites': ['071821', '86c06c', 'e0f8cf', '65ff00'],
+  // GB Studio Hintergründe: alle 4 Stufen (dunkel → hell), kein #65FF00
+  'GB Studio – Hintergründe': ['071821', '306850', '86c06c', 'e0f8cf'],
   'Graustufen': ['000000', '222222', '444444', '666666', '888888', 'aaaaaa', 'cccccc', 'eeeeee', 'ffffff'],
 };
 
@@ -1981,6 +1983,7 @@ function loadSettings() {
     if (s) Object.assign(settings, s);
     loadCustomPalettes();
     if (settings.paletteName === 'Eigene Palette' && customPalettes.length) settings.paletteName = CUSTOM_PREFIX + customPalettes[0].id; // alte Einstellung
+    if (settings.paletteName === 'GB Studio') settings.paletteName = 'GB Studio – Sprites'; // bis 1.2.1 hieß sie nur „GB Studio“
     const custom = currentCustom();
     if (custom) settings.palette = custom.colors.slice();
     else if (PALETTES[settings.paletteName]) settings.palette = PALETTES[settings.paletteName].map(parseHex);

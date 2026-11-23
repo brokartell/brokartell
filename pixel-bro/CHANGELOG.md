@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+- Palette „GB Studio“ aufgeteilt in **„GB Studio – Sprites“** (#071821, #86C06C, #E0F8CF und **#65FF00 für Transparenz**) und **„GB Studio – Hintergründe“** (#071821, #306850, #86C06C, #E0F8CF) – genau so, wie GB Studio die Farben verlangt
+- Wer bisher „GB Studio“ gewählt hatte, bekommt automatisch „GB Studio – Sprites“
+
 ## 1.2.1
 - Neues App-Icon – gezeichnet von izec313 mit Pixel Bro selbst (Programm, Taskleiste, Startmenü, Installer)
 
