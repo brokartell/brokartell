@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.6
+- Rechte Seitenleiste: Bei vielen Ebenen scrollt nur noch die Ebenen-Liste, nicht mehr die ganze Leiste. Die Ebenen nutzen den Platz bis ganz unten
+- Deckkraft: Der Regler ist etwas kürzer, damit „100 %“ immer ins Feld passt
+
 ## 1.2.5
 - Frames in der Zeitleiste: Das Vorschaubild verzerrt beim Drüberfahren nicht mehr, große Bilder werden sauber verkleinert
 - Vorschau zeigt jetzt auch große Bilder (z. B. 160 × 144) komplett

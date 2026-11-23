@@ -205,8 +205,9 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .panel-actions { display: flex; gap: 1px; }
 .row { display: flex; align-items: center; gap: 8px; color: var(--text-2); }
 .row label { min-width: 58px; font-size: 12px; }
-.row input[type="range"] { flex: 1; width: auto; }
+.row input[type="range"] { flex: 1 1 auto; width: auto; min-width: 0; }
 .row .mono { min-width: 36px; text-align: right; }
+.row span.mono { flex: none; min-width: 40px; white-space: nowrap; }
 .hint { margin: 0; font-size: 11px; color: var(--text-3); }
 
 .preview-box {
@@ -239,7 +240,10 @@ select {
 .swatch.is-primary { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent); }
 .swatch.is-secondary { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--text-3); }
 
-.layers { display: flex; flex-direction: column; gap: 3px; max-height: 190px; overflow-y: auto; }
+/* Seitenleiste: nur die Ebenen-Liste scrollt, nicht die ganze Leiste */
+#panel-preview, #panel-palette { flex: none; }
+#panel-layers { flex: 1 1 0; min-height: 150px; }
+.layers { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; min-height: 40px; overflow-y: auto; }
 .layer {
   display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 7px; cursor: pointer;
   border: 1px solid transparent;
