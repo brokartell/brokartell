@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+- Schließen-Dialog verständlicher: „Dein Projekt ist noch nicht als Datei gespeichert“ mit den Knöpfen „Speichern …“, „Schließen“ und „Abbrechen“
+- „Speichern …“ legt direkt die .pixelbro-Datei an und schließt danach
+- Beim Schließen wird die Arbeit sofort gesichert, auch der letzte Strich
+
 ## 1.1.0
 - **Automatische Updates:** Die installierte Version sucht beim Start nach einer neuen Version, lädt sie im Hintergrund und installiert sie nach einem Klick auf „Jetzt neu starten“ (oder beim Schließen)
 - Portable EXE und ZIP zeigen einen Hinweis mit Download-Link, wenn es eine neue Version gibt

@@ -48,14 +48,17 @@ function createWindow() {
     if (updater.isQuittingForUpdate()) { e.preventDefault(); return; }
     const choice = dialog.showMessageBoxSync(win, {
       type: 'question',
-      buttons: ['Ohne Speichern schließen', 'Abbrechen'],
-      defaultId: 1,
-      cancelId: 1,
-      title: 'Ungespeicherte Änderungen',
-      message: 'Es gibt ungespeicherte Änderungen.',
-      detail: 'Deine Arbeit wird automatisch gesichert und beim nächsten Start wiederhergestellt. Trotzdem schließen?',
+      buttons: ['Speichern …', 'Schließen', 'Abbrechen'],
+      defaultId: 0,
+      cancelId: 2,
+      noLink: true,
+      title: 'Pixel Bro schließen',
+      message: 'Dein Projekt ist noch nicht als Datei gespeichert.',
+      detail: 'Keine Sorge: Pixel Bro hat deine Arbeit automatisch gesichert und stellt sie beim nächsten Start wieder her.\n\n'
+        + '„Speichern …“ legt zusätzlich eine .pixelbro-Datei an, die du weitergeben oder später öffnen kannst.',
     });
-    if (choice === 0) e.preventDefault();
+    if (choice === 1) e.preventDefault();              // schließen
+    else if (choice === 0) win.webContents.send('save-and-close'); // erst speichern, dann schließen
   });
 
   // Externe Links im Standardbrowser öffnen
