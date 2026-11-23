@@ -86,6 +86,11 @@
     .keys kbd{border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;
               padding:1px 8px;font-family:inherit;font-size:.85em;white-space:nowrap}
     @media (max-width: 760px){ .gameRow{grid-template-columns:1fr} .gameRow__img{aspect-ratio:4/3} }
+    /* Pixel Bro (Werkzeug) */
+    .gameRow--tool .gameRow__img{aspect-ratio:16/10;object-fit:cover;object-position:left top;image-rendering:auto}
+    .gameRow--tool .gameRow__img.is-icon{object-fit:contain;image-rendering:pixelated;padding:18% 30%}
+    .dlNote{font-size:.9em;color:var(--muted)}
+    .dlNote a{color:var(--text)}
   </style>
 </head>
 
@@ -107,6 +112,7 @@
       <nav class="links" aria-label="Navigation">
         <a href="#top">Über uns</a>
         <a href="#first-strike">Unsere Spiele</a>
+        <a href="#pixel-bro">Pixel Bro</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
 
@@ -302,6 +308,85 @@
           <div class="hero__actions">
             <span class="soonBadge">COMING SOON</span>
           </div>
+        </div>
+      </section>
+
+      <!-- Werkzeug: Pixel Bro -->
+      <section class="panel gameRow gameRow--tool" id="pixel-bro">
+        <div class="gameRow__media">
+          <div class="shots" data-shots>
+            <img class="gameRow__img shots__img is-active" src="pixel-bro/screens/editor.png"
+                 alt="Pixel Bro: Editor mit animiertem Pixel-Charakter, Zeitleiste und Live-Palette" loading="lazy">
+            <img class="gameRow__img shots__img is-icon" src="pixel-bro/src/icon.png" alt="Pixel Bro Logo" loading="lazy">
+            <button class="shots__nav shots__nav--prev" type="button" aria-label="Vorheriges Bild">‹</button>
+            <button class="shots__nav shots__nav--next" type="button" aria-label="Nächstes Bild">›</button>
+            <div class="shots__dots" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="gameRow__body">
+          <div class="gameRow__top">
+            <div class="kicker"><span class="dot"></span>Werkzeug • Kostenlos</div>
+            <span class="badge">Version 1.0.2</span>
+          </div>
+          <h2>PIXEL BRO</h2>
+          <p>Unser eigener Pixel-Art- und Animations-Editor – komplett auf Deutsch. Damit entstehen Sprites,
+             Tilesets und Animationen für unsere Spiele. Mit Ebenen, Frames, Zwiebelhaut, Kachel-Modus,
+             Live-Palette und Export als PNG, Spritesheet oder animiertes GIF.</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Setup.exe">⬇ Download für Windows</a>
+            <a class="btn" href="pixel-bro/src/index.html" target="_blank" rel="noopener">▶ Im Browser testen</a>
+            <span class="badge">🖥️ Windows 10 / 11</span>
+          </div>
+          <p class="dlNote">
+            Ohne Installation:
+            <a href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Portable.exe">portable EXE</a> ·
+            <a href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Windows.zip">ZIP</a> ·
+            <a href="https://github.com/brokartell/brokartell/releases" target="_blank" rel="noreferrer">alle Versionen auf GitHub</a>
+          </p>
+
+          <details class="more">
+            <summary>Funktionen</summary>
+            <ul class="list">
+              <li>Stift mit Pixel-Perfect, Radierer, Füllen, Pipette, Linie, Rechteck, Ellipse</li>
+              <li>Auswahl, Zauberstab, Verschieben, Dithering, Aufhellen/Abdunkeln, Spiegel-Zeichnen</li>
+              <li>Ebenen und Frames mit Live-Vorschau und Zwiebelhaut</li>
+              <li>Kachel-Modus für nahtlose Tiles</li>
+              <li>Paletten wie PICO-8, Endesga 32, Game Boy – plus Live-Palette mit allen benutzten Farben</li>
+              <li>Import von Bildern und Spritesheets, Export als PNG, Spritesheet und GIF</li>
+            </ul>
+          </details>
+          <details class="more">
+            <summary>Windows-Warnung beim ersten Start?</summary>
+            <p>Pixel Bro ist ein Hobby-Projekt und nicht digital signiert. Windows SmartScreen zeigt deshalb evtl. eine
+               Warnung. Einfach auf <b>„Weitere Informationen“</b> und dann <b>„Trotzdem ausführen“</b> klicken.</p>
+          </details>
+          <details class="more">
+            <summary>Changelog</summary>
+            <div class="changelog">
+            <details open class="cl">
+              <summary><b>v1.0.2</b> <span class="cl-title">• Live-Palette</span></summary>
+              <ul>
+                <li>Palette „Benutzte Farben“ erkennt alle Farben im Sprite automatisch</li>
+                <li>Doppelklick auf eine Farbe ersetzt sie überall</li>
+              </ul>
+            </details>
+            <details class="cl">
+              <summary><b>v1.0.1</b> <span class="cl-title">• Über-Dialog</span></summary>
+              <ul><li>Entwickler, Homepage und Impressum in der App</li></ul>
+            </details>
+            <details class="cl">
+              <summary><b>v1.0</b> <span class="cl-title">• Release</span></summary>
+              <ul><li>Pixel Bro veröffentlicht</li></ul>
+            </details>
+            </div>
+          </details>
+          <details class="more">
+            <summary>Credits</summary>
+            <ul class="list">
+              <li>Idee &amp; Umsetzung: izec313</li>
+              <li>Gebaut mit Electron</li>
+            </ul>
+          </details>
         </div>
       </section>
 

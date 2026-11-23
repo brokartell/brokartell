@@ -1,0 +1,83 @@
+name: Pixel Bro – Release veröffentlichen
+
+# Veröffentlicht automatisch ein GitHub-Release, sobald eine neue Version
+# (package.json → "version") im Hauptzweig main landet.
+# Gibt es das Release zu dieser Version schon, passiert nichts.
+# Alternativ: Versionsmarke "pixel-bro-v1.2.3" hochladen oder manuell starten.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'pixel-bro/**'
+    tags:
+      - 'pixel-bro-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pixel-bro-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: pixel-bro
+        shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version prüfen
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="pixel-bro-v$VERSION"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then
+            echo "::error::Marke $GITHUB_REF_NAME passt nicht zur Version $VERSION in package.json"
+            exit 1
+          fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::notice::Release $TAG gibt es schon – nichts zu tun."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        if: steps.version.outputs.skip == 'false'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pixel-bro/package-lock.json
+
+      - name: Release-Text aus CHANGELOG.md erzeugen
+        if: steps.version.outputs.skip == 'false'
+        run: bash scripts/release-notes.sh "${{ steps.version.outputs.version }}" > release-notes.md
+
+      - name: Abhängigkeiten installieren
+        if: steps.version.outputs.skip == 'false'
+        run: npm ci
+
+      - name: Installer, portable EXE und ZIP bauen
+        if: steps.version.outputs.skip == 'false'
+        run: npx electron-builder --win nsis portable zip --x64 --publish never
+
+      - name: GitHub-Release erstellen
+        if: steps.version.outputs.skip == 'false'
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            dist/Pixel-Bro-Setup.exe \
+            dist/Pixel-Bro-Portable.exe \
+            dist/Pixel-Bro-Windows.zip \
+            --target "$GITHUB_SHA" \
+            --title "Pixel Bro ${{ steps.version.outputs.version }}" \
+            --notes-file release-notes.md \
+            --latest
