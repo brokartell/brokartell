@@ -116,12 +116,11 @@
     .more{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
     .more summary{cursor:pointer;font-weight:700;color:var(--text)}
     .more[open] summary{margin-bottom:10px}
+    .links a[aria-current="page"]{color:var(--text)}
     @media (max-width: 900px){ .pbGrid,.pbFiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
     .pbMobileOnly{display:none}
     @media (max-width: 760px){ .pbHero{grid-template-columns:1fr} .pbGrid,.pbFiles{grid-template-columns:1fr}
       .pbDesktopOnly{display:none} .pbMobileOnly{display:block} }
-    /* Pixel-Bro-Knopf nur am PC (wie die Menüleiste) */
-    @media (max-width: 920px){ .ctaDesktop{display:none !important} }
   </style>
 </head>
 
@@ -143,11 +142,12 @@
       <nav class="links" aria-label="Navigation">
         <a href="games.html">Unsere Spiele</a>
         <a href="games.html#kontakt">Kontakt</a>
+        <a href="pixel-bro.html" aria-current="page">Pixel Bro</a>
       </nav>
 
       <div class="cta">
         <a class="btn btn--primary" href="index.html">Bro Kartell</a>
-        <a class="btn btn--primary ctaDesktop" href="pixel-bro.html" aria-current="page">Pixel Bro</a>
+        <a class="btn btn--primary" href="https://www.youtube.com/@Bro-Kartell" target="_blank" rel="noreferrer">YouTube</a>
       </div>
     </div>
   </header>
