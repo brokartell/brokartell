@@ -18,6 +18,8 @@ $NOTES
 | **Pixel-Bro-Portable.exe** | Eine einzelne EXE, ohne Installation (z. B. für den USB-Stick) |
 | **Pixel-Bro-Windows.zip** | Zum Entpacken, dann *Pixel Bro.exe* starten |
 
+*latest.yml* und *Pixel-Bro-Setup.exe.blockmap* braucht Pixel Bro für die automatischen Updates – nicht löschen.
+
 **Hinweis:** Pixel Bro ist nicht digital signiert. Windows zeigt beim ersten Start deshalb evtl. die
 SmartScreen-Warnung – auf *„Weitere Informationen“* und dann *„Trotzdem ausführen“* klicken.
 

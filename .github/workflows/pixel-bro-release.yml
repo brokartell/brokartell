@@ -70,6 +70,14 @@ jobs:
         if: steps.version.outputs.skip == 'false'
         run: npx electron-builder --win nsis portable zip --x64 --publish never
 
+      # latest.yml beschreibt das neueste Setup – die App liest sie für automatische Updates
+      - name: Update-Datei prüfen
+        if: steps.version.outputs.skip == 'false'
+        run: |
+          test -f dist/latest.yml || { echo "::error::dist/latest.yml fehlt – automatische Updates gingen nicht"; exit 1; }
+          cat dist/latest.yml
+          grep -q "version: ${{ steps.version.outputs.version }}" dist/latest.yml
+
       - name: GitHub-Release erstellen
         if: steps.version.outputs.skip == 'false'
         env:
@@ -79,6 +87,8 @@ jobs:
             dist/Pixel-Bro-Setup.exe \
             dist/Pixel-Bro-Portable.exe \
             dist/Pixel-Bro-Windows.zip \
+            dist/latest.yml \
+            dist/Pixel-Bro-Setup.exe.blockmap \
             --target "$GITHUB_SHA" \
             --title "Pixel Bro ${{ steps.version.outputs.version }}" \
             --notes-file release-notes.md \

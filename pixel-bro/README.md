@@ -18,6 +18,7 @@ Inspiriert von Tools wie Piskel und Pyxel Edit, aber mit frischer, dunkler (oder
 - **Export:** PNG (skaliert), Spritesheet (horizontal/vertikal/Raster), animiertes GIF
 - **Projekte:** `.pixelbro`-Dateien, Doppelklick im Explorer öffnet sie, automatische Sicherung
 - Rückgängig/Wiederholen, Zwischenablage, alle wichtigen Tastenkürzel (F1)
+- **Automatische Updates** (Installer-Version) aus den GitHub-Releases, Hinweis bei portable/ZIP
 
 ## Entwickeln
 
@@ -45,6 +46,14 @@ Die App läuft auch direkt im Browser: `src/index.html` öffnen.
 ---
 
 Entwickelt von **Jens Niebisch** für **[Bro Kartell](https://bro-kartell.com)** – Multigaming Clan seit 2013.
+
+## Automatische Updates
+
+- Quelle: `https://github.com/brokartell/brokartell/releases/latest/download/latest.yml` (lädt der Release-Workflow mit hoch)
+- Installierte Version (`Uninstall Pixel Bro.exe` liegt neben der EXE): `electron-updater` lädt das neue Setup und installiert es still
+- Portable (`PORTABLE_EXECUTABLE_DIR`) und ZIP: nur Hinweis mit Link auf bro-kartell.com/pixel-bro.html
+- Logik in `updater.js`, Oberfläche in `src/app.js` (Abschnitt „Updates“)
+- Zum Testen ohne Release: `PIXELBRO_UPDATE_URL=http://… npm start` (eigene `latest.yml`), `PIXELBRO_UPDATE_KIND` setzt die Art
 
 ## Neue Version veröffentlichen
 
