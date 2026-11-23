@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+- **Mehrere eigene Paletten:** bis zu 20 eigene Paletten, jede mit eigenem Namen
+- Neue Knöpfe neben dem Paletten-Auswahlfeld: Neue Palette, Umbenennen, Löschen
+- „Farben aus dem Bild übernehmen“ legt eine neue benannte Palette an (oder ersetzt die gewählte eigene Palette)
+- Auswahlfeld mit den Gruppen „Vorlagen“ und „Eigene Paletten“
+- Änderungen an einer Vorlage legen automatisch eine eigene Kopie an – die Vorlage bleibt unverändert
+- Die bisherige „Eigene Palette“ wird automatisch als „Eigene Palette 1“ übernommen
+
 ## 1.1.5
 - Update ohne Fehlermeldung: Hält z. B. ein Virenscanner beim Update eine Programmdatei fest, erscheint nicht mehr „Die alten Anwendungsdateien konnten nicht deinstalliert werden …: 2“ – der Installer überschreibt die Dateien einfach
 
