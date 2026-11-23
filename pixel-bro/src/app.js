@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2254,6 +2254,8 @@ function status(msg) { $('#status-msg').textContent = msg; }
 
 /* ---------- Start ---------- */
 function init() {
+  $('#brand-version').textContent = 'v' + APP_VERSION;
+  $('#brand-version').title = 'Version ' + APP_VERSION;
   loadSettings();
   document.documentElement.dataset.theme = settings.theme;
   $('#opt-filled').checked = settings.filled;
