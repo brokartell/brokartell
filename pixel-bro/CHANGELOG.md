@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.5
+- Frames in der Zeitleiste: Das Vorschaubild verzerrt beim Drüberfahren nicht mehr, große Bilder werden sauber verkleinert
+- Vorschau zeigt jetzt auch große Bilder (z. B. 160 × 144) komplett
+- Paletten-Auswahl: ohne eigene Paletten steht dort nur noch „Noch keine“
+
 ## 1.2.4
 - Fehler behoben: Gelöschte eigene Paletten kamen nach einem Neustart wieder zurück (die einmalige Übernahme der alten „Eigene Palette“ lief bei jeder leeren Palettenliste erneut)
 
