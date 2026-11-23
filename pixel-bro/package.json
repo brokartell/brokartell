@@ -1,9 +1,9 @@
 {
   "name": "pixel-bro",
   "productName": "Pixel Bro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Moderner Pixel-Art- und Animations-Editor auf Deutsch",
-  "author": "Bro Kartell",
+  "author": "Jens Niebisch (Bro Kartell)",
   "license": "UNLICENSED",
   "private": true,
   "main": "main.js",
@@ -21,7 +21,7 @@
   "build": {
     "appId": "de.brokartell.pixelbro",
     "productName": "Pixel Bro",
-    "copyright": "© Bro Kartell",
+    "copyright": "© Jens Niebisch · Bro Kartell",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -60,5 +60,6 @@
       "artifactName": "Pixel-Bro-${version}-portable.${ext}"
     },
     "afterPack": "scripts/after-pack.js"
-  }
+  },
+  "homepage": "https://bro-kartell.com"
 }

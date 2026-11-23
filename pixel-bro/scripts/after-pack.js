@@ -25,8 +25,8 @@ exports.default = async function afterPack(context) {
   vi.setStringValues({ lang: 1033, codepage: 1200 }, {
     FileDescription: 'Pixel Bro',
     ProductName: 'Pixel Bro',
-    CompanyName: 'Bro Kartell',
-    LegalCopyright: '© Bro Kartell',
+    CompanyName: 'Bro Kartell – Jens Niebisch',
+    LegalCopyright: '© Jens Niebisch · Bro Kartell',
     OriginalFilename: `${productFilename}.exe`,
     InternalName: 'Pixel Bro',
   });

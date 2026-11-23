@@ -34,10 +34,14 @@ Auf Windows:
 npm run dist
 ```
 
-Erzeugt in `dist/` den Installer (`Pixel-Bro-Setup-1.0.0.exe`) und eine portable EXE.
+Erzeugt in `dist/` den Installer (`Pixel-Bro-Setup-1.0.1.exe`) und eine portable EXE.
 Unter Linux ohne Wine geht nur `npm run dist:zip` (ZIP zum Entpacken).
 
 Alternativ baut der GitHub-Workflow **„Pixel Bro – Windows-Build“** alles automatisch bei jedem Push;
 die Dateien liegen dann unter *Actions → Lauf → Artifacts*.
 
 Die App läuft auch direkt im Browser: `src/index.html` öffnen.
+
+---
+
+Entwickelt von **Jens Niebisch** für **[Bro Kartell](https://bro-kartell.com)** – Multigaming Clan seit 2013.

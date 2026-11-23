@@ -6,7 +6,8 @@
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const nativeApi = window.native || null; // Electron-Brücke (preload.js)
+const nativeApi = window.native || null;
+const APP_VERSION = '1.0.1'; // Electron-Brücke (preload.js)
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1725,9 +1726,16 @@ const commands = {
   shortcuts: showShortcuts,
   about: () => modal({
     title: 'Über Pixel Bro',
-    body: `<p><b>Pixel Bro 1.0</b> – ein moderner Pixel-Art- und Animations-Editor auf Deutsch.</p>
-      <p>Ebenen, Frames, Zwiebelhaut, Kachel-Modus, Pixel-Perfect-Stift, Spiegel-Zeichnen, Dithering, GIF- und Spritesheet-Export.</p>
-      <p class="hint">Projekte werden als <code>.pixelbro</code>-Datei gespeichert. Die aktuelle Arbeit wird zusätzlich automatisch gesichert.</p>`,
+    body: `<div style="display:flex;gap:14px;align-items:center">
+        <img src="icon.png" alt="" width="56" height="56" style="image-rendering:pixelated;border-radius:10px">
+        <div><b style="font-size:16px;color:var(--text)">Pixel Bro ${APP_VERSION}</b><br>Moderner Pixel-Art- und Animations-Editor auf Deutsch</div>
+      </div>
+      <p>Entwickelt von <b style="color:var(--text)">Jens Niebisch</b><br>
+        für <b style="color:var(--text)">Bro Kartell</b> – Multigaming Clan seit 2013</p>
+      <p><a href="https://bro-kartell.com" target="_blank" rel="noopener">bro-kartell.com</a> ·
+        <a href="https://bro-kartell.com/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
+      <p class="hint">© ${new Date().getFullYear()} Jens Niebisch · Bro Kartell. Alle Rechte vorbehalten.<br>
+        Projekte werden als <code>.pixelbro</code>-Datei gespeichert, die aktuelle Arbeit wird zusätzlich automatisch gesichert.</p>`,
   }),
   'layer-add': () => layerCmd('layer-add'),
   'layer-dup': () => layerCmd('layer-dup'),
