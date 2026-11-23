@@ -87,6 +87,11 @@
     .keys kbd{border:1px solid rgba(255,255,255,.18);border-bottom-width:3px;border-radius:6px;
               padding:1px 8px;font-family:inherit;font-size:.85em;white-space:nowrap}
     @media (max-width: 760px){ .gameRow{grid-template-columns:1fr} .gameRow__img{aspect-ratio:4/3} }
+    /* Pixel Bro nur am PC zeigen (wie das Menü, das unter 920 px ausgeblendet ist) */
+    @media (max-width: 920px){ .desktopOnly{display:none !important} }
+    .sub a{color:var(--text);text-decoration:underline;text-underline-offset:3px}
+    .cardLink{color:inherit;text-decoration:none}
+    .cardLink:hover{text-decoration:underline;text-underline-offset:3px}
   </style>
 </head>
 
@@ -124,13 +129,14 @@
 
       <section class="hero">
         <div class="panel hero__left">
-          <div class="kicker"><span class="dot"></span>Retro • Pixel • Game Boy</div>
+          <div class="kicker"><span class="dot"></span>Retro • Pixel • Games &amp; Software</div>
 
           <h1>BRO KARTELL GAMES<br><span class="muted">Von Gamern. Für Gamer.</span></h1>
 
           <p class="sub">
             Das Hobby-Studio vom Bro Kartell: Spiele für <b>Game Boy</b> und <b>Game Boy Color</b> –
             spielbar im Browser, am Handy oder als ROM auf echter Hardware.
+            <span class="desktopOnly">Dazu entwickeln wir eigene Software – wie <a href="pixel-bro.html">Pixel Bro</a>, unseren Pixel-Art-Editor.</span>
           </p>
 
           <div class="hero__actions">
@@ -146,16 +152,16 @@
               <span class="tag">Released</span>
             </div>
 
+            <div class="panel card desktopOnly">
+              <h3><a class="cardLink" href="pixel-bro.html">Pixel Bro</a></h3>
+              <p>Unser Pixel-Art- und Animations-Editor auf Deutsch. Damit entstehen die Sprites für unsere Spiele.</p>
+              <span class="tag">Released</span>
+            </div>
+
             <div class="panel card">
               <h3>Second Punch</h3>
               <p>Teil 2 in Farbe auf dem Game Boy Color. Sechs Bros, sechs Genres.</p>
               <span class="tag">In Arbeit</span>
-            </div>
-
-            <div class="panel card">
-              <h3>Teil 3</h3>
-              <p>Der nächste Schritt: eine neue Engine und noch mehr Möglichkeiten.</p>
-              <span class="tag">Geplant</span>
             </div>
           </div>
         </div>
