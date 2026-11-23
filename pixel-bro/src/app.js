@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.2.0';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1412,20 +1412,171 @@ function renderPalette() {
   });
   const sel = $('#palette-select');
   sel.innerHTML = '';
-  for (const name of [USED, ...Object.keys(PALETTES), 'Eigene Palette']) {
+  const addOption = (parent, value, text) => {
     const o = document.createElement('option');
-    o.value = name;
-    o.textContent = name === USED ? '★ Benutzte Farben (live)' : name;
-    if (name === settings.paletteName) o.selected = true;
-    sel.appendChild(o);
+    o.value = value;
+    o.textContent = text;
+    if (value === settings.paletteName) o.selected = true;
+    parent.appendChild(o);
+  };
+  addOption(sel, USED, '★ Benutzte Farben (live)');
+  const gPre = document.createElement('optgroup');
+  gPre.label = 'Vorlagen';
+  for (const name of Object.keys(PALETTES)) addOption(gPre, name, name);
+  sel.appendChild(gPre);
+  const gOwn = document.createElement('optgroup');
+  gOwn.label = `Eigene Paletten (${customPalettes.length}/${MAX_CUSTOM_PALETTES})`;
+  for (const c of customPalettes) addOption(gOwn, CUSTOM_PREFIX + c.id, `${c.name} (${c.colors.length})`);
+  if (!customPalettes.length) {
+    const o = document.createElement('option');
+    o.disabled = true;
+    o.textContent = 'Noch keine – mit „Neue Palette“ anlegen';
+    gOwn.appendChild(o);
+  }
+  sel.appendChild(gOwn);
+  const own = isCustomPalette();
+  $('#pal-rename').disabled = !own;
+  $('#pal-delete').disabled = !own;
+  if (!live) {
+    $('#palette-hint').textContent = own
+      ? 'Klick: Primär · Rechtsklick: Sekundär · Strg+Klick: entfernen'
+      : 'Klick: Primär · Rechtsklick: Sekundär · Ändern legt eine eigene Kopie an';
+    if (own && !settings.palette.length) box.innerHTML = '<p class="hint palette-empty">Leer – füge mit + die Primärfarbe hinzu oder übernimm Farben aus dem Bild.</p>';
   }
   updateColorUI();
 }
-function paletteEdited() {
-  settings.paletteName = 'Eigene Palette';
-  localStorage.setItem('pixelbro.customPalette', JSON.stringify(settings.palette));
+/* ---------- Eigene Paletten (mehrere, mit Namen) ---------- */
+const MAX_CUSTOM_PALETTES = 20;
+const CUSTOM_PREFIX = 'custom:';
+let customPalettes = []; // [{ id, name, colors: [u32] }]
+
+function loadCustomPalettes() {
+  try { customPalettes = JSON.parse(localStorage.getItem('pixelbro.customPalettes') || 'null') || []; } catch (e) { customPalettes = []; }
+  // Übernahme der alten einzelnen „Eigene Palette“
+  if (!customPalettes.length) {
+    try {
+      const old = JSON.parse(localStorage.getItem('pixelbro.customPalette') || 'null');
+      if (Array.isArray(old) && old.length) customPalettes.push({ id: newPaletteId(), name: 'Eigene Palette 1', colors: old });
+    } catch (e) { /* ignorieren */ }
+  }
+  customPalettes = customPalettes.filter((c) => c && c.id && Array.isArray(c.colors));
+  saveCustomPalettes();
+}
+function saveCustomPalettes() {
+  try { localStorage.setItem('pixelbro.customPalettes', JSON.stringify(customPalettes)); } catch (e) { /* ignorieren */ }
+}
+function newPaletteId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+const isCustomPalette = (name = settings.paletteName) => String(name).startsWith(CUSTOM_PREFIX);
+const currentCustom = () => customPalettes.find((c) => CUSTOM_PREFIX + c.id === settings.paletteName) || null;
+function nextPaletteName() {
+  let i = customPalettes.length + 1;
+  while (customPalettes.some((c) => c.name === 'Eigene Palette ' + i)) i++;
+  return 'Eigene Palette ' + i;
+}
+function selectPalette(name) {
+  settings.paletteName = name;
+  if (name === USED) { refreshUsedPalette(true); saveSettings(); return; }
+  const custom = currentCustom();
+  if (custom) settings.palette = custom.colors.slice();
+  else if (PALETTES[name]) settings.palette = PALETTES[name].map(parseHex);
+  else { settings.paletteName = 'Bro 32'; settings.palette = PALETTES['Bro 32'].map(parseHex); }
   renderPalette();
   saveSettings();
+}
+/** Legt eine neue eigene Palette an und wählt sie aus. Gibt null zurück, wenn das Limit erreicht ist. */
+function createCustomPalette(name, colors) {
+  if (customPalettes.length >= MAX_CUSTOM_PALETTES) {
+    toast(`Maximal ${MAX_CUSTOM_PALETTES} eigene Paletten – lösch eine, um Platz zu machen`);
+    return null;
+  }
+  const pal = { id: newPaletteId(), name: (name || '').trim() || nextPaletteName(), colors: colors.slice() };
+  customPalettes.push(pal);
+  saveCustomPalettes();
+  selectPalette(CUSTOM_PREFIX + pal.id);
+  return pal;
+}
+/** Nach einer Änderung an settings.palette: eigene Palette speichern – bei Vorlagen eine eigene Kopie anlegen. */
+function paletteEdited() {
+  const custom = currentCustom();
+  if (custom) {
+    custom.colors = settings.palette.slice();
+    saveCustomPalettes();
+    renderPalette();
+    saveSettings();
+    return;
+  }
+  const pal = createCustomPalette(nextPaletteName(), settings.palette);
+  if (pal) toast(`Eigene Kopie „${pal.name}“ angelegt – die Vorlage bleibt unverändert`);
+  else selectPalette(settings.paletteName); // Änderung verwerfen
+}
+async function askPaletteName(title, value, actions) {
+  const body = el(`<div class="field"><label>Name der Palette</label><input type="text" id="pal-name" maxlength="40"></div>`);
+  body.querySelector('#pal-name').value = value;
+  const res = await modal({ title, body, actions: actions || [{ label: 'Abbrechen', value: false }, { label: 'OK', value: true, primary: true }] });
+  if (!res) return null;
+  return { action: res, name: body.querySelector('#pal-name').value.trim() || value };
+}
+async function newPaletteDialog() {
+  if (customPalettes.length >= MAX_CUSTOM_PALETTES) return createCustomPalette('', []);
+  const r = await askPaletteName('Neue Palette', nextPaletteName(), [{ label: 'Abbrechen', value: false }, { label: 'Anlegen', value: true, primary: true }]);
+  if (!r) return;
+  const pal = createCustomPalette(r.name, []);
+  if (pal) toast(`„${pal.name}“ angelegt – füge mit + die Primärfarbe hinzu oder übernimm Farben aus dem Bild`);
+}
+async function renamePaletteDialog() {
+  const custom = currentCustom();
+  if (!custom) return toast('Nur eigene Paletten lassen sich umbenennen');
+  const r = await askPaletteName('Palette umbenennen', custom.name, [{ label: 'Abbrechen', value: false }, { label: 'Umbenennen', value: true, primary: true }]);
+  if (!r) return;
+  custom.name = r.name;
+  saveCustomPalettes();
+  renderPalette();
+}
+async function deletePaletteDialog() {
+  const custom = currentCustom();
+  if (!custom) return toast('Nur eigene Paletten lassen sich löschen');
+  const body = el(`<p>Die Palette <b></b> mit ${custom.colors.length} Farben wird gelöscht. Deine Bilder bleiben unverändert.</p>`);
+  body.querySelector('b').textContent = `„${custom.name}“`;
+  const ok = await modal({ title: 'Palette löschen?', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Löschen', value: true, primary: true }] });
+  if (!ok) return;
+  customPalettes = customPalettes.filter((c) => c !== custom);
+  saveCustomPalettes();
+  selectPalette('Bro 32');
+  toast(`„${custom.name}“ gelöscht`);
+}
+async function paletteFromImageDialog() {
+  const set = new Set();
+  for (const L of doc.layers) for (const f of L.frames) for (const u of f) if (u >>> 24) set.add(u);
+  if (!set.size) return toast('Das Bild enthält noch keine Farben');
+  if (set.size > 256) return toast(`Zu viele Farben (${set.size}) – maximal 256`);
+  const colors = [...set].sort((a, b) => rgbToHsl(...unpack(a).slice(0, 3))[0] - rgbToHsl(...unpack(b).slice(0, 3))[0]);
+  const custom = currentCustom();
+  const defName = fileInfo.name && fileInfo.name !== 'unbenannt' ? baseName() : nextPaletteName();
+  const actions = [{ label: 'Abbrechen', value: false }];
+  if (custom) actions.push({ label: `„${custom.name}“ ersetzen`, value: 'replace' });
+  actions.push({ label: 'Als neue Palette', value: 'new', primary: true });
+  const r = await askPaletteName(`${set.size} Farben aus dem Bild übernehmen`, defName, actions);
+  if (!r) return;
+  if (r.action === 'replace' && custom) {
+    custom.colors = colors;
+    custom.name = r.name;
+    saveCustomPalettes();
+    selectPalette(CUSTOM_PREFIX + custom.id);
+    toast(`„${custom.name}“ mit ${set.size} Farben ersetzt`);
+  } else {
+    const pal = createCustomPalette(r.name, colors);
+    if (pal) toast(`Neue Palette „${pal.name}“ mit ${set.size} Farben`);
+  }
+}
+/** Projektpalette beim Öffnen: passende Palette auswählen oder als eigene Palette anlegen. */
+function adoptProjectPalette(colors, projectName) {
+  if (!colors.length || isLivePalette()) return;
+  const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+  const custom = customPalettes.find((c) => same(c.colors, colors));
+  if (custom) return selectPalette(CUSTOM_PREFIX + custom.id);
+  const preset = Object.keys(PALETTES).find((k) => same(PALETTES[k].map(parseHex), colors));
+  if (preset) return selectPalette(preset);
+  if (customPalettes.length < MAX_CUSTOM_PALETTES) createCustomPalette('Projekt ' + projectName.replace(/\.[^.]+$/, ''), colors);
 }
 
 /* ---------- Werkzeugauswahl ---------- */
@@ -1717,7 +1868,7 @@ function loadProject(text, name, path) {
     float = null; sel = null;
     doc = r.doc;
     cur = { layer: doc.layers.length - 1, frame: 0 };
-    if (r.palette && r.palette.length && !isLivePalette()) { settings.palette = r.palette.map(parseHex).filter((x) => x !== null); settings.paletteName = 'Eigene Palette'; renderPalette(); }
+    if (r.palette && r.palette.length) adoptProjectPalette(r.palette.map(parseHex).filter((x) => x !== null), name || 'Projekt');
     fileInfo = { path: path || null, name: name || 'unbenannt.pixelbro' };
     dirty = false;
     updateTitle();
@@ -1828,11 +1979,13 @@ function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pixelbro.settings') || 'null');
     if (s) Object.assign(settings, s);
-    if (settings.paletteName === 'Eigene Palette') {
-      const p = JSON.parse(localStorage.getItem('pixelbro.customPalette') || 'null');
-      if (p) settings.palette = p;
-    } else if (PALETTES[settings.paletteName]) settings.palette = PALETTES[settings.paletteName].map(parseHex);
+    loadCustomPalettes();
+    if (settings.paletteName === 'Eigene Palette' && customPalettes.length) settings.paletteName = CUSTOM_PREFIX + customPalettes[0].id; // alte Einstellung
+    const custom = currentCustom();
+    if (custom) settings.palette = custom.colors.slice();
+    else if (PALETTES[settings.paletteName]) settings.palette = PALETTES[settings.paletteName].map(parseHex);
     else if (settings.paletteName === USED) settings.palette = [];
+    else { settings.paletteName = 'Bro 32'; settings.palette = PALETTES['Bro 32'].map(parseHex); }
   } catch (e) { /* ignorieren */ }
 }
 
@@ -2101,30 +2254,17 @@ $('#alpha-input').addEventListener('input', (e) => {
   settings.primary = pack(r, g, b, +e.target.value);
   updateColorUI();
 });
-$('#palette-select').addEventListener('change', (e) => {
-  const name = e.target.value;
-  settings.paletteName = name;
-  if (name === USED) { refreshUsedPalette(true); saveSettings(); return; }
-  if (PALETTES[name]) settings.palette = PALETTES[name].map(parseHex);
-  else settings.palette = JSON.parse(localStorage.getItem('pixelbro.customPalette') || '[]');
-  renderPalette();
-  saveSettings();
-});
+$('#palette-select').addEventListener('change', (e) => selectPalette(e.target.value));
+$('#pal-new').addEventListener('click', newPaletteDialog);
+$('#pal-rename').addEventListener('click', renamePaletteDialog);
+$('#pal-delete').addEventListener('click', deletePaletteDialog);
 $('#pal-add').addEventListener('click', () => {
   if (isLivePalette()) settings.palette = settings.palette.slice(); // wird zur eigenen Palette
   if (settings.palette.includes(settings.primary)) return toast('Farbe ist bereits in der Palette');
   settings.palette.push(settings.primary);
   paletteEdited();
 });
-$('#pal-from-image').addEventListener('click', () => {
-  const set = new Set();
-  for (const L of doc.layers) for (const f of L.frames) for (const u of f) if (u >>> 24) set.add(u);
-  if (!set.size) return toast('Das Bild enthält noch keine Farben');
-  if (set.size > 256) return toast(`Zu viele Farben (${set.size}) – maximal 256`);
-  settings.palette = [...set].sort((a, b) => rgbToHsl(...unpack(a).slice(0, 3))[0] - rgbToHsl(...unpack(b).slice(0, 3))[0]);
-  paletteEdited();
-  toast(`${set.size} Farben übernommen`);
-});
+$('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 
 $('#file-open').addEventListener('change', async (e) => {
   const f = e.target.files[0];

@@ -11,7 +11,7 @@ Inspiriert von Tools wie Piskel und Pyxel Edit, aber mit frischer, dunkler (oder
 - **Ebenen:** hinzufügen, duplizieren, sortieren, zusammenführen, ein-/ausblenden, Deckkraft, umbenennen
 - **Animation:** Frames hinzufügen/duplizieren/löschen, per Drag & Drop sortieren, Live-Vorschau mit FPS, Zwiebelhaut
 - **Tiles:** Kachel-Modus (nahtloses Zeichnen mit 3×3-Vorschau) und einstellbares Kachelraster
-- **Farben:** Live-Palette „Benutzte Farben“ (erkennt alle Farben im Sprite, Doppelklick ersetzt eine Farbe überall), Paletten (Bro 32, PICO-8, Endesga 32, Sweetie 16, Game Boy, GB Studio, Graustufen), eigene Palette,
+- **Farben:** Live-Palette „Benutzte Farben“ (erkennt alle Farben im Sprite, Doppelklick ersetzt eine Farbe überall), Paletten (Bro 32, PICO-8, Endesga 32, Sweetie 16, Game Boy, GB Studio, Graustufen), bis zu 20 eigene Paletten mit Namen,
   Palette aus Bild, Deckkraft, zuletzt benutzte Farben
 - **Bild:** Größe ändern / skalieren, spiegeln, drehen, Farbe ersetzen, Umriss hinzufügen
 - **Import:** PNG/JPG/GIF als neues Sprite, als Ebene oder Spritesheet in Frames zerlegen

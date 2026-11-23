@@ -341,3 +341,9 @@ body:not(.is-desktop) .desktop-only { display: none; }
 .ub-actions { display: flex; gap: 8px; width: 100%; padding-left: 46px; }
 .ub-actions:empty { display: none; }
 .ub-actions .btn { height: 30px; padding: 0 12px; font-size: 12px; justify-content: center; }
+
+/* Palettenauswahl mit Knöpfen */
+.pal-row { display: flex; gap: 4px; align-items: center; }
+.pal-row select { flex: 1; min-width: 0; }
+optgroup { font-style: normal; color: var(--text-3); }
+optgroup option { color: var(--text); }
