@@ -281,7 +281,8 @@ const EN = {
   'Text einfügen': 'Insert text',
   'Großbuchstaben, Ziffern, Umlaute und einfache Satzzeichen · Enter = neue Zeile · Farbe: Primärfarbe': 'Capital letters, digits, umlauts and simple punctuation · Enter = new line · Color: primary color',
   'Zeichenabstand': 'Letter spacing',
-  'Kleinbuchstaben werden als Großbuchstaben gezeichnet (5 px hohe Pixel-Schrift).': 'Lowercase letters are drawn as capitals (5 px tall pixel font).',
+  'Schriftgröße': 'Font size',
+  'Schriftgröße = Höhe der Buchstaben im Bild · Zeichenabstand wächst mit der Schriftgröße · Kleinbuchstaben werden als Großbuchstaben gezeichnet.': 'Font size = height of the letters in the image · Letter spacing grows with the font size · Lowercase letters are drawn as capitals.',
 
   // ---------- Über / Tastenkürzel ----------
   'Moderner Pixel-Art- und Animations-Editor auf Deutsch und Englisch': 'Modern pixel art and animation editor in German and English',

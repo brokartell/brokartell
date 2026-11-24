@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -973,7 +973,7 @@ const FONT = {
   '>': '#../.#./..#/.#./#..', '#': '#.#/###/#.#/###/#.#', '&': '.#./#.#/.#./#.#/.##', '@': '.#./#.#/###/#../.##',
 };
 const UMLAUT = { 'Ä': 'A', 'Ö': 'O', 'Ü': 'U' };
-function textPixels(text, spacing, color) {
+function textPixels(text, spacing, color, scale = 1) {
   const lines = text.toUpperCase().replace(/ß/g, 'SS').replace(/\r/g, '').split('\n');
   const glyphs = (ch) => {
     const base = UMLAUT[ch] || ch;
@@ -996,30 +996,44 @@ function textPixels(text, spacing, color) {
   if (!pts.length) return null;
   const minX = Math.min(...pts.map((q) => q[0])), minY = Math.min(...pts.map((q) => q[1]));
   const maxX = Math.max(...pts.map((q) => q[0])), maxY = Math.max(...pts.map((q) => q[1]));
-  const w = maxX - minX + 1, h = maxY - minY + 1;
+  // Schriftgröße: jeder Schrift-Pixel wird zu einem Block aus scale × scale Pixeln
+  const w = (maxX - minX + 1) * scale, h = (maxY - minY + 1) * scale;
+  if (w * h > 4096 * 4096) return null;
   const data = new Uint32Array(w * h), mask = new Uint8Array(w * h);
-  for (const [x, y] of pts) { const i = (y - minY) * w + (x - minX); data[i] = color; mask[i] = 1; }
+  for (const [x, y] of pts) {
+    for (let dy = 0; dy < scale; dy++) for (let dx = 0; dx < scale; dx++) {
+      const i = ((y - minY) * scale + dy) * w + (x - minX) * scale + dx;
+      data[i] = color; mask[i] = 1;
+    }
+  }
   return { data, mask, w, h };
 }
 let lastText = '';
 let lastTextSpacing = 1;
+let lastTextScale = 2;
+const TEXT_SCALES = [1, 2, 3, 4, 5, 6, 8, 10];
 async function textDialog(p) {
   const body = el(`<div class="field"><label>Text</label><textarea id="tx" rows="3" maxlength="400" spellcheck="false"></textarea></div>
-    <div class="field"><label>Zeichenabstand</label><select id="tsp"><option value="0">0 px</option><option value="1">1 px</option><option value="2">2 px</option></select></div>
+    <div class="field-row">
+      <div class="field"><label>Schriftgröße</label><select id="tsc">${TEXT_SCALES.map((s) => `<option value="${s}">${s}× – ${5 * s} px</option>`).join('')}</select></div>
+      <div class="field"><label>Zeichenabstand</label><select id="tsp"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    </div>
     <p class="hint">Großbuchstaben, Ziffern, Umlaute und einfache Satzzeichen · Enter = neue Zeile · Farbe: Primärfarbe</p>
-    <p class="hint">Kleinbuchstaben werden als Großbuchstaben gezeichnet (5 px hohe Pixel-Schrift).</p>`);
+    <p class="hint">Schriftgröße = Höhe der Buchstaben im Bild · Zeichenabstand wächst mit der Schriftgröße · Kleinbuchstaben werden als Großbuchstaben gezeichnet.</p>`);
   body.querySelector('#tx').value = lastText;
   body.querySelector('#tsp').value = String(lastTextSpacing);
+  body.querySelector('#tsc').value = String(lastTextScale);
   const ok = await modal({ title: 'Text einfügen', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Einfügen', value: true, primary: true }] });
   if (!ok) return;
   lastText = body.querySelector('#tx').value;
   lastTextSpacing = parseInt(body.querySelector('#tsp').value) || 0;
-  const px = textPixels(lastText, lastTextSpacing, settings.primary);
+  lastTextScale = parseInt(body.querySelector('#tsc').value) || 1;
+  const px = textPixels(lastText, lastTextSpacing, settings.primary, lastTextScale);
   if (!px) return;
   commitFloat(false);
   pushUndo();
   addRecent(settings.primary);
-  float = { ...px, x: p.x, y: p.y };
+  float = { ...px, x: p.x, y: p.y, text: true }; // Text: nach dem Festsetzen keine Auswahl übrig lassen
   sel = null;
   requestRender();
   scheduleUI(true);
@@ -1114,6 +1128,7 @@ function liftSelection() {
 }
 function commitFloat(keepSelection = true) {
   if (!float) return;
+  if (float.text) keepSelection = false;
   const buf = curBuf(), { w, h } = doc;
   const mask = keepSelection ? new Uint8Array(w * h) : null;
   for (let y = 0; y < float.h; y++) for (let x = 0; x < float.w; x++) {
