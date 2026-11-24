@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1
+- Pipette und Verschieben haben jetzt auch eigene lila Mauszeiger mit Rand (Pipette und Kreuzpfeil) – passend zu Stift, Hand und Text
+
 ## 1.4.0 – GB-Studio-Paletten prüfen
 - **Bild → GB-Studio-Paletten prüfen** (Umschalt+G): zerlegt das Bild in 8×8-Kacheln und fasst die Farben zu möglichst wenigen Paletten mit je 4 Farben zusammen – so wie GB Studio im Farbmodus. Zeigt, wie viele der 7 freien Paletten das Bild braucht, welche 4 Farben jede Palette hat und in wie vielen Kacheln sie vorkommt
 - Warnungen bei Kacheln mit mehr als 4 Farben, bei mehr als 7 Paletten und wenn das Bild nicht aus ganzen 8×8-Kacheln besteht

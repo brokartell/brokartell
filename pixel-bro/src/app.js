@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2051,11 +2051,14 @@ const CURSORS = {
   crosshair: svgCursor(outlined('M16 4v8M16 20v8M4 16h8M20 16h8') + '<circle cx="16" cy="16" r="1.6" fill="#7c5cff" stroke="#fff" stroke-width="1"/>', 16, 16, 'crosshair'),
   text: svgCursor(outlined('M12 5h8M16 5v22M12 27h8'), 16, 16, 'text'),
   grab: svgCursor(outlined(HAND_PATH), 16, 16, 'grab'),
+  // Pipette: Spitze unten links ist der Klickpunkt
+  picker: svgCursor(`<g transform="translate(3 3)">${outlined('m2 22 1-1h3l9-9M3 21v-3l9-9m6-3 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z')}</g>`, 5, 27, 'copy'),
+  move: svgCursor(`<g transform="translate(4 4)">${outlined('M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20')}</g>`, 16, 16, 'move'),
   grabbing: svgCursor(outlined('M22 15v-3a2 2 0 0 0-4 0v2M18 14v-3a2 2 0 0 0-4 0v3M14 14v-2a2 2 0 0 0-4 0v5M22 13a2 2 0 1 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L11 18'), 16, 16, 'grabbing'),
 };
 function updateCursor() {
   const t = activeTool();
-  canvas.style.cursor = t === 'hand' ? CURSORS.grab : t === 'move' ? 'move' : t === 'picker' ? 'copy' : t === 'text' ? CURSORS.text : CURSORS.crosshair;
+  canvas.style.cursor = t === 'hand' ? CURSORS.grab : t === 'move' ? CURSORS.move : t === 'picker' ? CURSORS.picker : t === 'text' ? CURSORS.text : CURSORS.crosshair;
 }
 function setBrushSize(s) {
   settings.size = clamp(s, 1, 16);
