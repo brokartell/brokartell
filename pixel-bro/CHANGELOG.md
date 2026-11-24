@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3
+- Werkzeugleiste: kleiner Abstand zwischen den Werkzeugen, damit Markierung und Hover nicht mehr aneinanderkleben – passt weiterhin ohne Scrollbalken
+
 ## 1.3.2
 - Werkzeugleiste wieder neben der Zeichenfläche (wie vor 1.3.1), dafür kompakter: kleinere Abstände und Trennlinien – alle Werkzeuge passen ohne Scrollbalken (ab ca. 768 Pixel Bildschirmhöhe). Bei noch kleineren Fenstern scrollt die Leiste per Mausrad, ohne sichtbaren Balken
 
