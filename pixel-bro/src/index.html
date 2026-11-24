@@ -58,6 +58,8 @@
             <hr>
             <button data-cmd="replace-color"><span>Farbe ersetzen (alle Frames)</span></button>
             <button data-cmd="outline"><span>Umriss hinzufügen</span></button>
+            <hr>
+            <button data-cmd="gb-palettes"><span>GB-Studio-Paletten prüfen …</span><kbd>Umschalt+G</kbd></button>
             <button data-cmd="clear-layer"><span>Ebene leeren</span></button>
           </div>
         </div>
@@ -180,6 +182,10 @@
         <canvas id="canvas"></canvas>
         <div class="sbar sbar-h" id="sbar-h" hidden><div class="sbar-thumb"></div></div>
         <div class="sbar sbar-v" id="sbar-v" hidden><div class="sbar-thumb"></div></div>
+        <div id="gb-hud" hidden>
+          <button id="gb-hud-open" title="Details anzeigen"><span class="gb-dot"></span><span id="gb-hud-text"></span></button>
+          <button id="gb-hud-close" class="icon-btn small" title="Ansicht ausblenden"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>
         <div id="zoom-hud">
           <button class="icon-btn small" data-cmd="zoom-out" title="Verkleinern">−</button>
           <span id="zoom-label" class="mono">100%</span>

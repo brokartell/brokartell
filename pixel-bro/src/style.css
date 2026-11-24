@@ -193,6 +193,28 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .sbar-h .sbar-thumb { top: 1px; bottom: 1px; }
 .sbar-v .sbar-thumb { left: 1px; right: 1px; }
 .sbar-thumb:hover, .sbar-thumb.dragging { background: var(--accent); }
+/* GB-Studio-Paletten: Anzeige oben links auf der Zeichenfläche und Dialog */
+#gb-hud {
+  position: absolute; left: 14px; top: 14px; display: flex; align-items: center; gap: 2px; padding: 4px 4px 4px 6px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(8px);
+  border: 1px solid var(--accent); border-radius: 10px; box-shadow: var(--shadow); z-index: 3;
+}
+#gb-hud[hidden] { display: none; }
+#gb-hud.warn { border-color: #ff3250; }
+#gb-hud-open { display: flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--text); font: 600 12px inherit; cursor: pointer; padding: 4px 6px; }
+.gb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+#gb-hud.warn .gb-dot { background: #ff3250; }
+.gb-sum { margin: 0; font-weight: 700; color: var(--text); }
+.gb-sum.ok { color: #3ddc84; }
+.gb-sum.warn { color: #ff6b81; }
+.gb-list { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow: auto; }
+.gb-row { display: flex; align-items: center; gap: 10px; }
+.gb-num { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: #fff; font: 700 12px var(--mono); flex: none; }
+.gb-sws { display: flex; gap: 3px; }
+.gb-sw { width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--line-2); }
+.gb-sw.empty { background: repeating-linear-gradient(45deg, transparent 0 4px, var(--line) 4px 5px); }
+#modal-body .gb-warn { color: #ff6b81; }
+
 #zoom-hud {
   position: absolute; right: 26px; bottom: 26px; display: flex; align-items: center; gap: 2px; padding: 4px;
   background: color-mix(in srgb, var(--panel) 85%, transparent); backdrop-filter: blur(8px);
