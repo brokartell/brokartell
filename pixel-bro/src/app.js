@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1019,7 +1019,7 @@ async function textDialog(p) {
   commitFloat(false);
   pushUndo();
   addRecent(settings.primary);
-  float = { ...px, x: p.x, y: p.y };
+  float = { ...px, x: p.x, y: p.y, text: true }; // Text: nach dem Festsetzen keine Auswahl übrig lassen
   sel = null;
   requestRender();
   scheduleUI(true);
@@ -1114,6 +1114,7 @@ function liftSelection() {
 }
 function commitFloat(keepSelection = true) {
   if (!float) return;
+  if (float.text) keepSelection = false;
   const buf = curBuf(), { w, h } = doc;
   const mask = keepSelection ? new Uint8Array(w * h) : null;
   for (let y = 0; y < float.h; y++) for (let x = 0; x < float.w; x++) {

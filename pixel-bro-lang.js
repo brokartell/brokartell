@@ -51,6 +51,7 @@
     'Text – eingebaute Pixel-Schrift mit Umlauten, Ziffern und Satzzeichen': 'Text – built-in pixel font with umlauts, digits and punctuation',
     'Mittellinien durch die Bildmitte – Schalter „Mitte“ neben „Raster“': 'Center lines through the middle of the image – “Center” switch next to “Grid”',
     'Englisch als zweite Sprache – Ansicht → English': 'English as a second language – View → English',
+    'Text hinterlässt nach dem Festsetzen keine Umrandung mehr, Werkzeugleiste geht bis ganz nach unten': 'Text no longer leaves an outline after placing it, the toolbar now reaches all the way down',
     '• Feinschliff': '• Polish',
     'Neues App-Icon – gezeichnet mit Pixel Bro selbst': 'New app icon – drawn with Pixel Bro itself',
     'GB-Studio-Paletten: „Sprites“ mit #65FF00 für Transparenz und „Hintergründe“': 'GB Studio palettes: “Sprites” with #65FF00 for transparency and “Backgrounds”',

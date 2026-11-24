@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1
+- Text: Nach dem Festsetzen (Enter oder Werkzeugwechsel) bleibt keine gestrichelte Umrandung mehr stehen – Stift und Pinsel malen sofort wieder überall
+- Text: Rückgängig entfernt den Text komplett, ohne übrig gebliebene Umrandung
+- Werkzeugleiste geht jetzt bis ganz nach unten, die Zeitleiste rückt nach rechts – die Werkzeuge haben mehr Platz und müssen nicht mehr scrollen
+
 ## 1.3.0 – Neue Werkzeuge & Englisch
 - **Verlauf** (J): Linie ziehen – Übergang von Primär- zu Sekundärfarbe, wahlweise mit Dithering-Muster oder in harten Stufen (2–16). Füllt die Auswahl oder wie das Füllen-Werkzeug die Fläche unter dem Startpunkt. Umschalt rastet in 45°-Schritten ein
 - **Sprühdose** (S): sprüht zufällige Pixel im Pinselbereich, Dichte einstellbar – für Gras, Rauch oder Schmutz
