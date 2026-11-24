@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.4.0';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -270,7 +270,8 @@ function render() {
   // Pixelraster
   if (settings.grid && z >= 6) {
     ctx.beginPath();
-    ctx.strokeStyle = settings.theme === 'light' ? 'rgba(0,0,0,.09)' : 'rgba(255,255,255,.07)';
+    // leicht lila: auf hellen und dunklen Bildern sichtbar
+    ctx.strokeStyle = 'rgba(124, 92, 255, .32)';
     ctx.lineWidth = 1 / dpr;
     for (let x = 1; x < w; x++) { const px = Math.round((view.ox + x * z) * dpr) / dpr; ctx.moveTo(px, view.oy); ctx.lineTo(px, view.oy + H); }
     for (let y = 1; y < h; y++) { const py = Math.round((view.oy + y * z) * dpr) / dpr; ctx.moveTo(view.ox, py); ctx.lineTo(view.ox + W, py); }
@@ -286,6 +287,8 @@ function render() {
     for (let y = t; y < h; y += t) { ctx.moveTo(view.ox, view.oy + y * z); ctx.lineTo(view.ox + W, view.oy + y * z); }
     ctx.stroke();
   }
+  // GB-Studio-Paletten: Kacheln mit Palettennummer
+  if (gbView.on) drawGbOverlay(z);
   // Mittellinien (waagerecht + senkrecht durch die Bildmitte)
   if (settings.center) {
     const mx = Math.round((view.ox + (w * z) / 2) * dpr) / dpr + 0.5 / dpr;
@@ -1394,11 +1397,13 @@ function moveFrame(from, to) {
 
 /* ---------- UI-Aktualisierung ---------- */
 function afterPaint() {
+  scheduleGbCheck();
   markDirty();
   requestRender();
   scheduleUI(true);
 }
 function afterStructureChange() {
+  scheduleGbCheck();
   selPathCache.key = null;
   requestRender();
   updateStatus();
@@ -1856,6 +1861,155 @@ function adoptProjectPalette(colors, projectName) {
   const preset = Object.keys(PALETTES).find((k) => same(PALETTES[k].map(parseHex), colors));
   if (preset) return selectPalette(preset);
   if (customPalettes.length < MAX_CUSTOM_PALETTES) createCustomPalette(t('Projekt') + ' ' + projectName.replace(/\.[^.]+$/, ''), colors);
+}
+
+/* ---------- GB-Studio-Paletten prüfen ----------
+   GB Studio (Farbmodus): Hintergründe bestehen aus 8×8-Kacheln, jede Kachel nutzt genau eine Palette mit 4 Farben.
+   7 Paletten sind frei, die 8. ist für Text/UI reserviert. Hier wird das Bild in Kacheln zerlegt und die
+   Farben werden zu möglichst wenigen 4er-Paletten zusammengefasst. */
+const GB_TILE = 8, GB_COLORS = 4, GB_MAX_PALETTES = 7;
+const GB_HUES = ['#7c5cff', '#22c3e6', '#3ddc84', '#ffb020', '#ff5ca8', '#a0e000', '#ff7a45', '#4f8bff', '#c58cff', '#00d0a0'];
+const gbView = { on: false, result: null, timer: null };
+
+function gbAnalyze() {
+  const { w, h } = doc;
+  const c = compositeCanvas(cur.frame, false);
+  const px = new Uint32Array(c.getContext('2d').getImageData(0, 0, w, h).data.buffer);
+  const cols = Math.ceil(w / GB_TILE), rows = Math.ceil(h / GB_TILE);
+  const tiles = [];
+  for (let ty = 0; ty < rows; ty++) for (let tx = 0; tx < cols; tx++) {
+    const set = new Set();
+    for (let y = ty * GB_TILE; y < Math.min(h, ty * GB_TILE + GB_TILE); y++) {
+      for (let x = tx * GB_TILE; x < Math.min(w, tx * GB_TILE + GB_TILE); x++) {
+        const u = px[y * w + x];
+        if (u >>> 24) set.add((u | 0xff000000) >>> 0); // Deckkraft spielt keine Rolle
+      }
+    }
+    tiles.push({ tx, ty, colors: [...set], palette: -1 });
+  }
+  const bad = tiles.filter((t) => t.colors.length > GB_COLORS);
+  // Gleiche Farbsets zusammenfassen, größte zuerst einsortieren (Best-Fit)
+  const sets = new Map();
+  for (const t of tiles) if (t.colors.length && t.colors.length <= GB_COLORS) {
+    const key = t.colors.slice().sort().join(',');
+    if (!sets.has(key)) sets.set(key, t.colors);
+  }
+  const order = [...sets.values()].sort((a, b) => b.length - a.length);
+  const palettes = [];
+  for (const s of order) {
+    let best = -1, bestAdd = Infinity;
+    palettes.forEach((p, i) => {
+      const add = s.filter((c2) => !p.includes(c2)).length;
+      if (p.length + add <= GB_COLORS && add < bestAdd) { best = i; bestAdd = add; }
+    });
+    if (best < 0) palettes.push(s.slice());
+    else for (const c2 of s) if (!palettes[best].includes(c2)) palettes[best].push(c2);
+  }
+  const light = (u) => { const [r, g, b] = unpack(u); return r * 0.299 + g * 0.587 + b * 0.114; };
+  palettes.forEach((p) => p.sort((a, b) => light(b) - light(a))); // hell → dunkel wie in GB Studio
+  const uses = palettes.map(() => 0);
+  for (const t of tiles) {
+    if (!t.colors.length || t.colors.length > GB_COLORS) continue;
+    t.palette = palettes.findIndex((p) => t.colors.every((c2) => p.includes(c2)));
+    if (t.palette >= 0) uses[t.palette]++;
+  }
+  return { tiles, palettes, uses, bad, cols, rows, partial: w % GB_TILE !== 0 || h % GB_TILE !== 0 };
+}
+
+function scheduleGbCheck() {
+  if (!gbView.on) return;
+  clearTimeout(gbView.timer);
+  gbView.timer = setTimeout(() => { gbView.result = gbAnalyze(); updateGbHud(); requestRender(); }, 120);
+}
+
+function setGbView(on) {
+  gbView.on = on;
+  gbView.result = on ? gbAnalyze() : null;
+  updateGbHud();
+  requestRender();
+}
+
+function updateGbHud() {
+  const hud = $('#gb-hud');
+  if (!gbView.on || !gbView.result) { hud.hidden = true; return; }
+  const r = gbView.result;
+  const over = r.palettes.length > GB_MAX_PALETTES;
+  hud.hidden = false;
+  hud.classList.toggle('warn', over || r.bad.length > 0);
+  $('#gb-hud-text').textContent = t('GB-Paletten {n}/{max}', { n: r.palettes.length, max: GB_MAX_PALETTES })
+    + (r.bad.length ? ' · ' + t(r.bad.length === 1 ? '1 Kachel mit mehr als 4 Farben' : '{n} Kacheln mit mehr als 4 Farben', { n: r.bad.length }) : '');
+}
+
+function drawGbOverlay(z) {
+  const r = gbView.result;
+  if (!r) return;
+  const s = GB_TILE * z;
+  ctx.save();
+  ctx.lineWidth = 1;
+  const font = Math.max(9, Math.min(14, Math.floor(s * 0.32)));
+  ctx.font = `700 ${font}px system-ui, sans-serif`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  for (const tile of r.tiles) {
+    const x = view.ox + tile.tx * s, y = view.oy + tile.ty * s;
+    const tw = Math.min(s, (doc.w - tile.tx * GB_TILE) * z), th = Math.min(s, (doc.h - tile.ty * GB_TILE) * z);
+    if (tile.colors.length > GB_COLORS) {
+      ctx.fillStyle = 'rgba(255, 50, 80, .35)'; ctx.fillRect(x, y, tw, th);
+      ctx.strokeStyle = '#ff3250'; ctx.strokeRect(x + 1.5, y + 1.5, tw - 3, th - 3);
+      if (s >= 24) { ctx.fillStyle = '#ff3250'; ctx.fillRect(x + 2, y + 2, font * 1.6, font + 4); ctx.fillStyle = '#fff'; ctx.fillText(tile.colors.length, x + 4, y + 4); }
+      continue;
+    }
+    if (tile.palette < 0) continue;
+    const col = GB_HUES[tile.palette % GB_HUES.length];
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.75;
+    ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
+    ctx.globalAlpha = 1;
+    if (s >= 24) {
+      const label = String(tile.palette + 1);
+      ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
+      ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
+    }
+  }
+  ctx.restore();
+}
+
+async function gbPaletteDialog() {
+  commitFloat();
+  const r = gbAnalyze();
+  const over = r.palettes.length > GB_MAX_PALETTES;
+  const swatch = (u) => `<span class="gb-sw" style="background:${cssColor(u)}" title="${toHex(u).toUpperCase()}"></span>`;
+  const rows = r.palettes.map((p, i) => `<div class="gb-row"><span class="gb-num" style="background:${GB_HUES[i % GB_HUES.length]}">${i + 1}</span>
+      <span class="gb-sws">${p.map(swatch).join('')}${'<span class="gb-sw empty"></span>'.repeat(GB_COLORS - p.length)}</span>
+      <span class="hint">${t(r.uses[i] === 1 ? '1 Kachel' : '{n} Kacheln', { n: r.uses[i] })}</span></div>`).join('');
+  const status = !r.palettes.length && !r.bad.length
+    ? `<p class="hint">${t('Das Bild enthält noch keine Farben')}</p>`
+    : `<p class="gb-sum ${over || r.bad.length ? 'warn' : 'ok'}">${over || r.bad.length ? '⚠' : '✓'} ${t('Dein Bild braucht {n} von {max} Paletten.', { n: r.palettes.length, max: GB_MAX_PALETTES })}</p>`;
+  const warns = [];
+  if (r.bad.length) warns.push(t(r.bad.length === 1 ? '1 Kachel hat mehr als 4 Farben – auf der Zeichenfläche rot markiert. Diese Kachel musst du vereinfachen.' : '{n} Kacheln haben mehr als 4 Farben – auf der Zeichenfläche rot markiert. Diese Kacheln musst du vereinfachen.', { n: r.bad.length }));
+  if (over) warns.push(t(r.palettes.length - GB_MAX_PALETTES === 1 ? '1 Palette zu viel – Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.' : '{n} Paletten zu viel – Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.', { n: r.palettes.length - GB_MAX_PALETTES }));
+  if (r.partial) warns.push(t('Breite und Höhe sind kein Vielfaches von 8 – GB Studio erwartet ganze 8×8-Kacheln.'));
+  const body = el(`${status}
+    <div class="gb-list">${rows}</div>
+    ${warns.map((x) => `<p class="hint gb-warn">${x}</p>`).join('')}
+    <p class="hint">${t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Geprüft wird der aktuelle Frame.')}</p>`);
+  const actions = [{ label: 'Schließen', value: false }];
+  if (r.palettes.length) actions.push({ label: 'Paletten speichern', value: 'save' });
+  actions.push({ label: gbView.on ? 'Im Bild ausblenden' : 'Im Bild zeigen', value: 'toggle', primary: true });
+  const res = await modal({ title: 'GB-Studio-Paletten prüfen', body, actions });
+  if (res === 'toggle') setGbView(!gbView.on);
+  if (res === 'save') {
+    const free = MAX_CUSTOM_PALETTES - customPalettes.length;
+    if (free <= 0) return toast(t('Maximal {max} eigene Paletten – lösch eine, um Platz zu machen', { max: MAX_CUSTOM_PALETTES }));
+    const base = fileInfo.name && fileInfo.name !== 'unbenannt' ? baseName() : 'GB';
+    const list = r.palettes.slice(0, free);
+    let last = null;
+    list.forEach((p, i) => {
+      const pal = { id: newPaletteId(), name: `${base} – GB ${i + 1}`, colors: p.slice() };
+      customPalettes.push(pal); last = pal;
+    });
+    saveCustomPalettes();
+    if (last) selectPalette(CUSTOM_PREFIX + last.id);
+    toast(t('{n} Paletten gespeichert', { n: list.length }) + (list.length < r.palettes.length ? ' · ' + t('Limit von {max} eigenen Paletten erreicht', { max: MAX_CUSTOM_PALETTES }) : ''));
+  }
 }
 
 /* ---------- Werkzeugauswahl ---------- */
@@ -2336,6 +2490,7 @@ const commands = {
   rotate: () => transform('r'),
   'replace-color': replaceColor,
   outline: addOutline,
+  'gb-palettes': gbPaletteDialog,
   'clear-layer': () => { commitFloat(false); pushUndo(); curBuf().fill(0); afterPaint(); },
   'toggle-grid': () => toggleSetting('grid', '#opt-grid'),
   'toggle-center': () => toggleSetting('center', '#opt-center'),
@@ -2420,6 +2575,7 @@ function showShortcuts() {
     ['T', 'Kachel-Modus'],
     ['#', 'Pixelraster'],
     ['Umschalt+M', 'Mittellinien'],
+    ['Umschalt+G', 'GB-Studio-Paletten prüfen'],
     ['Strg+Z / Strg+Y', 'Rückgängig / Wiederholen'],
     ['Strg+C / X / V', 'Kopieren / Ausschneiden / Einfügen'],
     ['Strg+S / Strg+Umschalt+S', 'Speichern / Speichern unter'],
@@ -2464,7 +2620,7 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (e.shiftKey) {
-    const map = { h: 'flip-h', v: 'flip-v', r: 'rotate', n: 'frame-dup', o: 'toggle-onion', m: 'toggle-center' };
+    const map = { h: 'flip-h', v: 'flip-v', r: 'rotate', n: 'frame-dup', o: 'toggle-onion', m: 'toggle-center', g: 'gb-palettes' };
     if (map[k]) { e.preventDefault(); run(map[k]); return; }
   }
   if (e.key === 'F1') { e.preventDefault(); return run('shortcuts'); }
@@ -2588,6 +2744,8 @@ $('#pal-add').addEventListener('click', () => {
   paletteEdited();
 });
 $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
+$('#gb-hud-open').addEventListener('click', gbPaletteDialog);
+$('#gb-hud-close').addEventListener('click', () => setGbView(false));
 
 $('#file-open').addEventListener('change', async (e) => {
   const f = e.target.files[0];
