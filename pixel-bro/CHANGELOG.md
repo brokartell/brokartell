@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0 – Game Boy Color / Game Boy (klassisch)
+- Prüf-Dialog (Bild → GB-Studio-Paletten prüfen, Umschalt+G) mit Umschalter **Game Boy Color / Game Boy (klassisch)** – die Auswahl wird gespeichert, die Überschrift zeigt den Modus
+- **Game Boy Color:** wie bisher Paletten pro 8×8-Kachel (höchstens 7 für Hintergründe, „X von 7“), dazu die Zahl der verschiedenen Kacheln (Grenze 384)
+- **Game Boy (klassisch):** prüft, ob nur die 4 Farben #E0F8CF, #86C06C, #306850 und #071821 vorkommen (mit Schalter „Sprite“ zusätzlich #65FF00 als Transparenz). Fremde Farben werden gezählt und im Bild rot markiert, dazu die Zahl der verschiedenen Kacheln (Grenze 192). Grüner Haken, wenn alles passt, sonst Warnung
+- Die Anzeige oben links auf der Zeichenfläche zeigt den gewählten Modus und rechnet beim Zeichnen live mit
+
 ## 1.4.1
 - Pipette und Verschieben haben jetzt auch eigene lila Mauszeiger mit Rand (Pipette und Kreuzpfeil) – passend zu Stift, Hand und Text
 
