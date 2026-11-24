@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.3.1
+- Text: neue Auswahl **Schriftgröße** 1× bis 10× (5 bis 50 Pixel hohe Buchstaben) – passend auch für große Bilder. Der Zeichenabstand wächst mit
 - Text: Nach dem Festsetzen (Enter oder Werkzeugwechsel) bleibt keine gestrichelte Umrandung mehr stehen – Stift und Pinsel malen sofort wieder überall
 - Text: Rückgängig entfernt den Text komplett, ohne übrig gebliebene Umrandung
 - Werkzeugleiste geht jetzt bis ganz nach unten, die Zeitleiste rückt nach rechts – die Werkzeuge haben mehr Platz und müssen nicht mehr scrollen
