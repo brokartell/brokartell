@@ -214,6 +214,18 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .gb-sw { width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--line-2); }
 .gb-sw.empty { background: repeating-linear-gradient(45deg, transparent 0 4px, var(--line) 4px 5px); }
 #modal-body .gb-warn { color: #ff6b81; }
+.gb-mode { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--panel-2); }
+.gb-mode-btn { flex: 1; border: 0; background: none; color: var(--text-2); font: 600 13px inherit; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
+.gb-mode-btn:hover { color: var(--text); }
+.gb-mode-btn.active { background: var(--accent); color: #fff; }
+.gb-line { display: flex; align-items: center; gap: 8px; color: var(--text); }
+.gb-mark { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
+.gb-mark.ok { background: rgba(61, 220, 132, .18); color: #3ddc84; }
+.gb-mark.warn { background: rgba(255, 50, 80, .18); color: #ff6b81; }
+.gb-label { min-width: 52px; }
+.gb-foreigns { flex-wrap: wrap; gap: 8px; }
+.gb-foreign { display: inline-flex; align-items: center; gap: 4px; }
+.gb-sprite { margin-top: 2px; }
 
 #zoom-hud {
   position: absolute; right: 26px; bottom: 26px; display: flex; align-items: center; gap: 2px; padding: 4px;
