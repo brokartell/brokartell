@@ -57,12 +57,7 @@ button, input, select { font: inherit; color: inherit; }
 svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
 
-#app { display: grid; grid-template-columns: 60px minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; height: 100vh; }
-/* Werkzeugleiste geht von unter der Optionsleiste bis ganz nach unten, Zeitleiste rückt nach rechts */
-#topbar, #optionsbar { grid-column: 1 / -1; }
-#toolbar { grid-column: 1; grid-row: 3 / 5; min-height: 0; }
-#workspace { grid-column: 2; grid-row: 3; }
-#timeline { grid-column: 2; grid-row: 4; min-width: 0; }
+#app { display: grid; grid-template-rows: auto auto 1fr auto; height: 100vh; }
 
 /* ---------- Kopfzeile ---------- */
 #topbar {
@@ -153,24 +148,27 @@ input[type="range"] { -webkit-appearance: none; appearance: none; width: 110px; 
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--panel); cursor: pointer; }
 
 /* ---------- Arbeitsbereich ---------- */
-#workspace { display: grid; grid-template-columns: 1fr 330px; min-height: 0; }
+#workspace { display: grid; grid-template-columns: 52px 1fr 330px; min-height: 0; }
 
+/* Kompakte Werkzeugleiste: passt auch auf Laptops ohne Scrollbalken; bei sehr kleinen Fenstern scrollt sie per Mausrad (ohne sichtbaren Balken) */
 #toolbar {
-  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0;
-  background: var(--bg-2); border-right: 1px solid var(--line); overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 0; padding: 6px 0;
+  background: var(--bg-2); border-right: 1px solid var(--line); overflow-y: auto; min-height: 0;
+  scrollbar-width: none;
 }
+#toolbar::-webkit-scrollbar { display: none; }
 .tool {
-  flex: none; width: 40px; height: 40px; display: grid; place-items: center;
+  flex: none; width: 36px; height: 30px; display: grid; place-items: center;
   border: 0; border-radius: 10px; background: none; cursor: pointer; color: var(--text-2);
   transition: background .12s, color .12s, transform .08s;
 }
 .tool:hover { background: var(--panel-2); color: var(--text); }
 .tool:active { transform: scale(.94); }
 .tool.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(124, 92, 255, .45); }
-.tool svg { width: 19px; height: 19px; }
-.tool-sep { width: 26px; height: 1px; background: var(--line); margin: 4px 0; flex: none; }
+.tool svg { width: 18px; height: 18px; }
+.tool-sep { width: 22px; height: 1px; background: var(--line); margin: 2px 0; flex: none; }
 
-.color-pair { position: relative; width: 44px; height: 50px; margin-top: auto; flex: none; }
+.color-pair { position: relative; width: 40px; height: 44px; margin-top: auto; flex: none; }
 .color-chip {
   position: absolute; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; padding: 0;
   border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--line-2);

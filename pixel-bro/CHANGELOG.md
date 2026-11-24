@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.2
+- Werkzeugleiste wieder neben der Zeichenfläche (wie vor 1.3.1), dafür kompakter: kleinere Abstände und Trennlinien – alle Werkzeuge passen ohne Scrollbalken (ab ca. 768 Pixel Bildschirmhöhe). Bei noch kleineren Fenstern scrollt die Leiste per Mausrad, ohne sichtbaren Balken
+
 ## 1.3.1
 - Text: neue Auswahl **Schriftgröße** 1× bis 10× (5 bis 50 Pixel hohe Buchstaben) – passend auch für große Bilder. Der Zeichenabstand wächst mit
 - Text: Nach dem Festsetzen (Enter oder Werkzeugwechsel) bleibt keine gestrichelte Umrandung mehr stehen – Stift und Pinsel malen sofort wieder überall
