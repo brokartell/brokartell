@@ -152,23 +152,23 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 
 /* Kompakte Werkzeugleiste: passt auch auf Laptops ohne Scrollbalken; bei sehr kleinen Fenstern scrollt sie per Mausrad (ohne sichtbaren Balken) */
 #toolbar {
-  display: flex; flex-direction: column; align-items: center; gap: 0; padding: 6px 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0;
   background: var(--bg-2); border-right: 1px solid var(--line); overflow-y: auto; min-height: 0;
   scrollbar-width: none;
 }
 #toolbar::-webkit-scrollbar { display: none; }
 .tool {
-  flex: none; width: 36px; height: 30px; display: grid; place-items: center;
-  border: 0; border-radius: 10px; background: none; cursor: pointer; color: var(--text-2);
+  flex: none; width: 34px; height: 27px; display: grid; place-items: center;
+  border: 0; border-radius: 8px; background: none; cursor: pointer; color: var(--text-2);
   transition: background .12s, color .12s, transform .08s;
 }
 .tool:hover { background: var(--panel-2); color: var(--text); }
 .tool:active { transform: scale(.94); }
 .tool.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(124, 92, 255, .45); }
-.tool svg { width: 18px; height: 18px; }
-.tool-sep { width: 22px; height: 1px; background: var(--line); margin: 2px 0; flex: none; }
+.tool svg { width: 17px; height: 17px; }
+.tool-sep { width: 22px; height: 1px; background: var(--line); margin: 1px 0; flex: none; }
 
-.color-pair { position: relative; width: 40px; height: 44px; margin-top: auto; flex: none; }
+.color-pair { position: relative; width: 46px; height: 46px; margin-top: auto; flex: none; }
 .color-chip {
   position: absolute; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; padding: 0;
   border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--line-2);
@@ -177,7 +177,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 }
 .color-chip.primary { left: 0; top: 0; z-index: 2; }
 .color-chip.secondary { right: 0; bottom: 0; }
-.swap { position: absolute; right: -2px; top: -2px; width: 18px; height: 18px; padding: 0; border: 0; background: none; color: var(--text-3); cursor: pointer; }
+.swap { position: absolute; right: -1px; top: -3px; width: 16px; height: 16px; padding: 0; border: 0; background: none; color: var(--text-3); cursor: pointer; }
 .swap svg { width: 13px; height: 13px; }
 .swap:hover { color: var(--text); }
 

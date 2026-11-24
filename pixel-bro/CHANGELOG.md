@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.3
+- Werkzeugleiste: kleiner Abstand zwischen den Werkzeugen, damit Markierung und Hover nicht mehr aneinanderkleben – passt weiterhin ohne Scrollbalken
+- Farbfelder: Der Pfeil zum Tauschen der Farben klebt nicht mehr am Farbfeld
+- Mauszeiger auf der Zeichenfläche (Kreuz, Hand, Text) jetzt lila mit weißem Rand – auch auf hellen Bildern gut zu sehen
+
 ## 1.3.2
 - Werkzeugleiste wieder neben der Zeichenfläche (wie vor 1.3.1), dafür kompakter: kleinere Abstände und Trennlinien – alle Werkzeuge passen ohne Scrollbalken (ab ca. 768 Pixel Bildschirmhöhe). Bei noch kleineren Fenstern scrollt die Leiste per Mausrad, ohne sichtbaren Balken
 
