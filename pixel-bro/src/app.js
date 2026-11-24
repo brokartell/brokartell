@@ -580,7 +580,7 @@ function onPointerDown(e) {
     isPanning = true;
     drag = { pan: true, sx: e.clientX, sy: e.clientY, ox: view.ox, oy: view.oy };
     canvas.setPointerCapture(e.pointerId);
-    canvas.style.cursor = 'grabbing';
+    canvas.style.cursor = CURSORS.grabbing;
     return;
   }
   if (e.button !== 0 && e.button !== 2) return;
@@ -753,7 +753,7 @@ function onPointerUp(e) {
   if (drag.timer) clearInterval(drag.timer);
   if (drag.pan) {
     isPanning = false;
-    canvas.style.cursor = '';
+    updateCursor();
   } else if (drag.tool === 'select') {
     if (!drag.moved) {
       if (!drag.add) sel = null;
@@ -1886,9 +1886,22 @@ function setTool(t) {
   status(TOOL_NAMES[t]);
   requestRender();
 }
+/* Mauszeiger auf der Zeichenfläche: lila mit weißem und dunklem Rand – auf hellen und dunklen Bildern gut sichtbar */
+function svgCursor(body, x, y, fallback) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${x} ${y}, ${fallback}`;
+}
+const outlined = (d, w = 2) => `<path d="${d}" stroke="#14101f" stroke-width="${w + 4}"/><path d="${d}" stroke="#fff" stroke-width="${w + 2}"/><path d="${d}" stroke="#7c5cff" stroke-width="${w}"/>`;
+const HAND_PATH = 'M22 15V10a2 2 0 0 0-4 0v4M18 13V8a2 2 0 0 0-4 0v5M14 13.5V9a2 2 0 0 0-4 0v8M22 12a2 2 0 1 1 4 0v5a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L11 18';
+const CURSORS = {
+  crosshair: svgCursor(outlined('M16 4v8M16 20v8M4 16h8M20 16h8') + '<circle cx="16" cy="16" r="1.6" fill="#7c5cff" stroke="#fff" stroke-width="1"/>', 16, 16, 'crosshair'),
+  text: svgCursor(outlined('M12 5h8M16 5v22M12 27h8'), 16, 16, 'text'),
+  grab: svgCursor(outlined(HAND_PATH), 16, 16, 'grab'),
+  grabbing: svgCursor(outlined('M22 15v-3a2 2 0 0 0-4 0v2M18 14v-3a2 2 0 0 0-4 0v3M14 14v-2a2 2 0 0 0-4 0v5M22 13a2 2 0 1 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L11 18'), 16, 16, 'grabbing'),
+};
 function updateCursor() {
   const t = activeTool();
-  canvas.style.cursor = t === 'hand' ? 'grab' : t === 'move' ? 'move' : t === 'picker' ? 'copy' : t === 'text' ? 'text' : 'crosshair';
+  canvas.style.cursor = t === 'hand' ? CURSORS.grab : t === 'move' ? 'move' : t === 'picker' ? 'copy' : t === 'text' ? CURSORS.text : CURSORS.crosshair;
 }
 function setBrushSize(s) {
   settings.size = clamp(s, 1, 16);
