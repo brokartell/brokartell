@@ -120,6 +120,9 @@
     .links a[aria-current="page"]{color:var(--text)}
     @media (max-width: 900px){ .pbGrid,.pbFiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
     .pbMobileOnly{display:none}
+    /* Header-Knöpfe nur, wenn das Menü ausgeblendet ist (unter 920 px) */
+    .pbMobileNav{display:none}
+    @media (max-width: 920px){ .pbMobileNav{display:flex} }
     @media (max-width: 760px){ .pbHero{grid-template-columns:1fr} .pbGrid,.pbFiles{grid-template-columns:1fr}
       .pbDesktopOnly{display:none} .pbMobileOnly{display:block} }
   </style>
@@ -146,6 +149,12 @@
         <a href="#top" aria-current="page">Pixel Bro</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
+
+      <!-- Nur am Handy/Tablet (dort ist das Menü ausgeblendet): zurück zu Bro Kartell und Bro Kartell Games -->
+      <div class="cta pbMobileNav">
+        <a class="btn btn--primary" href="index.html">Bro Kartell</a>
+        <a class="btn btn--primary" href="games.html">Bro Kartell Games</a>
+      </div>
     </div>
   </header>
 
