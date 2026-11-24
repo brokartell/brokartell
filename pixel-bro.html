@@ -118,12 +118,6 @@
     .more summary{cursor:pointer;font-weight:700;color:var(--text)}
     .more[open] summary{margin-bottom:10px}
     .links a[aria-current="page"]{color:var(--text)}
-    /* Sprachumschalter DE | EN – auch auf dem Handy sichtbar */
-    .langSwitch{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:#ffffff08;flex:none}
-    .langSwitch button{border:0;background:none;color:var(--muted);font:inherit;font-weight:800;font-size:13px;letter-spacing:.5px;
-      padding:6px 12px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}
-    .langSwitch button:hover{color:var(--text)}
-    .langSwitch button.is-active{background:linear-gradient(180deg,#f4f5f7,#c7cbd1);color:#111318}
     @media (max-width: 900px){ .pbGrid,.pbFiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
     .pbMobileOnly{display:none}
     @media (max-width: 760px){ .pbHero{grid-template-columns:1fr} .pbGrid,.pbFiles{grid-template-columns:1fr}
@@ -152,10 +146,6 @@
         <a href="#top" aria-current="page">Pixel Bro</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
-      <div class="langSwitch" role="group" aria-label="Sprache / Language">
-        <button type="button" data-lang="de" title="Deutsch">DE</button>
-        <button type="button" data-lang="en" title="English">EN</button>
-      </div>
     </div>
   </header>
 
@@ -227,7 +217,7 @@
         <div class="pbFiles">
           <div class="panel card pbFile">
             <h3>Installer</h3>
-            <p data-en="Recommended. Updates itself automatically, with Start menu and desktop shortcuts, and <code>.pixelbro</code> files open with a double-click.">Empfohlen. Aktualisiert sich automatisch, mit Startmenü- und Desktop-Verknüpfung, <code>.pixelbro</code>-Dateien öffnen per Doppelklick.</p>
+            <p>Empfohlen. Aktualisiert sich automatisch, mit Startmenü- und Desktop-Verknüpfung, <code>.pixelbro</code>-Dateien öffnen per Doppelklick.</p>
             <a class="btn btn--primary" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Setup.exe">⬇ Pixel-Bro-Setup.exe</a>
           </div>
           <div class="panel card pbFile">
@@ -237,14 +227,14 @@
           </div>
           <div class="panel card pbFile">
             <h3>ZIP</h3>
-            <p data-en="To unzip. Then just start &lt;b&gt;Pixel Bro.exe&lt;/b&gt;.">Zum Entpacken. Danach einfach <b>Pixel Bro.exe</b> starten.</p>
+            <p>Zum Entpacken. Danach einfach <b>Pixel Bro.exe</b> starten.</p>
             <a class="btn" href="https://github.com/brokartell/brokartell/releases/latest/download/Pixel-Bro-Windows.zip">⬇ Pixel-Bro-Windows.zip</a>
           </div>
         </div>
 
         <details class="more">
           <summary>Windows-Warnung beim ersten Start?</summary>
-          <p class="lead" data-en="Pixel Bro is a hobby project and is not digitally signed, so Windows SmartScreen may show a warning. Just click &lt;b&gt;“More info”&lt;/b&gt; and then &lt;b&gt;“Run anyway”&lt;/b&gt;.">Pixel Bro ist ein Hobby-Projekt und nicht digital signiert. Windows SmartScreen zeigt deshalb evtl.
+          <p class="lead">Pixel Bro ist ein Hobby-Projekt und nicht digital signiert. Windows SmartScreen zeigt deshalb evtl.
              eine Warnung. Einfach auf <b>„Weitere Informationen“</b> und dann <b>„Trotzdem ausführen“</b> klicken.</p>
         </details>
         <details class="more">
@@ -345,7 +335,6 @@
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
   <script src="script.js?v=199"></script>
-  <script src="pixel-bro-lang.js?v=2"></script>
   <script>
     (() => {
       const btn = document.getElementById("gamesMail");
