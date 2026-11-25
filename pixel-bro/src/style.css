@@ -218,6 +218,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .gb-mode-btn { flex: 1; border: 0; background: none; color: var(--text-2); font: 600 13px inherit; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
 .gb-mode-btn:hover { color: var(--text); }
 .gb-mode-btn.active { background: var(--accent); color: #fff; }
+.exp-mode { margin-bottom: 2px; }
 .gb-line { display: flex; align-items: center; gap: 8px; color: var(--text); }
 .gb-mark { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
 .gb-mark.ok { background: rgba(61, 220, 132, .18); color: #3ddc84; }

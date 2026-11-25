@@ -54,6 +54,7 @@ const EN = {
   'Automatisch nach Updates suchen': 'Check for updates automatically',
   'Über Pixel Bro': 'About Pixel Bro',
   'Exportieren': 'Export',
+  'Exportieren – PNG, Spritesheet oder GIF': 'Export – PNG, spritesheet or GIF',
   'Rückgängig (Strg+Z)': 'Undo (Ctrl+Z)',
   'Wiederholen (Strg+Y)': 'Redo (Ctrl+Y)',
 

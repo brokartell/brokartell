@@ -101,6 +101,7 @@ const settings = {
   lang: 'de',
   gbMode: 'color',   // GB-Studio-Prüfung: 'color' (Game Boy Color) oder 'classic' (Game Boy)
   gbSprite: false,   // klassisch: #65FF00 als Transparenz erlauben
+  exportFormat: 'png', // zuletzt benutztes Export-Format: 'png' | 'sheet' | 'gif'
 };
 
 const view = { zoom: 16, ox: 0, oy: 0 };
@@ -2284,11 +2285,38 @@ function scaleOptions(def = 4) {
   return [1, 2, 4, 8, 10, 16, 20, 32].map((s) => `<option value="${s}" ${s === def ? 'selected' : ''}>${s}× (${doc.w * s} × ${doc.h * s} px)</option>`).join('');
 }
 
+/* ---------- Exportieren: ein Fenster mit Umschalter PNG · Spritesheet · GIF ----------
+   Der Knopf „Exportieren“ öffnet das zuletzt benutzte Format (settings.exportFormat).
+   Ein Klick auf den Umschalter merkt sich das Format und baut das Fenster neu auf. */
+const EXPORT_FORMATS = [['png', 'PNG'], ['sheet', 'Spritesheet'], ['gif', 'GIF']];
+function exportToggle(active) {
+  return `<div class="gb-mode exp-mode" role="group">${EXPORT_FORMATS.map(([k, label]) =>
+    `<button type="button" class="gb-mode-btn ${k === active ? 'active' : ''}" data-format="${k}">${label}</button>`).join('')}</div>`;
+}
+/** Zeigt ein Export-Fenster mit Umschalter. Gibt true (exportieren), false (abbrechen) oder ein anderes Format zurück. */
+async function exportModal(format, title, body) {
+  settings.exportFormat = format; saveSettings();
+  let switchTo = null;
+  body.querySelectorAll('.exp-mode .gb-mode-btn').forEach((b) => b.onclick = () => {
+    if (b.dataset.format === format) return;
+    switchTo = b.dataset.format;
+    $('#exp-switch').click();
+  });
+  const res = await modal({ title, body, actions: [{ label: 'Abbrechen', value: false }, { label: '', value: 'switch', id: 'exp-switch', hidden: true }, { label: 'Exportieren', value: true, primary: true }] });
+  return res === 'switch' ? switchTo : res;
+}
+const EXPORT_DIALOGS = { png: () => dialogExportPNG(), sheet: () => dialogExportSheet(), gif: () => dialogExportGIF() };
+function dialogExport() {
+  const f = EXPORT_DIALOGS[settings.exportFormat] ? settings.exportFormat : 'png';
+  return EXPORT_DIALOGS[f]();
+}
+
 async function dialogExportPNG() {
   commitFloat();
-  const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
+  const body = el(`${exportToggle('png')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
     <div class="field"><label>Inhalt</label><select id="what"><option value="frame">${t('Aktueller Frame ({n})', { n: cur.frame + 1 })}</option><option value="layer">Nur aktuelle Ebene</option></select></div>`);
-  const ok = await modal({ title: 'Als PNG exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
+  const ok = await exportModal('png', 'Als PNG exportieren', body);
+  if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
   const what = body.querySelector('#what').value;
@@ -2301,11 +2329,12 @@ async function dialogExportPNG() {
 async function dialogExportSheet() {
   commitFloat();
   const n = frameCount();
-  const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
+  const body = el(`${exportToggle('sheet')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
     <div class="field"><label>Anordnung</label><select id="lay"><option value="h">Horizontal (1 Zeile)</option><option value="v">Vertikal (1 Spalte)</option><option value="g">Raster</option></select></div>
     <div class="field"><label>Spalten (bei Raster)</label><input type="number" id="cols" min="1" max="${n}" value="${Math.ceil(Math.sqrt(n))}"></div>
     <p class="hint">${t('{n} Frame(s) · {w} × {h} px pro Frame', { n, w: doc.w, h: doc.h })}</p>`);
-  const ok = await modal({ title: 'Spritesheet exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
+  const ok = await exportModal('sheet', 'Spritesheet exportieren', body);
+  if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
   const lay = body.querySelector('#lay').value;
@@ -2319,13 +2348,14 @@ async function dialogExportSheet() {
 }
 async function dialogExportGIF() {
   commitFloat();
-  const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(4)}</select></div>
+  const body = el(`${exportToggle('gif')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(4)}</select></div>
     <div class="field-row">
       <div class="field"><label>FPS</label><input type="number" id="gfps" min="1" max="50" value="${doc.fps}"></div>
       <div class="field"><label>Wiederholen</label><select id="loop"><option value="1">Endlos</option><option value="0">Einmal</option></select></div>
     </div>
     <p class="hint">Halbtransparente Pixel werden voll deckend gespeichert, vollständig transparente bleiben transparent.</p>`);
-  const ok = await modal({ title: 'Animiertes GIF exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
+  const ok = await exportModal('gif', 'Animiertes GIF exportieren', body);
+  if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
   const fps = clamp(parseInt(body.querySelector('#gfps').value) || doc.fps, 1, 50);
@@ -2540,8 +2570,8 @@ function scheduleAutosave() {
 }
 function saveSettings() {
   try {
-    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite } = settings;
-    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite }));
+    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, exportFormat } = settings;
+    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, exportFormat }));
   } catch (e) { /* ignorieren */ }
 }
 function loadSettings() {
@@ -2598,6 +2628,7 @@ const commands = {
   'export-png': dialogExportPNG,
   'export-sheet': dialogExportSheet,
   'export-gif': dialogExportGIF,
+  export: dialogExport,
   undo, redo,
   cut: cutSel, copy: copySel, paste: pasteClip, delete: deleteSel,
   'select-all': () => { commitFloat(false); setSelection(new Uint8Array(doc.w * doc.h).fill(1)); },
