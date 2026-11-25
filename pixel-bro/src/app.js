@@ -1765,7 +1765,6 @@ function renderPalette() {
   $('#palette-hint').textContent = live
     ? 'Erkennt automatisch alle Farben im Sprite · Klick: Primär · Rechtsklick: Sekundär · Doppelklick: Farbe überall ersetzen'
     : 'Klick: Primär · Rechtsklick: Sekundär · Strg+Klick: entfernen';
-  $('#palette-count').textContent = live ? String(settings.palette.length) : '';
   if (live && !settings.palette.length) {
     box.innerHTML = '<p class="hint palette-empty">Noch keine Farben benutzt – fang einfach an zu zeichnen.</p>';
   }

@@ -2,6 +2,7 @@
 
 ## 1.5.2
 - GB-Studio-Prüfung im Bild: Unter der Anzeige oben links steht jetzt eine kleine Paletten-Übersicht – Nummer und die 4 Farben jeder Palette, in denselben Farben wie die Nummern im Bild (beim klassischen Game Boy: erlaubte und fremde Farben). Klick auf eine Farbe = Primärfarbe, Rechtsklick = Sekundärfarbe
+- Die Zahl neben „Farbe & Palette“ (bei „Benutzte Farben“) ist weg – sie wirkte wie eine Palettenzahl
 
 ## 1.5.1
 - Neuer Knopf „Einpassen“ oben rechts neben Rückgängig/Wiederholen: Bild wieder mittig und ganz sichtbar (auch Taste 0)
