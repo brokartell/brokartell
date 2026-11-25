@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.3';
+const APP_VERSION = '1.5.4';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2031,12 +2031,48 @@ function gbAnalyze() {
   }
   const light = (u) => { const [r, g, b] = unpack(u); return r * 0.299 + g * 0.587 + b * 0.114; };
   palettes.forEach((p) => p.sort((a, b) => light(b) - light(a))); // hell → dunkel wie in GB Studio
-  const uses = palettes.map(() => 0);
+  // Zuordnung Kachel → Palette. Passt eine Kachel in mehrere Paletten (z. B. nur Weiß + Dunkel),
+  // bekommt sie die Palette ihrer Nachbarn – so zeigt das Bild, was beim Zeichnen gemeint war.
+  // tile.multi = true: Die Kachel würde auch in andere Paletten passen (Anzeige „6+“).
   for (const tile of tiles) {
-    if (!tile.colors.length || tile.colors.length > GB_COLORS) continue;
-    tile.palette = palettes.findIndex((p) => tile.colors.every((c2) => p.includes(c2)));
-    if (tile.palette >= 0) uses[tile.palette]++;
+    tile.candidates = (!tile.colors.length || tile.colors.length > GB_COLORS) ? []
+      : palettes.map((p, i) => (tile.colors.every((c2) => p.includes(c2)) ? i : -1)).filter((i) => i >= 0);
+    tile.multi = tile.candidates.length > 1;
+    tile.palette = tile.candidates.length === 1 ? tile.candidates[0] : -1;
   }
+  const at = (tx, ty) => (tx >= 0 && ty >= 0 && tx < cols && ty < rows ? tiles[ty * cols + tx] : null);
+  const NB = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+  for (let pass = 0; pass < 6; pass++) {
+    let changed = false;
+    for (const tile of tiles) {
+      if (!tile.multi) continue;
+      const votes = new Map();
+      NB.forEach(([dx, dy], k) => {
+        const n = at(tile.tx + dx, tile.ty + dy);
+        if (!n || n.palette < 0 || !tile.candidates.includes(n.palette)) return;
+        // Wie viele Pixel laufen über die gemeinsame Kante mit derselben Farbe weiter? (zählt am meisten)
+        let flow = 0;
+        if (k < 4) for (let i = 0; i < GB_TILE; i++) {
+          const a = dx ? tile.pixels[i * GB_TILE + (dx > 0 ? GB_TILE - 1 : 0)] : tile.pixels[(dy > 0 ? GB_TILE - 1 : 0) * GB_TILE + i];
+          const b = dx ? n.pixels[i * GB_TILE + (dx > 0 ? 0 : GB_TILE - 1)] : n.pixels[(dy > 0 ? 0 : GB_TILE - 1) * GB_TILE + i];
+          if (a && a === b) flow++;
+        }
+        votes.set(n.palette, (votes.get(n.palette) || 0) + flow * 3 + (k < 4 ? 2 : 1) + (n.multi ? 0 : 1));
+      });
+      if (!votes.size) continue;
+      const best = [...votes.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+      if (best !== tile.palette) { tile.palette = best; changed = true; }
+    }
+    if (!changed) break;
+  }
+  // Ohne passende Nachbarn: die Palette, die sonst am häufigsten vorkommt
+  const firm = palettes.map(() => 0);
+  for (const tile of tiles) if (tile.palette >= 0) firm[tile.palette]++;
+  for (const tile of tiles) {
+    if (tile.multi && tile.palette < 0) tile.palette = tile.candidates.slice().sort((a, b) => firm[b] - firm[a] || a - b)[0];
+  }
+  const uses = palettes.map(() => 0);
+  for (const tile of tiles) if (tile.palette >= 0) uses[tile.palette]++;
   // Verschiedene Kacheln: gleiche Muster (Farbnummer innerhalb der Palette) zählen nur einmal
   const keys = new Set(tiles.map((tile) => (tile.palette >= 0
     ? 'p' + tile.pixels.map((u) => (u ? palettes[tile.palette].indexOf(u) : 'x')).join('')
@@ -2168,7 +2204,7 @@ function drawGbOverlay(z) {
       ctx.globalAlpha = 1;
     }
     if (s >= 24) {
-      const label = String(tile.palette + 1);
+      const label = String(tile.palette + 1) + (tile.multi ? '+' : '');
       ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
       ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
     }
@@ -2233,7 +2269,7 @@ async function gbPaletteDialog() {
     if (r.bad.length) warns.push(pl(r.bad.length, '1 Kachel hat mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.', '{n} Kacheln haben mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.'));
     if (over) warns.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.', '{n} Paletten zu viel – Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.'));
     if (!tilesOk) warns.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
-    warns.push(t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.'));
+    warns.push(t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.') + ' ' + t('„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.'));
   }
   if (r.partial) warns.splice(warns.length - 1, 0, t('Breite und Höhe sind kein Vielfaches von 8 – GB Studio erwartet ganze 8×8-Kacheln.'));
   const info = warns.pop();

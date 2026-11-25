@@ -378,6 +378,7 @@ const EN = {
   'Erlaubt': 'Allowed',
   'Fremd': 'Foreign',
   'Zu viel': 'Extra',
+  '„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.': '“6+” in the image: the tile also fits other palettes and gets the palette of its neighbors.',
   'zu viel': 'too many',
   'Palette zu viel – nur {n} Kacheln': 'Palette too many – only {n} tiles',
   '1 Kachel hat mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.': '1 tile has more than 4 colors – the extra pixels are marked red in the image. Recolor them with one of the tile\'s other colors.',
