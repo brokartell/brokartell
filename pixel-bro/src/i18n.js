@@ -384,6 +384,8 @@ const EN = {
   '{n} Paletten zu viel – GB Studio legt sie auf andere Paletten, ihre Kacheln bekommen dann falsche Farben. Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.': '{n} palettes too many – GB Studio maps them onto other palettes and their tiles get the wrong colors. Match colors or combine tiles with similar colors.',
   'Fast gleiche Farben – zusammenlegen (Doppelklick in „Benutzte Farben“) spart oft eine Palette:': 'Almost identical colors – merging them (double-click in “Used colors”) often saves a palette:',
   'Die Paletten werden genau so aufgeteilt wie in GB Studio („Automatisch“).': 'Palettes are split exactly like GB Studio does (“Automatic”).',
+  '(ohne Spiegeln: {n})': '(without flipping: {n})',
+  'Kacheln werden wie in GB Studio gezählt: gleiches Muster mit anderer Palette und gespiegelte Kacheln zählen nur einmal.': 'Tiles are counted like GB Studio: the same pattern with another palette and flipped tiles count only once.',
   '„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.': '“6+” in the image: the tile also fits other palettes and gets the palette of its neighbors.',
   'zu viel': 'too many',
   'Palette zu viel – nur {n} Kacheln': 'Palette too many – only {n} tiles',
