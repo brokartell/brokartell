@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.11 – Klassisch wie GB Studio & Korrekturen per Knopf
+- Game Boy (klassisch): Die Prüfung rechnet jetzt wie GB Studio – jede Farbe wird nach ihrem Grünanteil einer der 4 Stufen zugeordnet. Leicht abweichende HEX-Codes sind kein Fehler mehr, sondern ein grüner Hinweis mit „wird in GB Studio zu …“. Rot nur noch, wenn eine Farbe genau an einer Grenze liegt oder zwei deutlich verschiedene Farben im Spiel gleich werden
+- Kacheln werden auch im klassischen Modus wie GB Studio gezählt (nach Farbstufe)
+- Korrekturen direkt im Prüf-Fenster: „Angleichen“ (klassisch, setzt die genauen 4 Farben), „Übernehmen“ bei geprüften Tausch-Tipps (Game Boy Color), „Wie GB Studio übernehmen“ für überzählige Pixel und Grenzfälle. Alles mit Strg+Z rückgängig
+
 ## 1.5.10 – Neues Prüf-Fenster
 - Das Fenster „Paletten prüfen“ ist neu gestaltet: oben groß das Ergebnis (grün „Passt in GB Studio“ oder rot), darunter zwei Kacheln für Paletten und Kacheln mit Balken
 - Paletten als Liste mit Nutzungsbalken, die betroffene Palette rot umrandet mit „In GB Studio: Farbe → Farbe“
