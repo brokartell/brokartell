@@ -218,6 +218,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .gb-mode-btn { flex: 1; border: 0; background: none; color: var(--text-2); font: 600 13px inherit; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
 .gb-mode-btn:hover { color: var(--text); }
 .gb-mode-btn.active { background: var(--accent); color: #fff; }
+.exp-mode { margin-bottom: 2px; }
 .gb-line { display: flex; align-items: center; gap: 8px; color: var(--text); }
 .gb-mark { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
 .gb-mark.ok { background: rgba(61, 220, 132, .18); color: #3ddc84; }
@@ -252,6 +253,12 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
   background: conic-gradient(var(--checker-a) 25%, var(--checker-b) 0 50%, var(--checker-a) 0 75%, var(--checker-b) 0) 0 0 / 16px 16px;
 }
 #preview { image-rendering: pixelated; max-width: 100%; max-height: 100%; }
+/* Vorschau-Zoom: Mausrad zoomt, Ziehen verschiebt, Doppelklick = ganzes Bild */
+#preview.zoomed { cursor: grab; }
+.preview-box.dragging #preview.zoomed { cursor: grabbing; }
+.pv-zoom { border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent-2); font: 700 11px var(--mono); padding: 2px 7px; border-radius: 999px; cursor: pointer; margin-right: 4px; }
+.pv-zoom[hidden] { display: none; }
+.pv-zoom:hover { background: var(--accent); color: #fff; }
 
 .color-editor { display: flex; gap: 10px; align-items: center; }
 #color-input { width: 46px; height: 46px; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; flex: none; }
@@ -328,6 +335,7 @@ select {
 #modal h2 { margin: 0 0 14px; font-size: 18px; }
 #modal-body { display: flex; flex-direction: column; gap: 12px; color: var(--text-2); }
 #modal-body .field { display: flex; flex-direction: column; gap: 5px; }
+#modal-body .field[hidden] { display: none; }
 #modal-body .field-row { display: flex; gap: 12px; }
 #modal-body .field-row > * { flex: 1; }
 #modal-body input[type="number"], #modal-body input[type="text"], #modal-body select, #modal-body textarea {

@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -101,6 +101,7 @@ const settings = {
   lang: 'de',
   gbMode: 'color',   // GB-Studio-Prüfung: 'color' (Game Boy Color) oder 'classic' (Game Boy)
   gbSprite: false,   // klassisch: #65FF00 als Transparenz erlauben
+  exportFormat: 'png', // zuletzt benutztes Export-Format: 'png' | 'sheet' | 'gif'
 };
 
 const view = { zoom: 16, ox: 0, oy: 0 };
@@ -1575,6 +1576,10 @@ function previewLoop(t) {
   const box = previewCanvas.parentElement;
   // Ganzes Bild zeigen: kleine Bilder ganzzahlig vergrößern, große Bilder passend verkleinern
   const fit = Math.min((box.clientWidth - 12) / doc.w, (box.clientHeight - 12) / doc.h);
+  if (pv.w !== doc.w || pv.h !== doc.h) resetPreviewZoom();
+  pv.base = fit >= 1 ? Math.floor(fit) : fit; // Bildschirm-Pixel pro Sprite-Pixel ohne Zoom
+  if (pv.zoom > 1) { drawPreviewZoomed(box); return; }
+  previewCanvas.classList.remove('zoomed');
   const s = fit >= 1 ? Math.floor(fit) : 1;
   if (previewCanvas.width !== doc.w * s || previewCanvas.height !== doc.h * s) {
     previewCanvas.width = doc.w * s; previewCanvas.height = doc.h * s;
@@ -1591,6 +1596,94 @@ function previewLoop(t) {
   pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   pctx.drawImage(c, 0, 0, previewCanvas.width, previewCanvas.height);
 }
+
+/* ---------- Vorschau-Zoom ----------
+   Mausrad über der Vorschau zoomt zur Mausposition, Ziehen verschiebt den Ausschnitt,
+   Doppelklick (oder Klick auf die Zoom-Anzeige) zeigt wieder das ganze Bild. */
+const pv = { zoom: 1, cx: 0, cy: 0, w: 0, h: 0, base: 1, drag: null };
+const PV_ZOOMS = [1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+function resetPreviewZoom() {
+  pv.zoom = 1; pv.cx = doc.w / 2; pv.cy = doc.h / 2; pv.w = doc.w; pv.h = doc.h;
+  const lbl = $('#preview-zoom');
+  if (lbl) lbl.hidden = true;
+  previewLast = 0;
+}
+function clampPreviewCenter() {
+  pv.cx = clamp(pv.cx, 0, doc.w); pv.cy = clamp(pv.cy, 0, doc.h);
+}
+function drawPreviewZoomed(box) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = box.clientWidth, H = box.clientHeight;
+  if (previewCanvas.width !== Math.round(W * dpr) || previewCanvas.height !== Math.round(H * dpr)) {
+    previewCanvas.width = Math.round(W * dpr); previewCanvas.height = Math.round(H * dpr);
+  }
+  if (previewCanvas.style.width !== W + 'px' || previewCanvas.style.height !== H + 'px') {
+    previewCanvas.style.width = W + 'px'; previewCanvas.style.height = H + 'px';
+  }
+  previewCanvas.classList.remove('smooth');
+  previewCanvas.classList.add('zoomed');
+  if (comp.width !== doc.w || comp.height !== doc.h) { comp.width = doc.w; comp.height = doc.h; }
+  const c = compositeCanvas(Math.min(previewFrame, frameCount() - 1));
+  const k = pv.base * pv.zoom * dpr;
+  pctx.setTransform(1, 0, 0, 1, 0, 0);
+  pctx.imageSmoothingEnabled = false;
+  pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  pctx.setTransform(k, 0, 0, k, previewCanvas.width / 2 - pv.cx * k, previewCanvas.height / 2 - pv.cy * k);
+  pctx.drawImage(c, 0, 0);
+  pctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+function setPreviewZoom(z, mx, my) {
+  const box = previewCanvas.parentElement;
+  const old = pv.base * pv.zoom;
+  // Punkt unter der Maus (in Sprite-Pixeln) – ohne Zoom liegt das Bild mittig in der Box
+  if (mx !== undefined && pv.zoom > 1) {
+    const px = pv.cx + (mx - box.clientWidth / 2) / old, py = pv.cy + (my - box.clientHeight / 2) / old;
+    pv.zoom = z;
+    const nk = pv.base * pv.zoom;
+    pv.cx = px - (mx - box.clientWidth / 2) / nk; pv.cy = py - (my - box.clientHeight / 2) / nk;
+  } else if (mx !== undefined) {
+    const r = previewCanvas.getBoundingClientRect(), b = box.getBoundingClientRect();
+    pv.cx = clamp((mx - (r.left - b.left)) / old, 0, doc.w);
+    pv.cy = clamp((my - (r.top - b.top)) / old, 0, doc.h);
+    pv.zoom = z;
+  } else pv.zoom = z;
+  if (pv.zoom <= 1) return resetPreviewZoom();
+  clampPreviewCenter();
+  const lbl = $('#preview-zoom');
+  lbl.hidden = false;
+  lbl.textContent = (Number.isInteger(pv.zoom) ? pv.zoom : pv.zoom.toFixed(1)) + '×';
+  previewLast = 0;
+}
+(function initPreviewZoom() {
+  const box = previewCanvas.parentElement;
+  box.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const b = box.getBoundingClientRect();
+    let i = PV_ZOOMS.findIndex((z) => z >= pv.zoom);
+    if (i < 0) i = PV_ZOOMS.length - 1;
+    i = clamp(i + (e.deltaY < 0 ? 1 : -1), 0, PV_ZOOMS.length - 1);
+    setPreviewZoom(PV_ZOOMS[i], e.clientX - b.left, e.clientY - b.top);
+  }, { passive: false });
+  box.addEventListener('pointerdown', (e) => {
+    if (pv.zoom <= 1 || e.button !== 0) return;
+    pv.drag = { x: e.clientX, y: e.clientY, cx: pv.cx, cy: pv.cy };
+    box.setPointerCapture(e.pointerId);
+    box.classList.add('dragging');
+  });
+  box.addEventListener('pointermove', (e) => {
+    if (!pv.drag) return;
+    const k = pv.base * pv.zoom;
+    pv.cx = pv.drag.cx - (e.clientX - pv.drag.x) / k;
+    pv.cy = pv.drag.cy - (e.clientY - pv.drag.y) / k;
+    clampPreviewCenter();
+    previewLast = 0;
+  });
+  const end = () => { pv.drag = null; box.classList.remove('dragging'); };
+  box.addEventListener('pointerup', end);
+  box.addEventListener('pointercancel', end);
+  box.addEventListener('dblclick', resetPreviewZoom);
+  $('#preview-zoom').addEventListener('click', resetPreviewZoom);
+})();
 
 /* ---------- Farben-UI ---------- */
 function updateColorUI() {
@@ -2284,11 +2377,38 @@ function scaleOptions(def = 4) {
   return [1, 2, 4, 8, 10, 16, 20, 32].map((s) => `<option value="${s}" ${s === def ? 'selected' : ''}>${s}× (${doc.w * s} × ${doc.h * s} px)</option>`).join('');
 }
 
+/* ---------- Exportieren: ein Fenster mit Umschalter PNG · Spritesheet · GIF ----------
+   Der Knopf „Exportieren“ öffnet das zuletzt benutzte Format (settings.exportFormat).
+   Ein Klick auf den Umschalter merkt sich das Format und baut das Fenster neu auf. */
+const EXPORT_FORMATS = [['png', 'PNG'], ['sheet', 'Spritesheet'], ['gif', 'GIF']];
+function exportToggle(active) {
+  return `<div class="gb-mode exp-mode" role="group">${EXPORT_FORMATS.map(([k, label]) =>
+    `<button type="button" class="gb-mode-btn ${k === active ? 'active' : ''}" data-format="${k}">${label}</button>`).join('')}</div>`;
+}
+/** Zeigt ein Export-Fenster mit Umschalter. Gibt true (exportieren), false (abbrechen) oder ein anderes Format zurück. */
+async function exportModal(format, title, body) {
+  settings.exportFormat = format; saveSettings();
+  let switchTo = null;
+  body.querySelectorAll('.exp-mode .gb-mode-btn').forEach((b) => b.onclick = () => {
+    if (b.dataset.format === format) return;
+    switchTo = b.dataset.format;
+    $('#exp-switch').click();
+  });
+  const res = await modal({ title, body, actions: [{ label: 'Abbrechen', value: false }, { label: '', value: 'switch', id: 'exp-switch', hidden: true }, { label: 'Exportieren', value: true, primary: true }] });
+  return res === 'switch' ? switchTo : res;
+}
+const EXPORT_DIALOGS = { png: () => dialogExportPNG(), sheet: () => dialogExportSheet(), gif: () => dialogExportGIF() };
+function dialogExport() {
+  const f = EXPORT_DIALOGS[settings.exportFormat] ? settings.exportFormat : 'png';
+  return EXPORT_DIALOGS[f]();
+}
+
 async function dialogExportPNG() {
   commitFloat();
-  const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
+  const body = el(`${exportToggle('png')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
     <div class="field"><label>Inhalt</label><select id="what"><option value="frame">${t('Aktueller Frame ({n})', { n: cur.frame + 1 })}</option><option value="layer">Nur aktuelle Ebene</option></select></div>`);
-  const ok = await modal({ title: 'Als PNG exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
+  const ok = await exportModal('png', 'Als PNG exportieren', body);
+  if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
   const what = body.querySelector('#what').value;
@@ -2301,11 +2421,15 @@ async function dialogExportPNG() {
 async function dialogExportSheet() {
   commitFloat();
   const n = frameCount();
-  const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
+  const body = el(`${exportToggle('sheet')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
     <div class="field"><label>Anordnung</label><select id="lay"><option value="h">Horizontal (1 Zeile)</option><option value="v">Vertikal (1 Spalte)</option><option value="g">Raster</option></select></div>
-    <div class="field"><label>Spalten (bei Raster)</label><input type="number" id="cols" min="1" max="${n}" value="${Math.ceil(Math.sqrt(n))}"></div>
+    <div class="field" id="cols-field" hidden><label>Spalten (bei Raster)</label><input type="number" id="cols" min="1" max="${n}" value="${n}"></div>
     <p class="hint">${t('{n} Frame(s) · {w} × {h} px pro Frame', { n, w: doc.w, h: doc.h })}</p>`);
-  const ok = await modal({ title: 'Spritesheet exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
+  // Spalten nur bei „Raster“ zeigen, vorbelegt mit der Anzahl der Frames
+  const laySel = body.querySelector('#lay');
+  laySel.onchange = () => { body.querySelector('#cols-field').hidden = laySel.value !== 'g'; };
+  const ok = await exportModal('sheet', 'Spritesheet exportieren', body);
+  if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
   const lay = body.querySelector('#lay').value;
@@ -2319,13 +2443,14 @@ async function dialogExportSheet() {
 }
 async function dialogExportGIF() {
   commitFloat();
-  const body = el(`<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(4)}</select></div>
+  const body = el(`${exportToggle('gif')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(4)}</select></div>
     <div class="field-row">
       <div class="field"><label>FPS</label><input type="number" id="gfps" min="1" max="50" value="${doc.fps}"></div>
       <div class="field"><label>Wiederholen</label><select id="loop"><option value="1">Endlos</option><option value="0">Einmal</option></select></div>
     </div>
     <p class="hint">Halbtransparente Pixel werden voll deckend gespeichert, vollständig transparente bleiben transparent.</p>`);
-  const ok = await modal({ title: 'Animiertes GIF exportieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Exportieren', value: true, primary: true }] });
+  const ok = await exportModal('gif', 'Animiertes GIF exportieren', body);
+  if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;
   const s = parseInt(body.querySelector('#sc').value);
   const fps = clamp(parseInt(body.querySelector('#gfps').value) || doc.fps, 1, 50);
@@ -2540,8 +2665,8 @@ function scheduleAutosave() {
 }
 function saveSettings() {
   try {
-    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite } = settings;
-    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite }));
+    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, exportFormat } = settings;
+    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, exportFormat }));
   } catch (e) { /* ignorieren */ }
 }
 function loadSettings() {
@@ -2598,6 +2723,7 @@ const commands = {
   'export-png': dialogExportPNG,
   'export-sheet': dialogExportSheet,
   'export-gif': dialogExportGIF,
+  export: dialogExport,
   undo, redo,
   cut: cutSel, copy: copySel, paste: pasteClip, delete: deleteSel,
   'select-all': () => { commitFloat(false); setSelection(new Uint8Array(doc.w * doc.h).fill(1)); },

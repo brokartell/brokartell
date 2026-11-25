@@ -54,6 +54,7 @@ const EN = {
   'Automatisch nach Updates suchen': 'Check for updates automatically',
   'Über Pixel Bro': 'About Pixel Bro',
   'Exportieren': 'Export',
+  'Exportieren – PNG, Spritesheet oder GIF': 'Export – PNG, spritesheet or GIF',
   'Rückgängig (Strg+Z)': 'Undo (Ctrl+Z)',
   'Wiederholen (Strg+Y)': 'Redo (Ctrl+Y)',
 
@@ -118,6 +119,7 @@ const EN = {
   // ---------- Seitenleiste ----------
   'Vorschau': 'Preview',
   'Abspielen / Pause': 'Play / pause',
+  'Zoom zurücksetzen – ganzes Bild zeigen (Doppelklick)': 'Reset zoom – show the whole image (double-click)',
   'FPS': 'FPS',
   'Farbe & Palette': 'Color & palette',
   'HEX': 'HEX',
@@ -249,6 +251,7 @@ const EN = {
   'Kachelgröße (0 = aus)': 'Tile size (0 = off)',
   'Hilft beim Zeichnen von Tilesets: zeigt ein Raster in der gewählten Kachelgröße.': 'Helps when drawing tilesets: shows a grid in the chosen tile size.',
   'Kachelraster': 'Tile grid',
+  'Einpassen – Bild mittig und ganz sichtbar (0)': 'Fit to screen – image centered and fully visible (0)',
   'Übernehmen': 'Apply',
   'Skalierung': 'Scale',
   'Inhalt': 'Content',
