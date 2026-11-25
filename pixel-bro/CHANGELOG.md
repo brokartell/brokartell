@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.9 – Eigene Palette 8 (Text/UI)
+- Game Boy Color: Im Prüf-Fenster lässt sich die Palette 8 (Text/UI) der Szene eintragen – so, wie GB Studio die HEX-Werte anzeigt. Die Prüfung sucht damit genau wie GB Studio aus, welche Palette bei 8 Paletten ersetzt wird
+- Neben der betroffenen Palette steht jetzt jede Farbe mit ihrer Farbe in GB Studio (z. B. Blau → Grau). Sind alle fast gleich, gilt das Bild als passend
+- Tausch-Tipp: Pixel Bro rechnet jeden Vorschlag vorher wie GB Studio durch und zeigt nur Tausche, mit denen 7 Paletten reichen (mit Richtung)
+
 ## 1.5.8 – Richtige Palette rot markiert
 - Game Boy Color: Bei 8 Paletten braucht GB Studio Platz 8 für Text und Menüs und ersetzt still die Palette, die der Text-Palette am ähnlichsten ist – ohne Warnung. Genau diese Palette wird jetzt rot markiert (bisher immer Palette 8, die in GB Studio aber einfach aufrückt und richtig aussieht)
 - Im Prüf-Fenster steht neben der betroffenen Palette, welche Farben ihre Kacheln in GB Studio bekommen
