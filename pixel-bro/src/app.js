@@ -2331,8 +2331,11 @@ async function dialogExportSheet() {
   const n = frameCount();
   const body = el(`${exportToggle('sheet')}<div class="field"><label>Skalierung</label><select id="sc">${scaleOptions(1)}</select></div>
     <div class="field"><label>Anordnung</label><select id="lay"><option value="h">Horizontal (1 Zeile)</option><option value="v">Vertikal (1 Spalte)</option><option value="g">Raster</option></select></div>
-    <div class="field"><label>Spalten (bei Raster)</label><input type="number" id="cols" min="1" max="${n}" value="${Math.ceil(Math.sqrt(n))}"></div>
+    <div class="field" id="cols-field" hidden><label>Spalten (bei Raster)</label><input type="number" id="cols" min="1" max="${n}" value="${n}"></div>
     <p class="hint">${t('{n} Frame(s) · {w} × {h} px pro Frame', { n, w: doc.w, h: doc.h })}</p>`);
+  // Spalten nur bei „Raster“ zeigen, vorbelegt mit der Anzahl der Frames
+  const laySel = body.querySelector('#lay');
+  laySel.onchange = () => { body.querySelector('#cols-field').hidden = laySel.value !== 'g'; };
   const ok = await exportModal('sheet', 'Spritesheet exportieren', body);
   if (typeof ok === 'string') return EXPORT_DIALOGS[ok]();
   if (!ok) return;

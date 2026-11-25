@@ -329,6 +329,7 @@ select {
 #modal h2 { margin: 0 0 14px; font-size: 18px; }
 #modal-body { display: flex; flex-direction: column; gap: 12px; color: var(--text-2); }
 #modal-body .field { display: flex; flex-direction: column; gap: 5px; }
+#modal-body .field[hidden] { display: none; }
 #modal-body .field-row { display: flex; gap: 12px; }
 #modal-body .field-row > * { flex: 1; }
 #modal-body input[type="number"], #modal-body input[type="text"], #modal-body select, #modal-body textarea {
