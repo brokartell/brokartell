@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.8 – Richtige Palette rot markiert
+- Game Boy Color: Bei 8 Paletten braucht GB Studio Platz 8 für Text und Menüs und ersetzt still die Palette, die der Text-Palette am ähnlichsten ist – ohne Warnung. Genau diese Palette wird jetzt rot markiert (bisher immer Palette 8, die in GB Studio aber einfach aufrückt und richtig aussieht)
+- Im Prüf-Fenster steht neben der betroffenen Palette, welche Farben ihre Kacheln in GB Studio bekommen
+
 ## 1.5.7 – Kacheln zählen wie GB Studio
 - Game Boy Color: „Verschiedene Kacheln“ wird jetzt genau wie in GB Studio gezählt. Gleiches Muster mit einer anderen Palette (z. B. dasselbe Auto in Rot und Blau) ist nur eine Kachel, und gespiegelte Kacheln (waagerecht, senkrecht oder beides) zählen nur einmal – wie mit „Auto Tile Flip“ in GB Studio. Das Prüf-Fenster zeigt zusätzlich die Zahl ohne Spiegeln
 - Reste am Rand, die keine ganze 8×8-Kachel sind, zählen nicht mit (GB Studio schneidet sie ab)
