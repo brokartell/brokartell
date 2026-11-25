@@ -219,6 +219,8 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 /* Paletten über 7: rot */
 .gb-lrow.gb-over { outline: 1px solid #ff3250; outline-offset: 2px; border-radius: 6px; background: rgba(255, 50, 80, .12); }
 .gb-row.gb-over .hint { color: #ff6b81; }
+.gb-pair { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.gb-pair .gb-sw { width: 14px; height: 14px; border-radius: 3px; }
 #gb-hud.warn { border-color: #ff3250; }
 #gb-hud-open { display: flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--text); font: 600 12px inherit; cursor: pointer; padding: 4px 6px; }
 .gb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }

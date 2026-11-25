@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.6 – Prüfung rechnet wie GB Studio
+- Game Boy Color: Die Paletten werden jetzt genau so aufgeteilt wie in GB Studio („Automatisch“) – gleiche Reihenfolge, gleiches Zusammenlegen, gleiche Farbkorrektur. Bisher fand Pixel Bro manchmal eine geschicktere Aufteilung mit 7 Paletten, während GB Studio 8 braucht – dann bekamen Kacheln in GB Studio falsche Farben (z. B. Teich grau statt blau), obwohl Pixel Bro „passt“ meldete
+- Bei zu vielen Paletten zeigt das Prüf-Fenster fast gleiche Farben an, deren Zusammenlegen oft eine Palette spart
+
 ## 1.5.5
 - „Farbe überall ersetzen“ (Doppelklick in „Benutzte Farben“) überarbeitet: HEX-Feld zum Eintippen und Einfügen (Strg+V), alle Farben aus dem Bild zum Anklicken – praktisch, um zwei ähnliche Farben zu einer zusammenzulegen und so eine Palettenfarbe zu sparen. Der Windows-Farbwähler bleibt als Knopf
 
