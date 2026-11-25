@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.9';
+const APP_VERSION = '1.5.10';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2460,59 +2460,82 @@ async function gbPaletteDialog() {
   const r = gbAnalyze();
   if (gbView.on) { gbView.result = r; updateGbHud(); requestRender(); }
   const swatch = (u) => `<span class="gb-sw" style="background:${cssColor(u)}" title="${toHex(u).toUpperCase()}"></span>`;
-  const mark = (ok) => `<span class="gb-mark ${ok ? 'ok' : 'warn'}">${ok ? '✓' : '⚠'}</span>`;
   const tilesOk = r.uniqueTiles <= r.tileLimit;
-  const tilesLine = `<div class="gb-line">${mark(tilesOk)}<span>${t('Verschiedene Kacheln: {n} von {max}', { n: r.uniqueTiles, max: r.tileLimit })}${mode === 'color' && r.uniqueTilesNoFlip !== r.uniqueTiles ? ` <span class="hint">${t('(ohne Spiegeln: {n})', { n: r.uniqueTilesNoFlip })}</span>` : ''}</span></div>`;
+  const empty = !r.tiles.some((tile) => tile.colors.length);
   const toggle = `<div class="gb-mode" role="group">
       <button type="button" class="gb-mode-btn ${mode === 'color' ? 'active' : ''}" data-mode="color">Game Boy Color</button>
       <button type="button" class="gb-mode-btn ${mode === 'classic' ? 'active' : ''}" data-mode="classic">Game Boy (klassisch)</button>
     </div>`;
-  const warns = [];
-  let content, title;
-  const empty = !r.tiles.some((tile) => tile.colors.length);
+  // Kachel mit Wert, Balken und Hinweis
+  const stat = (label, value, max, ok, note = '') => `<div class="gbx-stat ${ok ? 'ok' : 'warn'}">
+      <div class="gbx-stat-label">${label}</div>
+      <div class="gbx-stat-value">${value}${max != null ? `<span> / ${max}</span>` : ''}</div>
+      ${max != null ? `<div class="gbx-bar"><i style="width:${Math.min(100, Math.round((parseFloat(value) / max) * 100))}%"></i></div>` : ''}
+      ${note ? `<div class="gbx-stat-note">${note}</div>` : ''}</div>`;
+  const issues = [], tips = [];
+  let title, head, sub, stats, main = '', extraBlock = '';
 
   if (mode === 'classic') {
     title = 'Game Boy (klassisch) – Farben prüfen';
     const colorsOk = !r.foreignPixels.length;
     const allowed = GB_CLASSIC_COLORS.concat(settings.gbSprite ? [GB_SPRITE_TRANSPARENT] : []);
-    const foreignList = r.foreign.slice(0, 12).map(([u, n]) => `<span class="gb-foreign">${swatch(u)}<span class="hint">${n}</span></span>`).join('')
-      + (r.foreign.length > 12 ? `<span class="hint">+${r.foreign.length - 12}</span>` : '');
-    content = `
-      ${empty ? `<p class="hint">${t('Das Bild enthält noch keine Farben')}</p>` : `<p class="gb-sum ${r.ok ? 'ok' : 'warn'}">${r.ok ? '✓ ' + t('Passt für den Game Boy.') : '⚠ ' + t('Passt noch nicht für den Game Boy.')}</p>`}
-      <div class="gb-line">${mark(colorsOk)}<span>${colorsOk ? t('Nur erlaubte Farben') : pl(r.foreign.length, '1 fremde Farbe in {px} Pixeln', '{n} fremde Farben in {px} Pixeln', { px: r.foreignPixels.length })}</span></div>
-      <div class="gb-row"><span class="hint gb-label">${t('Erlaubt')}</span><span class="gb-sws">${allowed.map(swatch).join('')}</span></div>
-      ${colorsOk ? '' : `<div class="gb-row"><span class="hint gb-label">${t('Fremd')}</span><span class="gb-sws gb-foreigns">${foreignList}</span></div>`}
-      ${tilesLine}
+    head = r.ok ? t('Passt für den Game Boy') : t('Passt noch nicht für den Game Boy');
+    sub = colorsOk ? t('Nur die erlaubten Farben') : pl(r.foreign.length, '1 fremde Farbe in {px} Pixeln', '{n} fremde Farben in {px} Pixeln', { px: r.foreignPixels.length });
+    stats = stat(t('Fremde Farben'), String(r.foreign.length), null, colorsOk, colorsOk ? t('alles erlaubt') : pl(r.foreignPixels.length, '1 Pixel', '{n} Pixel'))
+      + stat(t('Kacheln'), String(r.uniqueTiles), r.tileLimit, tilesOk);
+    const chip = (u, label) => `<span class="gbx-chip">${swatch(u)}<span>${label}</span></span>`;
+    main = `<div class="gbx-section"><div class="gbx-title">${t('Erlaubt')}</div>
+        <div class="gbx-chips">${allowed.map((u) => chip(u, toHex(u).toUpperCase())).join('')}</div></div>
+      ${colorsOk ? '' : `<div class="gbx-section"><div class="gbx-title warn">${t('Fremd')}</div>
+        <div class="gbx-chips">${r.foreign.slice(0, 12).map(([u, n]) => chip(u, pl(n, '1 Pixel', '{n} Pixel'))).join('')}${r.foreign.length > 12 ? `<span class="hint">+${r.foreign.length - 12}</span>` : ''}</div></div>`}
       <label class="toggle gb-sprite"><input type="checkbox" id="gb-sprite" ${settings.gbSprite ? 'checked' : ''}><span>${t('Sprite – #65FF00 als Transparenz erlauben')}</span></label>`;
-    if (!colorsOk) warns.push(t('Fremde Farben sind im Bild rot markiert – ersetze sie durch eine der 4 Farben (z. B. mit „Farbe ersetzen“).'));
-    if (!tilesOk) warns.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
-    warns.push(t('Game Boy (klassisch): nur die 4 Grüntöne, höchstens 192 verschiedene 8×8-Kacheln. Geprüft wird der aktuelle Frame.'));
+    if (!colorsOk) issues.push(t('Fremde Farben sind im Bild rot markiert – ersetze sie durch eine der 4 Farben (z. B. mit „Farbe ersetzen“).'));
+    if (!tilesOk) issues.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
+    extraBlock = t('Game Boy (klassisch): nur die 4 Grüntöne, höchstens 192 verschiedene 8×8-Kacheln. Geprüft wird der aktuelle Frame.');
   } else {
     title = 'Game Boy Color – Paletten prüfen';
     const over = r.palettes.length > GB_MAX_PALETTES && !r.uiClose;
-    const rows = r.palettes.map((p, i) => `<div class="gb-row${r.over.has(i) ? ' gb-over' : ''}"><span class="gb-num" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</span>
-        <span class="gb-sws">${p.map(swatch).join('')}${'<span class="gb-sw empty"></span>'.repeat(GB_COLORS - p.length)}</span>
-        <span class="hint">${pl(r.uses[i], '1 Kachel', '{n} Kacheln')}${r.over.has(i) ? ' · ' + t('zu viel') : ''}${i === r.uiReplaced ? ` · ${t('nutzt in GB Studio Palette 8:')} <span class="gb-sws gb-ui">${r.uiMap.map((m) => `<span class="gb-map${m.same ? '' : ' diff'}">${swatch(m.from)}→${swatch(m.to)}</span>`).join('')}</span>` : ''}</span></div>`).join('');
-    content = `
-      ${empty ? `<p class="hint">${t('Das Bild enthält noch keine Farben')}</p>` : `<p class="gb-sum ${r.ok ? 'ok' : 'warn'}">${r.ok ? '✓' : '⚠'} ${t('Dein Bild braucht {n} von {max} Paletten.', { n: r.palettes.length, max: GB_MAX_PALETTES })}</p>`}
-      <div class="gb-list">${rows}</div>
-      ${r.extra.length ? `<div class="gb-row"><span class="hint gb-label">${t('Zu viel')}</span><span class="gb-sws gb-foreigns">${r.extra.slice(0, 12).map(([u, n]) => `<span class="gb-foreign">${swatch(u)}<span class="hint">${n}</span></span>`).join('')}</span></div>` : ''}
-      ${tilesLine}
-      <div class="gb-line gb-uirow"><span>${t('Palette 8 (Text/UI) deiner Szene:')}</span>
-        ${gbUiDisplay().map((h, k) => `<label class="gb-uihex">${swatch(parseHex('#' + h))}<input type="text" maxlength="7" spellcheck="false" value="#${h.toUpperCase()}" data-k="${k}" data-nofocus></label>`).join('')}
-        <button type="button" class="btn ghost gb-uireset" ${settings.gbUi ? '' : 'hidden'}>${t('Vorgabe')}</button></div>`;
-    if (r.uiClose) warns.push(t('Palette {p} nutzt in GB Studio deine Palette 8 (Text/UI) – die Farben sind fast gleich, das passt.', { p: r.uiReplaced + 1 }));
-    if (r.bad.length) warns.push(pl(r.bad.length, '1 Kachel hat mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.', '{n} Kacheln haben mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.'));
-    if (over) warns.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – Platz 8 braucht GB Studio für Text und Menüs. Dafür ersetzt es still die Palette, die deiner Palette 8 am ähnlichsten ist: Kacheln mit Palette {p} bekommen in GB Studio deren Farben, auch wenn es keine Warnung zeigt. Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.', '{n} Paletten zu viel – Platz 8 braucht GB Studio für Text und Menüs. Kacheln mit Palette {p} bekommen in GB Studio andere Farben. Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.', { p: [...r.over].map((i) => i + 1).join(', ') }));
-    if (over && r.near.length) warns.push(t('Geprüfter Tipp – diese Farbe ersetzen (Doppelklick in „Benutzte Farben“), dann reichen 7 Paletten:') + ' ' + r.near.slice(0, 4).map(([a, b]) => `<span class="gb-pair">${swatch(a)}${toHex(a).toUpperCase()} → ${swatch(b)}${toHex(b).toUpperCase()}</span>`).join(' · '));
-    if (!tilesOk) warns.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
-    warns.push(t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.') + ' ' + t('Die Paletten werden genau so aufgeteilt wie in GB Studio („Automatisch“).') + ' ' + t('Kacheln werden wie in GB Studio gezählt: gleiches Muster mit anderer Palette und gespiegelte Kacheln zählen nur einmal.') + ' ' + t('„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.'));
+    const palOk = r.palettes.length <= GB_MAX_PALETTES || r.uiClose;
+    head = r.ok ? t('Passt in GB Studio') : t('Passt noch nicht in GB Studio');
+    sub = t('{n} von {max} Paletten', { n: r.palettes.length, max: GB_MAX_PALETTES }) + ' · ' + t('{n} von {max} Kacheln', { n: r.uniqueTiles, max: r.tileLimit });
+    stats = stat(t('Paletten'), String(r.palettes.length), GB_MAX_PALETTES, palOk, r.uiClose ? t('8. passt zu deiner Palette 8') : over ? t('GB Studio ersetzt eine still') : t('frei für Hintergründe'))
+      + stat(t('Kacheln'), String(r.uniqueTiles), r.tileLimit, tilesOk, r.uniqueTilesNoFlip !== r.uniqueTiles ? t('ohne Spiegeln: {n}', { n: r.uniqueTilesNoFlip }) : '');
+    const maxUse = Math.max(1, ...r.uses);
+    const rows = r.palettes.map((p, i) => {
+      const bad = r.over.has(i);
+      const mapRow = i === r.uiReplaced ? `<div class="gbx-map ${r.uiClose ? 'ok' : ''}"><span>${t('In GB Studio:')}</span>${r.uiMap.map((m) => `<span class="gb-map${m.same ? '' : ' diff'}">${swatch(m.from)}<b>→</b>${swatch(m.to)}</span>`).join('')}</div>` : '';
+      return `<div class="gbx-pal${bad ? ' bad' : ''}${i === r.uiReplaced && r.uiClose ? ' close' : ''}">
+          <span class="gb-num" style="background:${bad ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</span>
+          <span class="gb-sws">${p.map(swatch).join('')}${'<span class="gb-sw empty"></span>'.repeat(GB_COLORS - p.length)}</span>
+          <span class="gbx-use"><span class="gbx-bar"><i style="width:${Math.max(3, Math.round((r.uses[i] / maxUse) * 100))}%"></i></span><span class="gbx-n">${pl(r.uses[i], '1 Kachel', '{n} Kacheln')}</span></span>
+          ${mapRow}</div>`;
+    }).join('');
+    main = `<div class="gbx-section"><div class="gbx-title">${t('Paletten')}</div><div class="gbx-pals">${rows}</div></div>
+      ${r.extra.length ? `<div class="gbx-section"><div class="gbx-title warn">${t('Zu viel')}</div><div class="gbx-chips">${r.extra.slice(0, 12).map(([u, n]) => `<span class="gbx-chip">${swatch(u)}<span>${pl(n, '1 Pixel', '{n} Pixel')}</span></span>`).join('')}</div></div>` : ''}`;
+    if (r.uiClose) tips.push(t('Palette {p} nutzt in GB Studio deine Palette 8 (Text/UI) – die Farben sind fast gleich, das passt.', { p: r.uiReplaced + 1 }));
+    if (r.bad.length) issues.push(pl(r.bad.length, '1 Kachel hat mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.', '{n} Kacheln haben mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.'));
+    if (over) issues.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – GB Studio braucht Platz 8 für Text und gibt dafür still Palette {p} die Farben deiner Palette 8 (siehe unten). Farben angleichen oder ähnliche Kacheln zusammenfassen.', '{n} Paletten zu viel – Kacheln mit Palette {p} bekommen in GB Studio falsche Farben. Farben angleichen oder ähnliche Kacheln zusammenfassen.', { p: [...r.over].map((i) => i + 1).join(', ') }));
+    if (over && r.near.length) tips.push(t('Geprüfter Tipp – so reichen 7 Paletten (Doppelklick in „Benutzte Farben“):') + ' ' + r.near.slice(0, 4).map(([a, b]) => `<span class="gb-pair">${swatch(a)}${toHex(a).toUpperCase()} → ${swatch(b)}${toHex(b).toUpperCase()}</span>`).join(' · '));
+    if (!tilesOk) issues.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
+    main += `<div class="gbx-section gbx-ui"><div class="gbx-title">${t('Palette 8 · Text/UI deiner Szene')}<span class="hint">${t('HEX wie in GB Studio')}</span></div>
+      <div class="gbx-uifields">${gbUiDisplay().map((h, k) => `<label class="gb-uihex">${swatch(parseHex('#' + h))}<input type="text" maxlength="7" spellcheck="false" value="#${h.toUpperCase()}" data-k="${k}" data-nofocus></label>`).join('')}
+        <button type="button" class="btn gb-uireset" title="${t('GB-Studio-Vorgabe')}" ${settings.gbUi ? '' : 'hidden'}>↺</button></div></div>`;
+    extraBlock = t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.') + ' ' + t('Die Paletten werden genau so aufgeteilt wie in GB Studio („Automatisch“).') + ' ' + t('Kacheln werden wie in GB Studio gezählt: gleiches Muster mit anderer Palette und gespiegelte Kacheln zählen nur einmal.') + ' ' + t('„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.');
   }
-  if (r.partial) warns.splice(warns.length - 1, 0, t('Breite und Höhe sind kein Vielfaches von 8 – GB Studio erwartet ganze 8×8-Kacheln.'));
-  const info = warns.pop();
-  const body = el(`${toggle}${content}
-    ${warns.map((x) => `<p class="hint gb-warn">${x}</p>`).join('')}
-    <p class="hint">${info}</p>`);
+  if (r.partial) issues.push(t('Breite und Höhe sind kein Vielfaches von 8 – GB Studio erwartet ganze 8×8-Kacheln.'));
+  if (empty) { head = t('Das Bild enthält noch keine Farben'); sub = ''; }
+  const ok = r.ok && !empty;
+  const body = el(`<div class="gbx">${toggle}
+    <div class="gbx-status ${empty ? '' : ok ? 'ok' : 'warn'}">
+      <div class="gbx-icon">${empty ? '·' : ok ? '✓' : '!'}</div>
+      <div><div class="gbx-head">${head}</div>${sub ? `<div class="gbx-sub">${sub}</div>` : ''}</div>
+    </div>
+    ${empty ? '' : `<div class="gbx-stats">${stats}</div>`}
+    ${issues.map((x) => `<div class="gbx-note issue"><span>!</span><p>${x}</p></div>`).join('')}
+    ${tips.map((x) => `<div class="gbx-note tip"><span>✓</span><p>${x}</p></div>`).join('')}
+    ${main}
+    <details class="gbx-info"><summary>${t('So prüft Pixel Bro')}</summary><p>${extraBlock}</p></details>
+  </div>`);
 
   // Umschalter und Sprite-Option: Auswahl speichern und Dialog mit dem neuen Modus neu aufbauen
   const reopen = () => $('#gb-reopen').click();
@@ -2536,7 +2559,7 @@ async function gbPaletteDialog() {
   const actions = [{ label: 'Schließen', value: false }, { label: '', value: 'reopen', id: 'gb-reopen', hidden: true }];
   if (mode === 'color' && r.palettes.length) actions.push({ label: 'Paletten speichern', value: 'save' });
   actions.push({ label: gbView.on ? 'Im Bild ausblenden' : 'Im Bild zeigen', value: 'toggle', primary: true });
-  const res = await modal({ title, body, actions });
+  const res = await modal({ title, body, actions, wide: true });
   if (res === 'reopen') {
     if (gbView.on) { gbView.result = gbAnalyze(); updateGbHud(); requestRender(); }
     return gbPaletteDialog();
@@ -2614,8 +2637,9 @@ function setBrushSize(s) {
 }
 
 /* ---------- Dialoge ---------- */
-function modal({ title, body, actions }) {
+function modal({ title, body, actions, wide = false }) {
   return new Promise((resolve) => {
+    $('#modal').classList.toggle('wide', wide);
     $('#modal-title').textContent = title;
     const b = $('#modal-body');
     b.innerHTML = '';
