@@ -388,6 +388,20 @@ select {
 .panel-head h3 .count:not(:empty) { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-2); letter-spacing: 0; }
 .palette-empty { grid-column: 1 / -1; padding: 10px 2px; }
 .color-preview { width: 100%; height: 40px; border-radius: 8px; border: 1px solid var(--line-2); }
+/* Farbe überall ersetzen */
+.rc-row { display: flex; align-items: flex-start; gap: 12px; }
+.rc-side { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rc-arrow { font-size: 22px; color: var(--text-3); padding-top: 34px; }
+.rc-sw { height: 44px; border-radius: 10px; border: 1px solid var(--line-2); }
+.rc-hexrow { display: flex; gap: 6px; align-items: center; }
+#modal-body .rc-hexrow input[type="text"] { flex: 1; min-width: 0; font-size: 13px; padding: 6px 8px; }
+#modal-body .rc-hexrow input.bad { outline: 2px solid #ff3250; border-color: transparent; }
+.rc-pick { position: relative; overflow: hidden; flex: none; }
+.rc-pick input[type="color"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.rc-colors { display: flex; flex-wrap: wrap; gap: 5px; max-height: 120px; overflow: auto; padding: 2px; }
+.rc-c { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line-2); cursor: pointer; padding: 0; }
+.rc-c:hover { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+.rc-c.active { outline: 2px solid var(--accent); outline-offset: 2px; }
 #modal-body input[type="color"] { width: 100%; height: 40px; padding: 0; border: 1px solid var(--line-2); border-radius: 8px; background: none; cursor: pointer; }
 
 /* Nur in der Windows-App */

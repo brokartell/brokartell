@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.5
+- „Farbe überall ersetzen“ (Doppelklick in „Benutzte Farben“) überarbeitet: HEX-Feld zum Eintippen und Einfügen (Strg+V), alle Farben aus dem Bild zum Anklicken – praktisch, um zwei ähnliche Farben zu einer zusammenzulegen und so eine Palettenfarbe zu sparen. Der Windows-Farbwähler bleibt als Knopf
+
 ## 1.5.4
 - Game Boy Color: Passt eine Kachel in mehrere Paletten (z. B. nur Weiß und Dunkel), bekommt sie jetzt die Palette ihrer Nachbarn – vor allem der Nachbarn, in die ihre Farben über die Kante weiterlaufen. So zeigt z. B. der Sockel eines Hauses dieselbe Nummer wie das Haus
 - Solche Kacheln haben ein „+“ hinter der Nummer (z. B. „6+“): Sie würden auch in andere Paletten passen

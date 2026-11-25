@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.4';
+const APP_VERSION = '1.5.5';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1272,18 +1272,41 @@ function replaceColor() {
 }
 /** Ersetzt eine Farbe in allen Ebenen und Frames (Doppelklick in der Live-Palette). */
 async function replaceColorDialog(from) {
+  // Neue Farbe: HEX eintippen/einfügen, eine Farbe aus dem Bild anklicken oder frei wählen
+  const others = [...usedCounts.keys()].filter((c) => c !== from);
   const body = el(`
-    <div class="field-row" style="align-items:center">
-      <div class="field"><label>Alte Farbe</label><div class="color-preview" style="background:${cssColor(from)}"></div><span class="mono">${toHex(from, true).toUpperCase()}</span></div>
-      <div class="field" style="flex:0;font-size:22px;padding-top:14px">→</div>
-      <div class="field"><label>Neue Farbe</label><input type="color" id="rc-new" value="${toHex(from).slice(0, 7)}"><span class="mono" id="rc-hex">${toHex(from).toUpperCase()}</span></div>
+    <div class="rc-row">
+      <div class="rc-side"><label>Alte Farbe</label><div class="rc-sw" style="background:${cssColor(from)}"></div><span class="mono">${toHex(from).toUpperCase()}</span></div>
+      <div class="rc-arrow">→</div>
+      <div class="rc-side"><label>Neue Farbe</label><div class="rc-sw" id="rc-prev" style="background:${cssColor(from)}"></div>
+        <div class="rc-hexrow"><input type="text" id="rc-hex" class="mono" maxlength="7" spellcheck="false" value="${toHex(from).toUpperCase()}">
+          <label class="icon-btn small rc-pick" title="Farbwähler"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.7 1.7-1.7H16c3.1 0 5.6-2.5 5.6-5.6C21.6 6 17.4 2 12 2z"/></svg><input type="color" id="rc-native" value="${toHex(from).slice(0, 7)}"></label>
+        </div>
+      </div>
     </div>
+    ${others.length ? `<div class="field"><label>Farben im Bild – zum Übernehmen anklicken</label><div class="rc-colors">${others.map((c) => `<button type="button" class="rc-c" data-c="${c}" style="background:${cssColor(c)}" title="${toHex(c).toUpperCase()} · ${usedCounts.get(c) || 0} Pixel"></button>`).join('')}</div></div>` : ''}
     <p class="hint">${t('Betrifft')} ${usedCounts.get(from) || 0} ${t('Pixel in allen Ebenen und Frames. Die Deckkraft bleibt erhalten.')}</p>`);
-  const inp = body.querySelector('#rc-new');
-  inp.oninput = () => { body.querySelector('#rc-hex').textContent = inp.value.toUpperCase(); };
+  const hex = body.querySelector('#rc-hex'), nat = body.querySelector('#rc-native'), prev = body.querySelector('#rc-prev');
+  let chosen = from;
+  const show = (c, from_) => {
+    chosen = c;
+    prev.style.background = cssColor(c);
+    if (from_ !== 'hex') hex.value = toHex(c).toUpperCase();
+    if (from_ !== 'native') nat.value = toHex(c).slice(0, 7);
+    hex.classList.remove('bad');
+    body.querySelectorAll('.rc-c').forEach((b) => b.classList.toggle('active', +b.dataset.c === c));
+  };
+  hex.oninput = () => {
+    const c = parseHex(hex.value.length === 6 && !hex.value.startsWith('#') ? '#' + hex.value : hex.value);
+    if (c === null || !/^#?[0-9a-f]{6}$/i.test(hex.value.trim())) { hex.classList.add('bad'); return; }
+    show(c, 'hex');
+  };
+  hex.onkeydown = (e) => e.stopPropagation(); // Strg+V usw. gehören dem Textfeld
+  nat.oninput = () => show(parseHex(nat.value), 'native');
+  body.querySelectorAll('.rc-c').forEach((b) => b.onclick = () => show(+b.dataset.c >>> 0));
   const ok = await modal({ title: 'Farbe überall ersetzen', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Ersetzen', value: true, primary: true }] });
   if (!ok) return;
-  const [r, g, b] = unpack(parseHex(inp.value));
+  const [r, g, b] = unpack(chosen);
   const to = pack(r, g, b, unpack(from)[3]);
   if (to === from) return;
   commitFloat(false);
