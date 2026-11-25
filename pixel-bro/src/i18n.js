@@ -214,6 +214,8 @@ const EN = {
   'Ersetzen': 'Replace',
   'Alte Farbe': 'Old color',
   'Neue Farbe': 'New color',
+  'Farben im Bild – zum Übernehmen anklicken': 'Colors in the image – click to use',
+  'Farbwähler': 'Color picker',
   'Betrifft': 'Affects',
   'Pixel in allen Ebenen und Frames. Die Deckkraft bleibt erhalten.': 'pixels in all layers and frames. Opacity is kept.',
   'Farbe überall ersetzen': 'Replace color everywhere',
