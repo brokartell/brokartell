@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -283,8 +283,8 @@ function render() {
   if (settings.tileGrid > 1) {
     const t = settings.tileGrid;
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(124,92,255,.55)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(124, 92, 255, .95)'; // kräftiger als das Pixelraster
+    ctx.lineWidth = 2;
     for (let x = t; x < w; x += t) { ctx.moveTo(view.ox + x * z, view.oy); ctx.lineTo(view.ox + x * z, view.oy + H); }
     for (let y = t; y < h; y += t) { ctx.moveTo(view.ox, view.oy + y * z); ctx.lineTo(view.ox + W, view.oy + y * z); }
     ctx.stroke();
@@ -2267,6 +2267,28 @@ async function dialogResize() {
   resizeDoc(nw, nh, body.querySelector('#rm').value, [a[1], a[2]]);
 }
 
+/** Auswahl „Kacheln“ in der Optionsleiste an settings.tileGrid anpassen (eigene Größen erscheinen als Eintrag). */
+function syncTileGridSelect() {
+  const sel = $('#tilegrid-select');
+  if (!sel) return;
+  const v = settings.tileGrid > 1 ? settings.tileGrid : 0;
+  let opt = [...sel.options].find((o) => o.value === String(v));
+  for (const o of [...sel.querySelectorAll('option[data-extra]')]) if (o !== opt) sel.removeChild(o);
+  if (!opt) {
+    opt = document.createElement('option');
+    opt.value = String(v); opt.dataset.extra = '1'; opt.dataset.i18nSkip = '';
+    opt.textContent = `${v} × ${v}`;
+    sel.insertBefore(opt, sel.querySelector('option[value="custom"]'));
+  }
+  sel.value = String(v);
+  sel.classList.toggle('on', v > 1);
+}
+function setTileGrid(v) {
+  settings.tileGrid = clamp(v | 0, 0, 512);
+  saveSettings();
+  syncMenuChecks();
+  requestRender();
+}
 async function dialogTileGrid() {
   const body = el(`<div class="field"><label>Kachelgröße (0 = aus)</label>
     <div class="chips">${[0, 8, 16, 24, 32].map((s) => `<button class="chip" data-s="${s}">${s ? s + ' px' : 'Aus'}</button>`).join('')}</div>
@@ -2275,9 +2297,7 @@ async function dialogTileGrid() {
   body.querySelectorAll('.chip').forEach((c) => c.onclick = () => { body.querySelector('#tg').value = c.dataset.s; });
   const ok = await modal({ title: 'Kachelraster', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Übernehmen', value: true, primary: true }] });
   if (!ok) return;
-  settings.tileGrid = clamp(parseInt(body.querySelector('#tg').value) || 0, 0, 512);
-  saveSettings();
-  requestRender();
+  setTileGrid(parseInt(body.querySelector('#tg').value) || 0);
 }
 
 function scaleOptions(def = 4) {
@@ -2571,6 +2591,7 @@ function syncMenuChecks() {
   const map = { 'toggle-grid': 'grid', 'toggle-center': 'center', 'toggle-tile': 'tile', 'toggle-onion': 'onion' };
   for (const [cmd, key] of Object.entries(map)) $$(`[data-cmd="${cmd}"]`).forEach((b) => b.classList.toggle('checked', !!settings[key]));
   $$('[data-cmd="toggle-tilegrid"]').forEach((b) => b.classList.toggle('checked', settings.tileGrid > 1));
+  syncTileGridSelect();
   $$('[data-cmd="toggle-autoupdate"]').forEach((b) => b.classList.toggle('checked', !!settings.autoUpdate));
   $$('[data-cmd="lang-de"]').forEach((b) => b.classList.toggle('checked', settings.lang !== 'en'));
   $$('[data-cmd="lang-en"]').forEach((b) => b.classList.toggle('checked', settings.lang === 'en'));
@@ -2806,6 +2827,10 @@ $('#opt-center').addEventListener('change', (e) => { settings.center = e.target.
 $('#grad-steps').addEventListener('input', (e) => { settings.gradSteps = +e.target.value; $('#grad-steps-val').textContent = settings.gradSteps; saveSettings(); });
 $('#opt-grad-dither').addEventListener('change', (e) => { settings.gradDither = e.target.checked; saveSettings(); });
 $('#spray-density').addEventListener('input', (e) => { settings.sprayDensity = +e.target.value; $('#spray-density-val').textContent = settings.sprayDensity; saveSettings(); });
+$('#tilegrid-select').addEventListener('change', async (e) => {
+  if (e.target.value === 'custom') { syncTileGridSelect(); await dialogTileGrid(); syncTileGridSelect(); return; }
+  setTileGrid(+e.target.value);
+});
 $('#opt-onion').addEventListener('change', (e) => { settings.onion = e.target.checked; saveSettings(); syncMenuChecks(); requestRender(); });
 $('#opt-tile').addEventListener('change', (e) => { settings.tile = e.target.checked; syncMenuChecks(); requestRender(); });
 

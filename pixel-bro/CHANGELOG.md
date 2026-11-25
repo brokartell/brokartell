@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+- Kachelraster direkt oben neben „Raster“ auswählbar: Aus, 2, 4, 8, 16, 32, 64 oder eigene Größe – die Auswahl wird gespeichert
+- Kachel-Linien kräftiger, damit sie sich vom Pixelraster abheben
+- Neuer Knopf „Einpassen“ oben rechts neben Rückgängig/Wiederholen: Bild wieder mittig und ganz sichtbar (auch Taste 0)
+
 ## 1.5.0 – Game Boy Color / Game Boy (klassisch)
 - Prüf-Dialog (Bild → GB-Studio-Paletten prüfen, Umschalt+G) mit Umschalter **Game Boy Color / Game Boy (klassisch)** – die Auswahl wird gespeichert, die Überschrift zeigt den Modus
 - **Game Boy Color:** wie bisher Paletten pro 8×8-Kachel (höchstens 7 für Hintergründe, „X von 7“), dazu die Zahl der verschiedenen Kacheln (Grenze 384)

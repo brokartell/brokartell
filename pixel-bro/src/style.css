@@ -390,5 +390,8 @@ body:not(.is-desktop) .desktop-only { display: none; }
 /* Palettenauswahl mit Knöpfen */
 .pal-row { display: flex; gap: 4px; align-items: center; }
 .pal-row select { flex: 1; min-width: 0; }
+/* Kachelraster-Auswahl in der Optionsleiste */
+.opt-select { width: auto; padding: 4px 8px; font-size: 12px; border-radius: 8px; }
+.opt-select.on { border-color: var(--accent); color: var(--text); }
 optgroup { font-style: normal; color: var(--text-3); }
 optgroup option { color: var(--text); }
