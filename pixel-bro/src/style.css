@@ -512,3 +512,9 @@ optgroup option { color: var(--text); }
 .gbx-info p { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-3); }
 :root[data-theme="light"] .gbx-note.issue { color: #a3122c; }
 :root[data-theme="light"] .gbx-note.tip { color: #11633a; }
+.gbx-note .gbx-apply { margin-left: auto; flex: none; padding: 5px 12px; font-size: 12px; align-self: center; }
+.gbx-note.tip .gbx-apply { border-color: rgba(61, 220, 132, .6); }
+.gbx-note.tip .gbx-apply:hover { background: rgba(61, 220, 132, .18); }
+.gbx-note.issue .gbx-apply { border-color: rgba(255, 50, 80, .6); }
+.gbx-note.issue .gbx-apply:hover { background: rgba(255, 50, 80, .18); }
+.gbx-arrow { font-weight: 400; color: var(--text-3); margin: 0 -2px; }
