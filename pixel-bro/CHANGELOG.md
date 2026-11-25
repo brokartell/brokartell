@@ -1,8 +1,6 @@
 # Changelog
 
 ## 1.5.1
-- Kachelraster direkt oben neben „Raster“ auswählbar: Aus, 2, 4, 8, 16, 32, 64 oder eigene Größe – die Auswahl wird gespeichert
-- Kachel-Linien kräftiger, damit sie sich vom Pixelraster abheben
 - Neuer Knopf „Einpassen“ oben rechts neben Rückgängig/Wiederholen: Bild wieder mittig und ganz sichtbar (auch Taste 0)
 
 ## 1.5.0 – Game Boy Color / Game Boy (klassisch)
