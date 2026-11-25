@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.10 – Neues Prüf-Fenster
+- Das Fenster „Paletten prüfen“ ist neu gestaltet: oben groß das Ergebnis (grün „Passt in GB Studio“ oder rot), darunter zwei Kacheln für Paletten und Kacheln mit Balken
+- Paletten als Liste mit Nutzungsbalken, die betroffene Palette rot umrandet mit „In GB Studio: Farbe → Farbe“
+- Probleme (rot) und geprüfte Tipps (grün) getrennt und kürzer formuliert, die Erklärung steckt eingeklappt unter „So prüft Pixel Bro“
+- Palette 8 (Text/UI) in einer Reihe mit Farbpunkt im Feld, Zurücksetzen als kleiner Knopf
+- Game Boy (klassisch) im selben Stil: erlaubte und fremde Farben als Chips mit HEX bzw. Pixelzahl
+
 ## 1.5.9 – Eigene Palette 8 (Text/UI)
 - Game Boy Color: Im Prüf-Fenster lässt sich die Palette 8 (Text/UI) der Szene eintragen – so, wie GB Studio die HEX-Werte anzeigt. Die Prüfung sucht damit genau wie GB Studio aus, welche Palette bei 8 Paletten ersetzt wird
 - Neben der betroffenen Palette steht jetzt jede Farbe mit ihrer Farbe in GB Studio (z. B. Blau → Grau). Sind alle fast gleich, gilt das Bild als passend
