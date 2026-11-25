@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.5.3';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2061,7 +2061,9 @@ function gbAnalyze() {
       if (!tile.extra.includes(u)) tile.extra.push(u);
     });
   }
-  Object.assign(res, { palettes, uses, bad, uniqueTiles: keys.size, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
+  // Mehr als 7 Paletten: die mit den wenigsten Kacheln gelten als „zu viel“ – die lassen sich am leichtesten einsparen
+  const over = new Set(palettes.map((_, i) => i).sort((a, b) => uses[a] - uses[b] || b - a).slice(0, Math.max(0, palettes.length - GB_MAX_PALETTES)));
+  Object.assign(res, { palettes, uses, bad, over, uniqueTiles: keys.size, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
   res.ok = !bad.length && palettes.length <= GB_MAX_PALETTES && res.uniqueTiles <= res.tileLimit;
   return res;
 }
@@ -2109,7 +2111,7 @@ function renderGbLegend(r) {
     rows.push(`<div class="gb-lrow"><span class="gb-ltag ok">✓</span>${allowed.map(sw).join('')}</div>`);
     if (r.foreign.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.foreign.slice(0, 8).map(([u]) => sw(u)).join('')}${r.foreign.length > 8 ? `<span class="gb-lmore">+${r.foreign.length - 8}</span>` : ''}</div>`);
   } else {
-    rows = r.palettes.map((p, i) => `<div class="gb-lrow"><span class="gb-ltag" style="background:${GB_HUES[i % GB_HUES.length]}">${i + 1}</span>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
+    rows = r.palettes.map((p, i) => `<div class="gb-lrow${r.over.has(i) ? ' gb-over' : ''}" ${r.over.has(i) ? `title="${t('Palette zu viel – nur {n} Kacheln', { n: r.uses[i] })}"` : ''}><span class="gb-ltag" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</span>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
     if (r.extra.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.extra.slice(0, 8).map(([u]) => sw(u)).join('')}${r.extra.length > 8 ? `<span class="gb-lmore">+${r.extra.length - 8}</span>` : ''}</div>`);
   }
   box.innerHTML = rows.join('');
@@ -2155,10 +2157,16 @@ function drawGbOverlay(z) {
       continue;
     }
     if (tile.palette < 0) continue;
-    const col = GB_HUES[tile.palette % GB_HUES.length];
-    ctx.strokeStyle = col; ctx.globalAlpha = 0.75;
-    ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
-    ctx.globalAlpha = 1;
+    const isOver = r.over && r.over.has(tile.palette);
+    const col = isOver ? '#ff3250' : GB_HUES[tile.palette % GB_HUES.length];
+    if (isOver) {
+      ctx.fillStyle = 'rgba(255, 50, 80, .18)'; ctx.fillRect(x, y, tw, th);
+      ctx.strokeStyle = col; ctx.strokeRect(x + 1.5, y + 1.5, tw - 3, th - 3);
+    } else {
+      ctx.strokeStyle = col; ctx.globalAlpha = 0.75;
+      ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
+      ctx.globalAlpha = 1;
+    }
     if (s >= 24) {
       const label = String(tile.palette + 1);
       ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
@@ -2214,9 +2222,9 @@ async function gbPaletteDialog() {
   } else {
     title = 'Game Boy Color – Paletten prüfen';
     const over = r.palettes.length > GB_MAX_PALETTES;
-    const rows = r.palettes.map((p, i) => `<div class="gb-row"><span class="gb-num" style="background:${GB_HUES[i % GB_HUES.length]}">${i + 1}</span>
+    const rows = r.palettes.map((p, i) => `<div class="gb-row${r.over.has(i) ? ' gb-over' : ''}"><span class="gb-num" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</span>
         <span class="gb-sws">${p.map(swatch).join('')}${'<span class="gb-sw empty"></span>'.repeat(GB_COLORS - p.length)}</span>
-        <span class="hint">${pl(r.uses[i], '1 Kachel', '{n} Kacheln')}</span></div>`).join('');
+        <span class="hint">${pl(r.uses[i], '1 Kachel', '{n} Kacheln')}${r.over.has(i) ? ' · ' + t('zu viel') : ''}</span></div>`).join('');
     content = `
       ${empty ? `<p class="hint">${t('Das Bild enthält noch keine Farben')}</p>` : `<p class="gb-sum ${r.ok ? 'ok' : 'warn'}">${r.ok ? '✓' : '⚠'} ${t('Dein Bild braucht {n} von {max} Paletten.', { n: r.palettes.length, max: GB_MAX_PALETTES })}</p>`}
       <div class="gb-list">${rows}</div>
