@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.5.2';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2062,9 +2062,10 @@ function setGbView(on) {
 
 function updateGbHud() {
   const hud = $('#gb-hud');
-  if (!gbView.on || !gbView.result) { hud.hidden = true; return; }
+  if (!gbView.on || !gbView.result) { hud.hidden = true; $('#gb-legend').hidden = true; return; }
   const r = gbView.result;
   hud.hidden = false;
+  renderGbLegend(r);
   hud.classList.toggle('warn', !r.ok);
   const tilesTxt = t('Kacheln {n}/{max}', { n: r.uniqueTiles, max: r.tileLimit });
   if (r.mode === 'classic') {
@@ -2076,6 +2077,23 @@ function updateGbHud() {
       + ' · ' + tilesTxt
       + (r.bad.length ? ' · ' + pl(r.bad.length, '1 Kachel mit mehr als 4 Farben', '{n} Kacheln mit mehr als 4 Farben') : '');
   }
+}
+
+/** Kleine Paletten-Übersicht unter der Anzeige oben links – Klick auf eine Farbe = Primär, Rechtsklick = Sekundär. */
+function renderGbLegend(r) {
+  const box = $('#gb-legend');
+  const sw = (u) => `<button class="gb-lsw" data-c="${u}" style="background:${cssColor(u)}" title="${toHex(u).toUpperCase()}"></button>`;
+  const empty = '<span class="gb-lsw empty"></span>';
+  let rows = [];
+  if (r.mode === 'classic') {
+    const allowed = GB_CLASSIC_COLORS.concat(settings.gbSprite ? [GB_SPRITE_TRANSPARENT] : []);
+    rows.push(`<div class="gb-lrow"><span class="gb-ltag ok">✓</span>${allowed.map(sw).join('')}</div>`);
+    if (r.foreign.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.foreign.slice(0, 8).map(([u]) => sw(u)).join('')}${r.foreign.length > 8 ? `<span class="gb-lmore">+${r.foreign.length - 8}</span>` : ''}</div>`);
+  } else {
+    rows = r.palettes.map((p, i) => `<div class="gb-lrow"><span class="gb-ltag" style="background:${GB_HUES[i % GB_HUES.length]}">${i + 1}</span>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
+  }
+  box.innerHTML = rows.join('');
+  box.hidden = !rows.length;
 }
 
 function drawGbOverlay(z) {
@@ -2990,6 +3008,15 @@ $('#pal-add').addEventListener('click', () => {
 $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
+$('#gb-legend').addEventListener('click', (e) => {
+  const b = e.target.closest('.gb-lsw[data-c]'); if (!b) return;
+  settings.primary = +b.dataset.c >>> 0; updateColorUI(); saveSettings();
+});
+$('#gb-legend').addEventListener('contextmenu', (e) => {
+  const b = e.target.closest('.gb-lsw[data-c]'); if (!b) return;
+  e.preventDefault();
+  settings.secondary = +b.dataset.c >>> 0; updateColorUI(); saveSettings();
+});
 
 $('#file-open').addEventListener('change', async (e) => {
   const f = e.target.files[0];

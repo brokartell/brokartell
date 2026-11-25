@@ -357,6 +357,7 @@ const EN = {
   'Ansicht ausblenden': 'Hide overlay',
   'Auf der Zeichenfläche zeigen': 'Show on canvas',
   'Details anzeigen': 'Show details',
+  'Klick: Primärfarbe · Rechtsklick: Sekundärfarbe': 'Click: primary color · Right-click: secondary color',
   '{n} Paletten gespeichert': '{n} palettes saved',
   'Limit von {max} eigenen Paletten erreicht': 'limit of {max} custom palettes reached',
   'Umschalt+G': 'Shift+G',
