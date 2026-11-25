@@ -438,3 +438,12 @@ body:not(.is-desktop) .desktop-only { display: none; }
 .pal-row select { flex: 1; min-width: 0; }
 optgroup { font-style: normal; color: var(--text-3); }
 optgroup option { color: var(--text); }
+.gb-uirow { flex-wrap: wrap; gap: 6px; margin-top: 4px; font-size: 13px; color: var(--text-2); }
+.gb-uihex { display: inline-flex; align-items: center; gap: 4px; }
+.gb-uihex .gb-sw { width: 14px; height: 14px; border-radius: 3px; }
+.gb-uihex input { width: 66px; padding: 3px 5px; font: 12px ui-monospace, Consolas, monospace; background: var(--bg-2); color: var(--text); border: 1px solid var(--line-2); border-radius: 6px; }
+.gb-uihex input:focus { outline: none; border-color: var(--accent); }
+.gb-uirow .btn { padding: 3px 10px; font-size: 12px; }
+.gb-map { display: inline-flex; align-items: center; gap: 2px; margin-right: 6px; color: var(--text-3); }
+.gb-map.diff { color: #ff6b81; }
+#modal-body .gb-uihex input[type="text"] { width: 78px; padding: 3px 6px; font: 12px ui-monospace, Consolas, monospace; }
