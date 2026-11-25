@@ -4,6 +4,7 @@
 - Neuer Knopf „Einpassen“ oben rechts neben Rückgängig/Wiederholen: Bild wieder mittig und ganz sichtbar (auch Taste 0)
 - Der Knopf „Exportieren“ öffnet ein Fenster mit Umschalter **PNG · Spritesheet · GIF** – Pixel Bro merkt sich das zuletzt benutzte Format. Die Einträge im Menü Datei bleiben
 - Spritesheet: „Spalten“ ist automatisch mit der Anzahl der Frames vorbelegt und erscheint nur noch bei der Anordnung „Raster“
+- Vorschau-Zoom: Mausrad über der Vorschau zoomt bis 32× zur Mausposition, Ziehen verschiebt den Ausschnitt, Doppelklick oder Klick auf die Zoom-Anzeige zeigt wieder das ganze Bild – so sieht man auch kleine Bewegungen in großen Bildern
 
 ## 1.5.0 – Game Boy Color / Game Boy (klassisch)
 - Prüf-Dialog (Bild → GB-Studio-Paletten prüfen, Umschalt+G) mit Umschalter **Game Boy Color / Game Boy (klassisch)** – die Auswahl wird gespeichert, die Überschrift zeigt den Modus

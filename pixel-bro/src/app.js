@@ -1576,6 +1576,10 @@ function previewLoop(t) {
   const box = previewCanvas.parentElement;
   // Ganzes Bild zeigen: kleine Bilder ganzzahlig vergrößern, große Bilder passend verkleinern
   const fit = Math.min((box.clientWidth - 12) / doc.w, (box.clientHeight - 12) / doc.h);
+  if (pv.w !== doc.w || pv.h !== doc.h) resetPreviewZoom();
+  pv.base = fit >= 1 ? Math.floor(fit) : fit; // Bildschirm-Pixel pro Sprite-Pixel ohne Zoom
+  if (pv.zoom > 1) { drawPreviewZoomed(box); return; }
+  previewCanvas.classList.remove('zoomed');
   const s = fit >= 1 ? Math.floor(fit) : 1;
   if (previewCanvas.width !== doc.w * s || previewCanvas.height !== doc.h * s) {
     previewCanvas.width = doc.w * s; previewCanvas.height = doc.h * s;
@@ -1592,6 +1596,94 @@ function previewLoop(t) {
   pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   pctx.drawImage(c, 0, 0, previewCanvas.width, previewCanvas.height);
 }
+
+/* ---------- Vorschau-Zoom ----------
+   Mausrad über der Vorschau zoomt zur Mausposition, Ziehen verschiebt den Ausschnitt,
+   Doppelklick (oder Klick auf die Zoom-Anzeige) zeigt wieder das ganze Bild. */
+const pv = { zoom: 1, cx: 0, cy: 0, w: 0, h: 0, base: 1, drag: null };
+const PV_ZOOMS = [1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+function resetPreviewZoom() {
+  pv.zoom = 1; pv.cx = doc.w / 2; pv.cy = doc.h / 2; pv.w = doc.w; pv.h = doc.h;
+  const lbl = $('#preview-zoom');
+  if (lbl) lbl.hidden = true;
+  previewLast = 0;
+}
+function clampPreviewCenter() {
+  pv.cx = clamp(pv.cx, 0, doc.w); pv.cy = clamp(pv.cy, 0, doc.h);
+}
+function drawPreviewZoomed(box) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = box.clientWidth, H = box.clientHeight;
+  if (previewCanvas.width !== Math.round(W * dpr) || previewCanvas.height !== Math.round(H * dpr)) {
+    previewCanvas.width = Math.round(W * dpr); previewCanvas.height = Math.round(H * dpr);
+  }
+  if (previewCanvas.style.width !== W + 'px' || previewCanvas.style.height !== H + 'px') {
+    previewCanvas.style.width = W + 'px'; previewCanvas.style.height = H + 'px';
+  }
+  previewCanvas.classList.remove('smooth');
+  previewCanvas.classList.add('zoomed');
+  if (comp.width !== doc.w || comp.height !== doc.h) { comp.width = doc.w; comp.height = doc.h; }
+  const c = compositeCanvas(Math.min(previewFrame, frameCount() - 1));
+  const k = pv.base * pv.zoom * dpr;
+  pctx.setTransform(1, 0, 0, 1, 0, 0);
+  pctx.imageSmoothingEnabled = false;
+  pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  pctx.setTransform(k, 0, 0, k, previewCanvas.width / 2 - pv.cx * k, previewCanvas.height / 2 - pv.cy * k);
+  pctx.drawImage(c, 0, 0);
+  pctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+function setPreviewZoom(z, mx, my) {
+  const box = previewCanvas.parentElement;
+  const old = pv.base * pv.zoom;
+  // Punkt unter der Maus (in Sprite-Pixeln) – ohne Zoom liegt das Bild mittig in der Box
+  if (mx !== undefined && pv.zoom > 1) {
+    const px = pv.cx + (mx - box.clientWidth / 2) / old, py = pv.cy + (my - box.clientHeight / 2) / old;
+    pv.zoom = z;
+    const nk = pv.base * pv.zoom;
+    pv.cx = px - (mx - box.clientWidth / 2) / nk; pv.cy = py - (my - box.clientHeight / 2) / nk;
+  } else if (mx !== undefined) {
+    const r = previewCanvas.getBoundingClientRect(), b = box.getBoundingClientRect();
+    pv.cx = clamp((mx - (r.left - b.left)) / old, 0, doc.w);
+    pv.cy = clamp((my - (r.top - b.top)) / old, 0, doc.h);
+    pv.zoom = z;
+  } else pv.zoom = z;
+  if (pv.zoom <= 1) return resetPreviewZoom();
+  clampPreviewCenter();
+  const lbl = $('#preview-zoom');
+  lbl.hidden = false;
+  lbl.textContent = (Number.isInteger(pv.zoom) ? pv.zoom : pv.zoom.toFixed(1)) + '×';
+  previewLast = 0;
+}
+(function initPreviewZoom() {
+  const box = previewCanvas.parentElement;
+  box.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const b = box.getBoundingClientRect();
+    let i = PV_ZOOMS.findIndex((z) => z >= pv.zoom);
+    if (i < 0) i = PV_ZOOMS.length - 1;
+    i = clamp(i + (e.deltaY < 0 ? 1 : -1), 0, PV_ZOOMS.length - 1);
+    setPreviewZoom(PV_ZOOMS[i], e.clientX - b.left, e.clientY - b.top);
+  }, { passive: false });
+  box.addEventListener('pointerdown', (e) => {
+    if (pv.zoom <= 1 || e.button !== 0) return;
+    pv.drag = { x: e.clientX, y: e.clientY, cx: pv.cx, cy: pv.cy };
+    box.setPointerCapture(e.pointerId);
+    box.classList.add('dragging');
+  });
+  box.addEventListener('pointermove', (e) => {
+    if (!pv.drag) return;
+    const k = pv.base * pv.zoom;
+    pv.cx = pv.drag.cx - (e.clientX - pv.drag.x) / k;
+    pv.cy = pv.drag.cy - (e.clientY - pv.drag.y) / k;
+    clampPreviewCenter();
+    previewLast = 0;
+  });
+  const end = () => { pv.drag = null; box.classList.remove('dragging'); };
+  box.addEventListener('pointerup', end);
+  box.addEventListener('pointercancel', end);
+  box.addEventListener('dblclick', resetPreviewZoom);
+  $('#preview-zoom').addEventListener('click', resetPreviewZoom);
+})();
 
 /* ---------- Farben-UI ---------- */
 function updateColorUI() {

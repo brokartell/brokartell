@@ -253,6 +253,12 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
   background: conic-gradient(var(--checker-a) 25%, var(--checker-b) 0 50%, var(--checker-a) 0 75%, var(--checker-b) 0) 0 0 / 16px 16px;
 }
 #preview { image-rendering: pixelated; max-width: 100%; max-height: 100%; }
+/* Vorschau-Zoom: Mausrad zoomt, Ziehen verschiebt, Doppelklick = ganzes Bild */
+#preview.zoomed { cursor: grab; }
+.preview-box.dragging #preview.zoomed { cursor: grabbing; }
+.pv-zoom { border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent-2); font: 700 11px var(--mono); padding: 2px 7px; border-radius: 999px; cursor: pointer; margin-right: 4px; }
+.pv-zoom[hidden] { display: none; }
+.pv-zoom:hover { background: var(--accent); color: #fff; }
 
 .color-editor { display: flex; gap: 10px; align-items: center; }
 #color-input { width: 46px; height: 46px; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; flex: none; }

@@ -119,6 +119,7 @@ const EN = {
   // ---------- Seitenleiste ----------
   'Vorschau': 'Preview',
   'Abspielen / Pause': 'Play / pause',
+  'Zoom zurücksetzen – ganzes Bild zeigen (Doppelklick)': 'Reset zoom – show the whole image (double-click)',
   'FPS': 'FPS',
   'Farbe & Palette': 'Color & palette',
   'HEX': 'HEX',
