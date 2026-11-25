@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.6';
+const APP_VERSION = '1.5.7';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2023,6 +2023,90 @@ function gbcCanonical(u) {
   return res;
 }
 
+/* Verschiedene Kacheln wie GB Studio zählen (compileImages.ts, autoColor.ts, autoFlip.ts):
+   - Eine Kachel speichert nur Farbnummern 0–3. Gleiches Muster mit anderer Palette = dieselbe Kachel.
+   - Die Farbnummer kommt aus der Palette, die GB Studio der Kachel gibt (nach Helligkeit einsortiert,
+     fillVariablePalette); Farben, die nicht drin sind, nehmen die ähnlichste.
+   - Im Farbmodus erkennt GB Studio gespiegelte Kacheln (waagerecht, senkrecht, beides) – „Auto Tile Flip“.
+   - Nur ganze 8×8-Kacheln zählen (Reste am Rand schneidet GB Studio ab). */
+const GB_UI_PALETTE = ['f8f8b8', '90c8c8', '486878', '082048'];
+const GB_EMPTY_PALETTE = ['f8f8f8', 'a0a0a0', '585858', '080808'];
+function gbcHex(u) {
+  if (!u) return '000000';
+  const raw = gbcCanonical(u);
+  return [(raw >> 10) & 31, (raw >> 5) & 31, raw & 31].map((v) => Math.round((v / 31) * 255).toString(16).padStart(2, '0')).join('');
+}
+function hexLabL(hex) {
+  const v = [0, 2, 4].map((i) => { const c = parseInt(hex.substr(i, 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+  const y = 0.2126729 * v[0] + 0.7151522 * v[1] + 0.072175 * v[2];
+  return 116 * (y > 0.008856452 ? Math.cbrt(y) : y / 0.12841855 + 0.137931034) - 16;
+}
+const hexDist = (a, b) => [0, 2, 4].reduce((s2, i) => s2 + Math.abs(parseInt(a.substr(i, 2), 16) - parseInt(b.substr(i, 2), 16)), 0);
+function gbsFillPalette(hexes) {
+  const A = [100, 66, 33, 0];
+  const slot = (hex) => { const g = parseInt(hex.substr(2, 2), 16); return g < 65 ? 3 : g < 130 ? 2 : g < 205 ? 1 : 0; };
+  const colors = hexes.map((hex) => ({ hex, l: hexLabL(hex) })).sort((a, b) => b.l - a.l)
+    .map((c2) => ({ ...c2, index: slot(c2.hex) })).sort((a, b) => a.index - b.index);
+  const res = [undefined, undefined, undefined, undefined], overflow = [];
+  for (let i = 0; i < colors.length;) {
+    const s2 = colors[i].index, start = i;
+    while (i < colors.length && colors[i].index === s2) i++;
+    const group = colors.slice(start, i).sort((a, b) => Math.abs(a.l - A[s2]) - Math.abs(b.l - A[s2]));
+    if (res[s2] === undefined) res[s2] = group[0].hex; else overflow.push(group[0]);
+    overflow.push(...group.slice(1));
+  }
+  overflow.sort((a, b) => Math.abs(a.l - A[a.index]) - Math.abs(b.l - A[b.index]));
+  for (const c2 of overflow) {
+    let k = -1;
+    for (let i = c2.index + 1; i < 4 && k < 0; i++) if (res[i] === undefined) k = i;
+    for (let i = c2.index - 1; i >= 0 && k < 0; i--) if (res[i] === undefined) k = i;
+    if (k >= 0) res[k] = c2.hex;
+  }
+  return res.map((x) => x || '000000');
+}
+function gbsTileCount(tiles, palettes, cols, rows, w, h) {
+  // Paletten so, wie GB Studio sie ablegt: Platz = Nummer % 8, ab 8 Paletten tauscht die UI-Palette (Platz 8)
+  // mit der ähnlichsten der ersten 7
+  let pals = palettes.map((p) => gbsFillPalette([...new Set(p.map(gbcHex))]));
+  let slotOf = (i) => i % 8;
+  if (pals.length < 8) {
+    pals = pals.slice(0, 7);
+    while (pals.length < 7) pals.push(GB_EMPTY_PALETTE);
+    pals.push(GB_UI_PALETTE);
+  } else {
+    let ri = 0, best = Infinity;
+    for (let i = 0; i <= Math.min(6, pals.length - 1); i++) {
+      const d = [0, 1, 2, 3].reduce((s2, k) => s2 + hexDist(pals[i][k], GB_UI_PALETTE[k]), 0);
+      if (d < best) { best = d; ri = i; }
+    }
+    const at7 = pals[7];
+    pals = pals.slice(0, 8); pals[ri] = at7; pals[7] = GB_UI_PALETTE;
+    slotOf = (i) => { const m = i % 8; return m === ri ? 7 : m === 7 ? ri : m; };
+  }
+  const fullCols = Math.floor(w / GB_TILE), fullRows = Math.floor(h / GB_TILE);
+  const plain = new Set(), flipped = new Set();
+  let flip = 0;
+  const N = GB_TILE;
+  for (let ty = 0; ty < fullRows; ty++) for (let tx = 0; tx < fullCols; tx++) {
+    const tile = tiles[ty * cols + tx];
+    const pal = pals[slotOf(Math.max(0, tile.gbs))];
+    const cache = new Map();
+    const idx = tile.pixels.map((u) => {
+      if (cache.has(u)) return cache.get(u);
+      const hex = gbcHex(u);
+      let bi = 0, bd = Infinity;
+      pal.forEach((c2, i) => { const d = hexDist(hex, c2); if (d < bd) { bd = d; bi = i; } });
+      cache.set(u, bi);
+      return bi;
+    });
+    const key = (fx, fy) => { let k = ''; for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) k += idx[(fy ? N - 1 - y : y) * N + (fx ? N - 1 - x : x)]; return k; };
+    const k0 = key(false, false);
+    plain.add(k0);
+    if (![k0, key(true, false), key(false, true), key(true, true)].some((k) => flipped.has(k))) { flipped.add(k0); flip++; }
+  }
+  return { plain: plain.size, flip };
+}
+
 function gbAnalyze() {
   const mode = gbMode();
   const { w, h } = doc;
@@ -2154,10 +2238,8 @@ function gbAnalyze() {
   for (const tile of tiles) if (tile.gbs >= 0 && tile.colors.length <= GB_COLORS) uses[tile.gbs]++;
   // Kacheln, die GB Studio einer überzähligen Palette gibt, zeigen genau diese (rot) – nicht die Nachbar-Palette
   for (const tile of tiles) if (tile.gbs >= GB_MAX_PALETTES && tile.colors.length <= GB_COLORS) tile.palette = tile.gbs;
-  // Verschiedene Kacheln: gleiche Muster (Farbnummer innerhalb der Palette) zählen nur einmal
-  const keys = new Set(tiles.map((tile) => (tile.palette >= 0
-    ? 'p' + tile.pixels.map((u) => (u ? palettes[tile.palette].indexOf(u) : 'x')).join('')
-    : 'r' + tile.pixels.join(','))));
+  // Verschiedene Kacheln genau wie GB Studio zählen
+  const tileCount = gbsTileCount(tiles, palettes, cols, rows, w, h);
   // Rote Kacheln: welche Farben sind zu viel? Behalten wird die Palette (oder die 4 häufigsten Farben der Kachel),
   // die die meisten Pixel abdeckt – alles andere ist „zu viel“ und wird einzeln markiert.
   const extraColors = new Map(), extraPixels = [];
@@ -2193,7 +2275,7 @@ function gbAnalyze() {
     }
     near.sort((x, y) => x[2] - y[2]);
   }
-  Object.assign(res, { palettes, uses, bad, over, near, uniqueTiles: keys.size, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
+  Object.assign(res, { palettes, uses, bad, over, near, uniqueTiles: tileCount.flip, uniqueTilesNoFlip: tileCount.plain, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
   res.ok = !bad.length && palettes.length <= GB_MAX_PALETTES && res.uniqueTiles <= res.tileLimit;
   return res;
 }
@@ -2324,7 +2406,7 @@ async function gbPaletteDialog() {
   const swatch = (u) => `<span class="gb-sw" style="background:${cssColor(u)}" title="${toHex(u).toUpperCase()}"></span>`;
   const mark = (ok) => `<span class="gb-mark ${ok ? 'ok' : 'warn'}">${ok ? '✓' : '⚠'}</span>`;
   const tilesOk = r.uniqueTiles <= r.tileLimit;
-  const tilesLine = `<div class="gb-line">${mark(tilesOk)}<span>${t('Verschiedene Kacheln: {n} von {max}', { n: r.uniqueTiles, max: r.tileLimit })}</span></div>`;
+  const tilesLine = `<div class="gb-line">${mark(tilesOk)}<span>${t('Verschiedene Kacheln: {n} von {max}', { n: r.uniqueTiles, max: r.tileLimit })}${mode === 'color' && r.uniqueTilesNoFlip !== r.uniqueTiles ? ` <span class="hint">${t('(ohne Spiegeln: {n})', { n: r.uniqueTilesNoFlip })}</span>` : ''}</span></div>`;
   const toggle = `<div class="gb-mode" role="group">
       <button type="button" class="gb-mode-btn ${mode === 'color' ? 'active' : ''}" data-mode="color">Game Boy Color</button>
       <button type="button" class="gb-mode-btn ${mode === 'classic' ? 'active' : ''}" data-mode="classic">Game Boy (klassisch)</button>
@@ -2364,7 +2446,7 @@ async function gbPaletteDialog() {
     if (over) warns.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – GB Studio legt sie auf eine andere Palette, ihre Kacheln bekommen dann falsche Farben. Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.', '{n} Paletten zu viel – GB Studio legt sie auf andere Paletten, ihre Kacheln bekommen dann falsche Farben. Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.'));
     if (over && r.near.length) warns.push(t('Fast gleiche Farben – zusammenlegen (Doppelklick in „Benutzte Farben“) spart oft eine Palette:') + ' ' + r.near.slice(0, 4).map(([a, b]) => `<span class="gb-pair">${swatch(a)}${toHex(a).toUpperCase()} / ${swatch(b)}${toHex(b).toUpperCase()}</span>`).join(' · '));
     if (!tilesOk) warns.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
-    warns.push(t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.') + ' ' + t('Die Paletten werden genau so aufgeteilt wie in GB Studio („Automatisch“).') + ' ' + t('„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.'));
+    warns.push(t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.') + ' ' + t('Die Paletten werden genau so aufgeteilt wie in GB Studio („Automatisch“).') + ' ' + t('Kacheln werden wie in GB Studio gezählt: gleiches Muster mit anderer Palette und gespiegelte Kacheln zählen nur einmal.') + ' ' + t('„6+“ im Bild: Die Kachel passt auch in andere Paletten und bekommt die Palette ihrer Nachbarn.'));
   }
   if (r.partial) warns.splice(warns.length - 1, 0, t('Breite und Höhe sind kein Vielfaches von 8 – GB Studio erwartet ganze 8×8-Kacheln.'));
   const info = warns.pop();

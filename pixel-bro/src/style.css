@@ -241,6 +241,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .gb-mode-btn.active { background: var(--accent); color: #fff; }
 .exp-mode { margin-bottom: 2px; }
 .gb-line { display: flex; align-items: center; gap: 8px; color: var(--text); }
+.gb-line .hint { color: var(--text-3); font-size: 12px; }
 .gb-mark { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none; }
 .gb-mark.ok { background: rgba(61, 220, 132, .18); color: #3ddc84; }
 .gb-mark.warn { background: rgba(255, 50, 80, .18); color: #ff6b81; }

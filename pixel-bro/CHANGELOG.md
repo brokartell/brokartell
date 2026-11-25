@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.7 – Kacheln zählen wie GB Studio
+- Game Boy Color: „Verschiedene Kacheln“ wird jetzt genau wie in GB Studio gezählt. Gleiches Muster mit einer anderen Palette (z. B. dasselbe Auto in Rot und Blau) ist nur eine Kachel, und gespiegelte Kacheln (waagerecht, senkrecht oder beides) zählen nur einmal – wie mit „Auto Tile Flip“ in GB Studio. Das Prüf-Fenster zeigt zusätzlich die Zahl ohne Spiegeln
+- Reste am Rand, die keine ganze 8×8-Kachel sind, zählen nicht mit (GB Studio schneidet sie ab)
+
 ## 1.5.6 – Prüfung rechnet wie GB Studio
 - Game Boy Color: Die Paletten werden jetzt genau so aufgeteilt wie in GB Studio („Automatisch“) – gleiche Reihenfolge, gleiches Zusammenlegen, gleiche Farbkorrektur. Bisher fand Pixel Bro manchmal eine geschicktere Aufteilung mit 7 Paletten, während GB Studio 8 braucht – dann bekamen Kacheln in GB Studio falsche Farben (z. B. Teich grau statt blau), obwohl Pixel Bro „passt“ meldete
 - Bei zu vielen Paletten zeigt das Prüf-Fenster fast gleiche Farben an, deren Zusammenlegen oft eine Palette spart
