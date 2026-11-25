@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.3
+- Game Boy Color: Braucht ein Bild mehr als 7 Paletten, werden die überzähligen Paletten rot markiert – die mit den wenigsten Kacheln, weil sie sich am leichtesten einsparen lassen. Rot in der Übersicht oben links, im Prüf-Fenster („zu viel“) und auf ihren Kacheln im Bild
+
 ## 1.5.2
 - GB-Studio-Prüfung im Bild: Unter der Anzeige oben links steht jetzt eine kleine Paletten-Übersicht – Nummer und die 4 Farben jeder Palette, in denselben Farben wie die Nummern im Bild (beim klassischen Game Boy: erlaubte und fremde Farben). Klick auf eine Farbe = Primärfarbe, Rechtsklick = Sekundärfarbe
 - Die Zahl neben „Farbe & Palette“ (bei „Benutzte Farben“) ist weg – sie wirkte wie eine Palettenzahl

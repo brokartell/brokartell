@@ -378,6 +378,8 @@ const EN = {
   'Erlaubt': 'Allowed',
   'Fremd': 'Foreign',
   'Zu viel': 'Extra',
+  'zu viel': 'too many',
+  'Palette zu viel – nur {n} Kacheln': 'Palette too many – only {n} tiles',
   '1 Kachel hat mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.': '1 tile has more than 4 colors – the extra pixels are marked red in the image. Recolor them with one of the tile\'s other colors.',
   '{n} Kacheln haben mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.': '{n} tiles have more than 4 colors – the extra pixels are marked red in the image. Recolor them with one of the tile\'s other colors.',
   'Sprite – #65FF00 als Transparenz erlauben': 'Sprite – allow #65FF00 as transparency',
