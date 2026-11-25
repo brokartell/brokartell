@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.4
+- Game Boy Color: Passt eine Kachel in mehrere Paletten (z. B. nur Weiß und Dunkel), bekommt sie jetzt die Palette ihrer Nachbarn – vor allem der Nachbarn, in die ihre Farben über die Kante weiterlaufen. So zeigt z. B. der Sockel eines Hauses dieselbe Nummer wie das Haus
+- Solche Kacheln haben ein „+“ hinter der Nummer (z. B. „6+“): Sie würden auch in andere Paletten passen
+
 ## 1.5.3
 - Game Boy Color: Braucht ein Bild mehr als 7 Paletten, werden die überzähligen Paletten rot markiert – die mit den wenigsten Kacheln, weil sie sich am leichtesten einsparen lassen. Rot in der Übersicht oben links, im Prüf-Fenster („zu viel“) und auf ihren Kacheln im Bild
 
