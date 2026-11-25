@@ -824,7 +824,7 @@ details.cl > summary{
   cursor: pointer;
 
   display: grid;
-  grid-template-columns: auto 1fr auto;  /* ver | title | date */
+  grid-template-columns: auto 1fr;  /* Version | Titel (ohne Datum) */
   align-items: center;
   gap: 10px;
 
@@ -870,9 +870,7 @@ details.cl.cl--sub{
 @media (max-width: 600px){
   details.cl > summary{
     grid-template-columns: auto 1fr;
-    grid-template-areas:
-      "ver title"
-      "date date";
+    grid-template-areas: "ver title";
   }
 
   details.cl > summary b{ grid-area: ver; }
