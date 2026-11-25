@@ -187,6 +187,7 @@
           <button id="gb-hud-open" title="Details anzeigen"><span class="gb-dot"></span><span id="gb-hud-text"></span></button>
           <button id="gb-hud-close" class="icon-btn small" title="Ansicht ausblenden"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>
+        <div id="gb-legend" hidden title="Klick: Primärfarbe · Rechtsklick: Sekundärfarbe"></div>
         <div id="zoom-hud">
           <button class="icon-btn small" data-cmd="zoom-out" title="Verkleinern">−</button>
           <span id="zoom-label" class="mono">100%</span>
@@ -215,7 +216,7 @@
 
         <section class="panel grow" id="panel-palette">
           <header class="panel-head">
-            <h3>Farbe &amp; Palette <span id="palette-count" class="count"></span></h3>
+            <h3>Farbe &amp; Palette</h3>
             <div class="panel-actions">
               <button class="icon-btn small" id="pal-add" title="Primärfarbe zur Palette hinzufügen (bei Vorlagen: als eigene Kopie)"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
               <button class="icon-btn small" id="pal-from-image" title="Farben aus dem Bild als eigene Palette übernehmen"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></button>

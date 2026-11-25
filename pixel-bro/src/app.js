@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.5.2';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1765,7 +1765,6 @@ function renderPalette() {
   $('#palette-hint').textContent = live
     ? 'Erkennt automatisch alle Farben im Sprite · Klick: Primär · Rechtsklick: Sekundär · Doppelklick: Farbe überall ersetzen'
     : 'Klick: Primär · Rechtsklick: Sekundär · Strg+Klick: entfernen';
-  $('#palette-count').textContent = live ? String(settings.palette.length) : '';
   if (live && !settings.palette.length) {
     box.innerHTML = '<p class="hint palette-empty">Noch keine Farben benutzt – fang einfach an zu zeichnen.</p>';
   }
@@ -2042,7 +2041,27 @@ function gbAnalyze() {
   const keys = new Set(tiles.map((tile) => (tile.palette >= 0
     ? 'p' + tile.pixels.map((u) => (u ? palettes[tile.palette].indexOf(u) : 'x')).join('')
     : 'r' + tile.pixels.join(','))));
-  Object.assign(res, { palettes, uses, bad, uniqueTiles: keys.size });
+  // Rote Kacheln: welche Farben sind zu viel? Behalten wird die Palette (oder die 4 häufigsten Farben der Kachel),
+  // die die meisten Pixel abdeckt – alles andere ist „zu viel“ und wird einzeln markiert.
+  const extraColors = new Map(), extraPixels = [];
+  for (const tile of bad) {
+    const count = new Map();
+    for (const u of tile.pixels) if (u) count.set(u, (count.get(u) || 0) + 1);
+    const covered = (set) => { let n = 0; for (const [u, c] of count) if (set.includes(u)) n += c; return n; };
+    let keep = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, GB_COLORS).map(([u]) => u);
+    let best = covered(keep);
+    for (const p of palettes) { const n = covered(p); if (n > best) { best = n; keep = p; } }
+    tile.extra = [];
+    tile.pixels.forEach((u, k) => {
+      if (!u || keep.includes(u)) return;
+      const x = tile.tx * GB_TILE + (k % GB_TILE), y = tile.ty * GB_TILE + Math.floor(k / GB_TILE);
+      if (x >= w || y >= h) return;
+      extraPixels.push(y * w + x);
+      extraColors.set(u, (extraColors.get(u) || 0) + 1);
+      if (!tile.extra.includes(u)) tile.extra.push(u);
+    });
+  }
+  Object.assign(res, { palettes, uses, bad, uniqueTiles: keys.size, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
   res.ok = !bad.length && palettes.length <= GB_MAX_PALETTES && res.uniqueTiles <= res.tileLimit;
   return res;
 }
@@ -2062,9 +2081,10 @@ function setGbView(on) {
 
 function updateGbHud() {
   const hud = $('#gb-hud');
-  if (!gbView.on || !gbView.result) { hud.hidden = true; return; }
+  if (!gbView.on || !gbView.result) { hud.hidden = true; $('#gb-legend').hidden = true; return; }
   const r = gbView.result;
   hud.hidden = false;
+  renderGbLegend(r);
   hud.classList.toggle('warn', !r.ok);
   const tilesTxt = t('Kacheln {n}/{max}', { n: r.uniqueTiles, max: r.tileLimit });
   if (r.mode === 'classic') {
@@ -2076,6 +2096,24 @@ function updateGbHud() {
       + ' · ' + tilesTxt
       + (r.bad.length ? ' · ' + pl(r.bad.length, '1 Kachel mit mehr als 4 Farben', '{n} Kacheln mit mehr als 4 Farben') : '');
   }
+}
+
+/** Kleine Paletten-Übersicht unter der Anzeige oben links – Klick auf eine Farbe = Primär, Rechtsklick = Sekundär. */
+function renderGbLegend(r) {
+  const box = $('#gb-legend');
+  const sw = (u) => `<button class="gb-lsw" data-c="${u}" style="background:${cssColor(u)}" title="${toHex(u).toUpperCase()}"></button>`;
+  const empty = '<span class="gb-lsw empty"></span>';
+  let rows = [];
+  if (r.mode === 'classic') {
+    const allowed = GB_CLASSIC_COLORS.concat(settings.gbSprite ? [GB_SPRITE_TRANSPARENT] : []);
+    rows.push(`<div class="gb-lrow"><span class="gb-ltag ok">✓</span>${allowed.map(sw).join('')}</div>`);
+    if (r.foreign.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.foreign.slice(0, 8).map(([u]) => sw(u)).join('')}${r.foreign.length > 8 ? `<span class="gb-lmore">+${r.foreign.length - 8}</span>` : ''}</div>`);
+  } else {
+    rows = r.palettes.map((p, i) => `<div class="gb-lrow"><span class="gb-ltag" style="background:${GB_HUES[i % GB_HUES.length]}">${i + 1}</span>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
+    if (r.extra.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.extra.slice(0, 8).map(([u]) => sw(u)).join('')}${r.extra.length > 8 ? `<span class="gb-lmore">+${r.extra.length - 8}</span>` : ''}</div>`);
+  }
+  box.innerHTML = rows.join('');
+  box.hidden = !rows.length;
 }
 
 function drawGbOverlay(z) {
@@ -2111,7 +2149,7 @@ function drawGbOverlay(z) {
   for (const tile of r.tiles) {
     const [x, y, tw, th] = tileBox(tile);
     if (tile.colors.length > GB_COLORS) {
-      ctx.fillStyle = 'rgba(255, 50, 80, .35)'; ctx.fillRect(x, y, tw, th);
+      ctx.fillStyle = 'rgba(255, 50, 80, .12)'; ctx.fillRect(x, y, tw, th);
       ctx.strokeStyle = '#ff3250'; ctx.strokeRect(x + 1.5, y + 1.5, tw - 3, th - 3);
       if (s >= 24) { ctx.fillStyle = '#ff3250'; ctx.fillRect(x + 2, y + 2, font * 1.6, font + 4); ctx.fillStyle = '#fff'; ctx.fillText(tile.colors.length, x + 4, y + 4); }
       continue;
@@ -2125,6 +2163,16 @@ function drawGbOverlay(z) {
       const label = String(tile.palette + 1);
       ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
       ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
+    }
+  }
+  // überzählige Farben: jeden betroffenen Pixel rot markieren (wie beim klassischen Game Boy)
+  if (r.extraPixels && r.extraPixels.length) {
+    ctx.fillStyle = 'rgba(255, 50, 80, .6)';
+    ctx.strokeStyle = '#ff3250';
+    for (const i of r.extraPixels) {
+      const px = view.ox + (i % doc.w) * z, py = view.oy + Math.floor(i / doc.w) * z;
+      ctx.fillRect(px, py, z, z);
+      if (z >= 6) ctx.strokeRect(px + 0.5, py + 0.5, z - 1, z - 1);
     }
   }
   ctx.restore();
@@ -2172,8 +2220,9 @@ async function gbPaletteDialog() {
     content = `
       ${empty ? `<p class="hint">${t('Das Bild enthält noch keine Farben')}</p>` : `<p class="gb-sum ${r.ok ? 'ok' : 'warn'}">${r.ok ? '✓' : '⚠'} ${t('Dein Bild braucht {n} von {max} Paletten.', { n: r.palettes.length, max: GB_MAX_PALETTES })}</p>`}
       <div class="gb-list">${rows}</div>
+      ${r.extra.length ? `<div class="gb-row"><span class="hint gb-label">${t('Zu viel')}</span><span class="gb-sws gb-foreigns">${r.extra.slice(0, 12).map(([u, n]) => `<span class="gb-foreign">${swatch(u)}<span class="hint">${n}</span></span>`).join('')}</span></div>` : ''}
       ${tilesLine}`;
-    if (r.bad.length) warns.push(pl(r.bad.length, '1 Kachel hat mehr als 4 Farben – auf der Zeichenfläche rot markiert. Diese Kachel musst du vereinfachen.', '{n} Kacheln haben mehr als 4 Farben – auf der Zeichenfläche rot markiert. Diese Kacheln musst du vereinfachen.'));
+    if (r.bad.length) warns.push(pl(r.bad.length, '1 Kachel hat mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.', '{n} Kacheln haben mehr als 4 Farben – die überzähligen Pixel sind im Bild rot markiert. Färbe sie in eine der anderen Farben der Kachel um.'));
     if (over) warns.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.', '{n} Paletten zu viel – Farben angleichen oder Kacheln mit ähnlichen Farben zusammenfassen.'));
     if (!tilesOk) warns.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
     warns.push(t('GB Studio (Farbmodus): Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind für Hintergründe frei, die 8. ist für Text und UI reserviert. Höchstens 384 verschiedene Kacheln. Geprüft wird der aktuelle Frame.'));
@@ -2990,6 +3039,15 @@ $('#pal-add').addEventListener('click', () => {
 $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
+$('#gb-legend').addEventListener('click', (e) => {
+  const b = e.target.closest('.gb-lsw[data-c]'); if (!b) return;
+  settings.primary = +b.dataset.c >>> 0; updateColorUI(); saveSettings();
+});
+$('#gb-legend').addEventListener('contextmenu', (e) => {
+  const b = e.target.closest('.gb-lsw[data-c]'); if (!b) return;
+  e.preventDefault();
+  settings.secondary = +b.dataset.c >>> 0; updateColorUI(); saveSettings();
+});
 
 $('#file-open').addEventListener('change', async (e) => {
   const f = e.target.files[0];

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2
+- GB-Studio-Prüfung im Bild: Unter der Anzeige oben links steht jetzt eine kleine Paletten-Übersicht – Nummer und die 4 Farben jeder Palette, in denselben Farben wie die Nummern im Bild (beim klassischen Game Boy: erlaubte und fremde Farben). Klick auf eine Farbe = Primärfarbe, Rechtsklick = Sekundärfarbe
+- Die Zahl neben „Farbe & Palette“ (bei „Benutzte Farben“) ist weg – sie wirkte wie eine Palettenzahl
+- Game Boy Color: Bei Kacheln mit mehr als 4 Farben werden jetzt genau die überzähligen Pixel rot markiert (die Farbe, bei der am wenigsten Pixel geändert werden müssen). Prüf-Fenster und Paletten-Übersicht zeigen, welche Farben zu viel sind
+
 ## 1.5.1
 - Neuer Knopf „Einpassen“ oben rechts neben Rückgängig/Wiederholen: Bild wieder mittig und ganz sichtbar (auch Taste 0)
 - Der Knopf „Exportieren“ öffnet ein Fenster mit Umschalter **PNG · Spritesheet · GIF** – Pixel Bro merkt sich das zuletzt benutzte Format. Die Einträge im Menü Datei bleiben
