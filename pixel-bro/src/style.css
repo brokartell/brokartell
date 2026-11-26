@@ -518,3 +518,9 @@ optgroup option { color: var(--text); }
 .gbx-note.issue .gbx-apply { border-color: rgba(255, 50, 80, .6); }
 .gbx-note.issue .gbx-apply:hover { background: rgba(255, 50, 80, .18); }
 .gbx-arrow { font-weight: 400; color: var(--text-3); margin: 0 -2px; }
+.gb-lpick { border: 0; padding: 0; cursor: pointer; transition: transform .1s; }
+.gb-lpick:hover { transform: scale(1.12); }
+.gb-lpick.active { outline: 2px solid #fff; outline-offset: 1px; }
+.gb-lrow.dim { opacity: .35; }
+.gb-lall { margin-top: 4px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text-2); font: 600 11px var(--font); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+.gb-lall:hover { color: var(--text); border-color: var(--accent); }

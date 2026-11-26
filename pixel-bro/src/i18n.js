@@ -390,6 +390,8 @@ const EN = {
   'nutzt in GB Studio Palette 8:': 'uses palette 8 in GB Studio:',
   'Palette 8 (Text/UI) deiner Szene:': 'Palette 8 (text/UI) of your scene:',
   'Vorgabe': 'Default',
+  'Klick: nur Palette {n} im Bild zeigen': 'Click: show only palette {n} in the image',
+  'Alle Paletten zeigen': 'Show all palettes',
   '1 Farbe macht Probleme': '1 color causes problems',
   '{n} Farben machen Probleme': '{n} colors cause problems',
   '1 Farbe weicht leicht ab – GB Studio macht daraus die richtige': '1 color is slightly off – GB Studio turns it into the right one',
