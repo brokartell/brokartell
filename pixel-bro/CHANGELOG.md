@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.13 – Anleitung
+- Neu unter Hilfe → Anleitung: großes Fenster mit Kapiteln – Erste Schritte, alle Werkzeuge mit Symbol und Taste, Farben & Paletten, Ebenen & Animation, Bild & Ansicht, Import & Export und ausführlich die GB-Studio-Prüfung. Auf Deutsch und Englisch
+
 ## 1.5.12 – Palette im Bild finden
 - Game Boy Color: Klick auf eine Palettennummer in der Übersicht oben links zeigt nur die Kacheln, denen GB Studio diese Palette gibt – alles andere wird abgedunkelt. Nochmal klicken oder „Alle Paletten zeigen“ schaltet zurück
 

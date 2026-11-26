@@ -50,6 +50,7 @@ const EN = {
   'Sprache': 'Language',
   'Hilfe': 'Help',
   'Tastenkürzel': 'Keyboard shortcuts',
+  'Anleitung': 'Guide',
   'Nach Updates suchen …': 'Check for updates …',
   'Automatisch nach Updates suchen': 'Check for updates automatically',
   'Über Pixel Bro': 'About Pixel Bro',
