@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.12 – Palette im Bild finden
+- Game Boy Color: Klick auf eine Palettennummer in der Übersicht oben links zeigt nur die Kacheln, denen GB Studio diese Palette gibt – alles andere wird abgedunkelt. Nochmal klicken oder „Alle Paletten zeigen“ schaltet zurück
+
 ## 1.5.11 – Klassisch wie GB Studio & Korrekturen per Knopf
 - Game Boy (klassisch): Die Prüfung rechnet jetzt wie GB Studio – jede Farbe wird nach ihrem Grünanteil einer der 4 Stufen zugeordnet. Leicht abweichende HEX-Codes sind kein Fehler mehr, sondern ein grüner Hinweis mit „wird in GB Studio zu …“. Rot nur noch, wenn eine Farbe genau an einer Grenze liegt oder zwei deutlich verschiedene Farben im Spiel gleich werden
 - Kacheln werden auch im klassischen Modus wie GB Studio gezählt (nach Farbstufe)

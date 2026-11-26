@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.11';
+const APP_VERSION = '1.5.12';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -1992,7 +1992,7 @@ const GB_TILE_LIMIT = { color: 384, classic: 192 };
 const GB_CLASSIC_COLORS = ['e0f8cf', '86c06c', '306850', '071821'].map(parseHex);
 const GB_SPRITE_TRANSPARENT = parseHex('65ff00');
 const GB_HUES = ['#7c5cff', '#22c3e6', '#3ddc84', '#ffb020', '#ff5ca8', '#a0e000', '#ff7a45', '#4f8bff', '#c58cff', '#00d0a0'];
-const gbView = { on: false, result: null, timer: null };
+const gbView = { on: false, result: null, timer: null, filter: -1 }; // filter: nur diese Palette im Bild zeigen (-1 = alle)
 const pl = (n, one, many, vars = {}) => t(n === 1 ? one : many, { n, ...vars });
 const gbMode = () => (settings.gbMode === 'classic' ? 'classic' : 'color');
 
@@ -2464,9 +2464,11 @@ function renderGbLegend(r) {
     rows.push(`<div class="gb-lrow"><span class="gb-ltag ok">✓</span>${allowed.map(sw).join('')}</div>`);
     if (r.foreign.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.foreign.slice(0, 8).map(([u]) => sw(u)).join('')}${r.foreign.length > 8 ? `<span class="gb-lmore">+${r.foreign.length - 8}</span>` : ''}</div>`);
   } else {
-    rows = r.palettes.map((p, i) => `<div class="gb-lrow${r.over.has(i) ? ' gb-over' : ''}" ${r.over.has(i) ? `title="${t('Palette zu viel – {n} Kacheln bekommen in GB Studio andere Farben', { n: r.uses[i] })}"` : ''}><span class="gb-ltag" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</span>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
+    if (gbView.filter >= r.palettes.length) gbView.filter = -1;
+    rows = r.palettes.map((p, i) => `<div class="gb-lrow${r.over.has(i) ? ' gb-over' : ''}${gbView.filter >= 0 && gbView.filter !== i ? ' dim' : ''}" ${r.over.has(i) ? `title="${t('Palette zu viel – {n} Kacheln bekommen in GB Studio andere Farben', { n: r.uses[i] })}"` : ''}><button class="gb-ltag gb-lpick${gbView.filter === i ? ' active' : ''}" data-pal="${i}" title="${t('Klick: nur Palette {n} im Bild zeigen', { n: i + 1 })}" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</button>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
     if (r.extra.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.extra.slice(0, 8).map(([u]) => sw(u)).join('')}${r.extra.length > 8 ? `<span class="gb-lmore">+${r.extra.length - 8}</span>` : ''}</div>`);
   }
+  if (r.mode !== 'classic' && gbView.filter >= 0) rows.push(`<button class="gb-lall">${t('Alle Paletten zeigen')}</button>`);
   box.innerHTML = rows.join('');
   box.hidden = !rows.length;
 }
@@ -2497,6 +2499,24 @@ function drawGbOverlay(z) {
       const x = view.ox + (i % doc.w) * z, y = view.oy + Math.floor(i / doc.w) * z;
       ctx.fillRect(x, y, z, z);
       if (z >= 6) ctx.strokeRect(x + 0.5, y + 0.5, z - 1, z - 1);
+    }
+    ctx.restore();
+    return;
+  }
+  // Nur eine Palette zeigen: genau die Kacheln, denen GB Studio diese Palette gibt – der Rest wird abgedunkelt
+  const filter = gbView.filter;
+  if (filter >= 0 && filter < r.palettes.length) {
+    const col = r.over.has(filter) ? '#ff3250' : GB_HUES[filter % GB_HUES.length];
+    ctx.lineWidth = 2;
+    for (const tile of r.tiles) {
+      const [x, y, tw, th] = tileBox(tile);
+      if (tile.gbs !== filter || tile.colors.length > GB_COLORS) { ctx.fillStyle = 'rgba(8, 10, 16, .68)'; ctx.fillRect(x, y, tw, th); continue; }
+      ctx.strokeStyle = col; ctx.strokeRect(x + 1, y + 1, tw - 2, th - 2);
+      if (s >= 24) {
+        const label = String(filter + 1);
+        ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
+        ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
+      }
     }
     ctx.restore();
     return;
@@ -3466,6 +3486,13 @@ $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
 $('#gb-legend').addEventListener('click', (e) => {
+  const pick = e.target.closest('.gb-lpick');
+  if (pick || e.target.closest('.gb-lall')) {
+    const i = pick ? +pick.dataset.pal : -1;
+    gbView.filter = gbView.filter === i ? -1 : i;
+    updateGbHud(); requestRender();
+    return;
+  }
   const b = e.target.closest('.gb-lsw[data-c]'); if (!b) return;
   settings.primary = +b.dataset.c >>> 0; updateColorUI(); saveSettings();
 });
