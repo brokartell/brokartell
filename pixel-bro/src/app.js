@@ -2755,6 +2755,9 @@ const CURSORS = {
   move: svgCursor(`<g transform="translate(4 4)">${outlined('M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20')}</g>`, 16, 16, 'move'),
   grabbing: svgCursor(outlined('M22 15v-3a2 2 0 0 0-4 0v2M18 14v-3a2 2 0 0 0-4 0v3M14 14v-2a2 2 0 0 0-4 0v5M22 13a2 2 0 1 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L11 18'), 16, 16, 'grabbing'),
 };
+// Eigene lila Hand auch in der Vorschau (die Windows-Hand ist auf hellen Bildern kaum zu sehen)
+document.documentElement.style.setProperty('--cur-grab', CURSORS.grab);
+document.documentElement.style.setProperty('--cur-grabbing', CURSORS.grabbing);
 function updateCursor() {
   const t = activeTool();
   canvas.style.cursor = t === 'hand' ? CURSORS.grab : t === 'move' ? CURSORS.move : t === 'picker' ? CURSORS.picker : t === 'text' ? CURSORS.text : CURSORS.crosshair;
