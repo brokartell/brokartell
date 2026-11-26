@@ -524,3 +524,34 @@ optgroup option { color: var(--text); }
 .gb-lrow.dim { opacity: .35; }
 .gb-lall { margin-top: 4px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text-2); font: 600 11px var(--font); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
 .gb-lall:hover { color: var(--text); border-color: var(--accent); }
+
+/* Anleitung (Hilfe → Anleitung) */
+#modal.xl { width: min(900px, calc(100vw - 32px)); }
+.gd { display: grid; grid-template-columns: 190px 1fr; gap: 18px; height: min(64vh, 620px); }
+.gd-nav { display: flex; flex-direction: column; gap: 2px; padding-right: 14px; border-right: 1px solid var(--line); overflow: auto; }
+.gd-nav button { text-align: left; border: 0; background: none; color: var(--text-2); font: 600 13px var(--font); padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+.gd-nav button:hover { background: var(--panel-2); color: var(--text); }
+.gd-nav button.active { background: var(--accent-soft); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+.gd-nav .gd-keys { margin-top: auto; color: var(--accent-2); font-weight: 600; }
+.gd-page { overflow: auto; padding-right: 6px; color: var(--text-2); font-size: 14px; line-height: 1.55; }
+.gd-page h3 { margin: 0 0 10px; font-size: 20px; color: var(--text); }
+.gd-page h4 { margin: 18px 0 6px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.gd-page ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
+.gd-page b { color: var(--text); }
+.gd-star { color: var(--accent-2); margin-right: 8px; }
+.gd-lead { margin: 0 0 14px; font-size: 15px; color: var(--text); }
+.gd-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.gd-steps > div { padding: 12px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); }
+.gd-steps > div > b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; margin-bottom: 8px; }
+.gd-steps p { margin: 0; font-size: 13px; }
+.gd-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gd-tool { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); }
+.gd-ticon { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-2); flex: none; }
+.gd-ticon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gd-tool kbd { margin-left: 8px; font: 600 11px var(--mono); padding: 1px 6px; border-radius: 5px; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--text-2); }
+.gd-tool p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.45; }
+.gd-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.gd-cards > div { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: linear-gradient(135deg, var(--accent-soft), transparent); }
+.gd-cards h5 { margin: 0 0 4px; font-size: 14px; color: var(--text); }
+.gd-cards p { margin: 0; font-size: 13px; }
+@media (max-width: 700px) { .gd { grid-template-columns: 1fr; height: auto; } .gd-nav { flex-direction: row; flex-wrap: wrap; border-right: 0; } .gd-tools, .gd-steps, .gd-cards { grid-template-columns: 1fr; } }

@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.12';
+const APP_VERSION = '1.5.13';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -2769,7 +2769,8 @@ function setBrushSize(s) {
 /* ---------- Dialoge ---------- */
 function modal({ title, body, actions, wide = false }) {
   return new Promise((resolve) => {
-    $('#modal').classList.toggle('wide', wide);
+    $('#modal').classList.toggle('wide', !!wide);
+    $('#modal').classList.toggle('xl', wide === 'xl');
     $('#modal-title').textContent = title;
     const b = $('#modal-body');
     b.innerHTML = '';
@@ -3249,6 +3250,7 @@ const commands = {
     requestRender();
   },
   shortcuts: showShortcuts,
+  guide: () => showGuide(),
   'update-check': () => checkForUpdates(true),
   'toggle-autoupdate': () => {
     settings.autoUpdate = !settings.autoUpdate;
@@ -3288,6 +3290,194 @@ function run(cmd) {
   closeMenus();
   const fn = commands[cmd];
   if (fn) fn();
+}
+
+/* ---------- Anleitung (Hilfe → Anleitung) ----------
+   Eigenes großes Fenster mit Kapiteln links. Texte stehen hier auf Deutsch und Englisch
+   (nicht im Wörterbuch – das Fenster ist data-i18n-skip). */
+const GUIDE_TOOLS = {
+  pen: ['Stift', 'Pen', 'Zeichnet Pixel. Pinselgröße oben einstellen, „Pixel-Perfect“ glättet Linien. Rechtsklick zeichnet mit der Zweitfarbe.', 'Draws pixels. Set the brush size at the top, “Pixel-Perfect” smooths lines. Right-click draws with the secondary color.'],
+  eraser: ['Radierer', 'Eraser', 'Macht Pixel durchsichtig.', 'Makes pixels transparent.'],
+  bucket: ['Füllen', 'Fill', 'Füllt eine Fläche mit der Farbe. „Zusammenhängend“ aus = alle Pixel dieser Farbe im Bild.', 'Fills an area. Turn off “Contiguous” to fill every pixel of that color.'],
+  gradient: ['Verlauf', 'Gradient', 'Ziehen: Verlauf von Primär- zu Zweitfarbe in 2–16 Stufen, wahlweise mit Dithering. Füllt die Auswahl oder die Fläche.', 'Drag: gradient from primary to secondary color in 2–16 steps, optionally dithered. Fills the selection or area.'],
+  picker: ['Pipette', 'Picker', 'Nimmt eine Farbe aus dem Bild. Geht auch jederzeit mit gedrückter Alt-Taste.', 'Picks a color from the image. Also works anytime by holding Alt.'],
+  line: ['Linie', 'Line', 'Gerade Linie. Umschalt rastet in 45°-Schritten ein.', 'Straight line. Shift snaps to 45° steps.'],
+  rect: ['Rechteck', 'Rectangle', 'Rahmen oder gefüllt (Schalter oben). Umschalt = Quadrat.', 'Outline or filled (toggle at the top). Shift = square.'],
+  ellipse: ['Ellipse', 'Ellipse', 'Rahmen oder gefüllt. Umschalt = Kreis.', 'Outline or filled. Shift = circle.'],
+  text: ['Text', 'Text', 'Pixel-Schrift mit Umlauten, Größe 1×–10×, Zeichenabstand einstellbar. Text lässt sich vor dem Festsetzen verschieben.', 'Pixel font with umlauts, size 1×–10×, adjustable spacing. Move the text before committing.'],
+  select: ['Auswahl', 'Select', 'Rechteck auswählen. Umschalt erweitert, Strg zieht ab. Danach kopieren, ausschneiden, löschen oder verschieben.', 'Select a rectangle. Shift adds, Ctrl subtracts. Then copy, cut, delete or move.'],
+  wand: ['Zauberstab', 'Magic wand', 'Wählt alle zusammenhängenden Pixel einer Farbe aus.', 'Selects all connected pixels of one color.'],
+  move: ['Verschieben', 'Move', 'Verschiebt die Auswahl oder die ganze Ebene. Pfeiltasten = 1 Pixel, Enter bestätigt.', 'Moves the selection or the whole layer. Arrow keys = 1 pixel, Enter confirms.'],
+  dither: ['Dithering', 'Dither', 'Malt ein Schachbrett aus Primär- und Zweitfarbe – für Übergänge und Schatten.', 'Paints a checkerboard of primary and secondary color – for blends and shading.'],
+  spray: ['Sprühdose', 'Spray', 'Sprüht zufällige Pixel, Dichte oben einstellbar.', 'Sprays random pixels, density adjustable at the top.'],
+  shade: ['Aufhellen / Abdunkeln', 'Lighten / darken', 'Macht vorhandene Pixel heller, mit Umschalt dunkler.', 'Makes existing pixels lighter, with Shift darker.'],
+  hand: ['Hand', 'Hand', 'Verschiebt die Ansicht. Geht auch mit gedrückter Leertaste.', 'Pans the view. Also works by holding Space.'],
+};
+const GUIDE = [
+  { id: 'start', de: 'Erste Schritte', en: 'Getting started',
+    deBody: `<p class="gd-lead">Pixel Bro ist ein Editor für Pixel-Art, Animationen und Tilesets – mit einer Prüfung, die genau wie GB Studio rechnet.</p>
+      <div class="gd-steps">
+        <div><b>1</b><p><b>Neues Sprite</b> über Datei → Neues Sprite (Strg+N): Breite und Höhe in Pixeln, z. B. 16×16 für Figuren oder 160×144 für einen Game-Boy-Bildschirm.</p></div>
+        <div><b>2</b><p><b>Zeichnen</b> mit den Werkzeugen links. Farben wählst du rechts unter „Farbe &amp; Palette“.</p></div>
+        <div><b>3</b><p><b>Speichern</b> als Projekt (.pixelbro, Strg+S) – mit allen Ebenen und Frames. Fertige Bilder über <b>Exportieren</b> oben rechts.</p></div>
+      </div>
+      <h4>Zeichenfläche</h4>
+      <ul><li>Mausrad zoomt, Umschalt + Mausrad scrollt waagerecht, Leertaste halten verschiebt</li>
+        <li>„Einpassen“ oben rechts (Taste 0) zeigt das ganze Bild</li>
+        <li>Raster, Mittellinien, Zwiebelhaut und Kachel-Modus schaltest du in der Leiste oben</li></ul>
+      <h4>Sicherheit</h4>
+      <ul><li>Pixel Bro sichert automatisch – nach einem Absturz ist die letzte Sitzung wieder da</li>
+        <li>Rückgängig / Wiederholen mit Strg+Z / Strg+Y (bis zu 120 Schritte)</li>
+        <li>Die Windows-Version aktualisiert sich selbst (Hilfe → Nach Updates suchen)</li></ul>`,
+    enBody: `<p class="gd-lead">Pixel Bro is an editor for pixel art, animations and tilesets – with a check that calculates exactly like GB Studio.</p>
+      <div class="gd-steps">
+        <div><b>1</b><p><b>New sprite</b> via File → New sprite (Ctrl+N): width and height in pixels, e.g. 16×16 for characters or 160×144 for a Game Boy screen.</p></div>
+        <div><b>2</b><p><b>Draw</b> with the tools on the left. Pick colors on the right under “Color &amp; palette”.</p></div>
+        <div><b>3</b><p><b>Save</b> as a project (.pixelbro, Ctrl+S) – with all layers and frames. Finished images via <b>Export</b> at the top right.</p></div>
+      </div>
+      <h4>Canvas</h4>
+      <ul><li>Mouse wheel zooms, Shift + wheel scrolls horizontally, hold Space to pan</li>
+        <li>“Fit” at the top right (key 0) shows the whole image</li>
+        <li>Grid, center lines, onion skin and tile mode are toggled in the bar at the top</li></ul>
+      <h4>Safety</h4>
+      <ul><li>Pixel Bro saves automatically – after a crash your last session is back</li>
+        <li>Undo / redo with Ctrl+Z / Ctrl+Y (up to 120 steps)</li>
+        <li>The Windows version updates itself (Help → Check for updates)</li></ul>` },
+  { id: 'tools', de: 'Werkzeuge', en: 'Tools', tools: true,
+    deBody: '<p class="gd-lead">Alle Werkzeuge links in der Leiste. Der Buchstabe ist die Taste dafür.</p>',
+    enBody: '<p class="gd-lead">All tools are in the bar on the left. The letter is its shortcut key.</p>' },
+  { id: 'colors', de: 'Farben & Paletten', en: 'Colors & palettes',
+    deBody: `<ul><li><b>Primär- und Zweitfarbe</b> unten links – Linksklick malt mit der Primär-, Rechtsklick mit der Zweitfarbe. X tauscht beide</li>
+        <li><b>HEX und Deckkraft</b> rechts unter „Farbe &amp; Palette“</li>
+        <li><b>Paletten-Vorlagen:</b> Bro 32, PICO-8, Endesga 32, Sweetie 16, Game Boy, GB Studio (Sprites / Hintergründe), Graustufen</li>
+        <li><b>Eigene Paletten:</b> bis zu 20 mit Namen – neu anlegen, umbenennen, löschen oder „aus dem Bild“ übernehmen</li>
+        <li><b>Benutzte Farben:</b> zeigt automatisch alle Farben im Bild. <b>Doppelklick</b> auf eine Farbe ersetzt sie überall – mit HEX-Feld (Strg+V geht) und allen Bildfarben zum Anklicken</li></ul>`,
+    enBody: `<ul><li><b>Primary and secondary color</b> at the bottom left – left-click paints with the primary, right-click with the secondary. X swaps them</li>
+        <li><b>HEX and opacity</b> on the right under “Color &amp; palette”</li>
+        <li><b>Palette presets:</b> Bro 32, PICO-8, Endesga 32, Sweetie 16, Game Boy, GB Studio (sprites / backgrounds), grayscale</li>
+        <li><b>Custom palettes:</b> up to 20 with names – create, rename, delete or take them “from the image”</li>
+        <li><b>Used colors:</b> shows every color in the image. <b>Double-click</b> a color to replace it everywhere – with a HEX field (Ctrl+V works) and all image colors to pick from</li></ul>` },
+  { id: 'anim', de: 'Ebenen & Animation', en: 'Layers & animation',
+    deBody: `<h4>Ebenen</h4>
+      <ul><li>Hinzufügen, duplizieren, sortieren, zusammenführen, ausblenden, umbenennen (Doppelklick) und Deckkraft</li>
+        <li>Ebene 1 liegt unten – z. B. Hintergrund unten, Figur darüber</li></ul>
+      <h4>Frames</h4>
+      <ul><li>Unten in der Zeitleiste: + neuer Frame (N), duplizieren (Umschalt+N), löschen, per Drag &amp; Drop sortieren</li>
+        <li><b>Vorschau</b> rechts oben spielt die Animation ab, FPS einstellbar. Mausrad zoomt bis 32×, Ziehen verschiebt, Doppelklick zeigt wieder alles</li>
+        <li><b>Zwiebelhaut</b> zeigt den vorherigen und nächsten Frame durchscheinend</li></ul>`,
+    enBody: `<h4>Layers</h4>
+      <ul><li>Add, duplicate, reorder, merge, hide, rename (double-click) and opacity</li>
+        <li>Layer 1 is at the bottom – e.g. background below, character above</li></ul>
+      <h4>Frames</h4>
+      <ul><li>In the timeline: + new frame (N), duplicate (Shift+N), delete, reorder by drag &amp; drop</li>
+        <li>The <b>preview</b> at the top right plays the animation, FPS adjustable. Mouse wheel zooms up to 32×, drag pans, double-click shows everything</li>
+        <li><b>Onion skin</b> shows the previous and next frame see-through</li></ul>` },
+  { id: 'image', de: 'Bild & Ansicht', en: 'Image & view',
+    deBody: `<h4>Bild-Menü</h4>
+      <ul><li>Größe ändern (Strg+R) – Leinwand vergrößern oder Bild skalieren</li>
+        <li>Spiegeln (Umschalt+H / Umschalt+V), 90° drehen (Umschalt+R)</li>
+        <li>Farbe ersetzen in allen Frames, Umriss hinzufügen, Ebene leeren</li></ul>
+      <h4>Hilfen beim Zeichnen</h4>
+      <ul><li><b>Spiegel ↔ / ↕</b>: zeichnet gleichzeitig gespiegelt – ideal für symmetrische Figuren</li>
+        <li><b>Raster</b> (#) zeigt jeden Pixel, <b>Kachelraster</b> (Ansicht) z. B. alle 8 Pixel für Game-Boy-Kacheln</li>
+        <li><b>Kachel-Modus</b> (T) zeigt das Bild 3×3 – zum nahtlosen Zeichnen von Mustern</li>
+        <li><b>Mittellinien</b> (Umschalt+M) durch die Bildmitte</li>
+        <li>Helles / dunkles Design und Deutsch / English unter Ansicht</li></ul>`,
+    enBody: `<h4>Image menu</h4>
+      <ul><li>Resize (Ctrl+R) – enlarge the canvas or scale the image</li>
+        <li>Flip (Shift+H / Shift+V), rotate 90° (Shift+R)</li>
+        <li>Replace color in all frames, add outline, clear layer</li></ul>
+      <h4>Drawing helpers</h4>
+      <ul><li><b>Mirror ↔ / ↕</b>: draws mirrored at the same time – great for symmetric characters</li>
+        <li><b>Grid</b> (#) shows every pixel, <b>tile grid</b> (View) e.g. every 8 pixels for Game Boy tiles</li>
+        <li><b>Tile mode</b> (T) shows the image 3×3 – for drawing seamless patterns</li>
+        <li><b>Center lines</b> (Shift+M) through the middle of the image</li>
+        <li>Light / dark theme and Deutsch / English under View</li></ul>` },
+  { id: 'io', de: 'Import & Export', en: 'Import & export',
+    deBody: `<h4>Importieren</h4>
+      <ul><li>Datei → Bild importieren (Strg+I) oder Bild einfach ins Fenster ziehen</li>
+        <li>Als <b>neues Sprite</b>, als <b>neue Ebene</b> oder <b>Spritesheet → Frames</b> (Frame-Größe angeben)</li>
+        <li>Projekte (.pixelbro) öffnen mit Strg+O oder per Doppelklick im Explorer</li></ul>
+      <h4>Exportieren</h4>
+      <ul><li><b>Exportieren</b> oben rechts – Umschalter <b>PNG · Spritesheet · GIF</b>, das letzte Format wird gemerkt</li>
+        <li><b>PNG:</b> aktueller Frame, wahlweise vergrößert (Skalierung)</li>
+        <li><b>Spritesheet:</b> alle Frames in einem Bild – nebeneinander, untereinander oder als Raster</li>
+        <li><b>GIF:</b> animiert mit der FPS aus der Vorschau</li></ul>`,
+    enBody: `<h4>Import</h4>
+      <ul><li>File → Import image (Ctrl+I) or simply drag an image into the window</li>
+        <li>As a <b>new sprite</b>, as a <b>new layer</b> or <b>spritesheet → frames</b> (enter the frame size)</li>
+        <li>Open projects (.pixelbro) with Ctrl+O or by double-clicking in Explorer</li></ul>
+      <h4>Export</h4>
+      <ul><li><b>Export</b> at the top right – switch between <b>PNG · Spritesheet · GIF</b>, the last format is remembered</li>
+        <li><b>PNG:</b> current frame, optionally enlarged (scale)</li>
+        <li><b>Spritesheet:</b> all frames in one image – in a row, a column or a grid</li>
+        <li><b>GIF:</b> animated with the FPS from the preview</li></ul>` },
+  { id: 'gb', de: 'GB-Studio-Prüfung', en: 'GB Studio check', star: true,
+    deBody: `<p class="gd-lead">Das Herzstück für Game-Boy-Projekte: Bild → <b>GB-Studio-Paletten prüfen</b> (Umschalt+G). Pixel Bro rechnet dabei <b>genau wie GB Studio</b> – du siehst vor dem Import, ob alles passt.</p>
+      <div class="gd-cards">
+        <div><h5>Game Boy Color</h5><p>Jede 8×8-Kachel nutzt eine Palette mit 4 Farben. 7 Paletten sind frei, die 8. ist für Text und Menüs. Höchstens 384 verschiedene Kacheln.</p></div>
+        <div><h5>Game Boy (klassisch)</h5><p>Nur 4 Helligkeitsstufen. Leicht abweichende Farben ordnet GB Studio selbst richtig zu – Pixel Bro zeigt „wird zu …“. Höchstens 192 Kacheln.</p></div>
+      </div>
+      <h4>So liest du das Ergebnis</h4>
+      <ul><li><b>Grün „Passt in GB Studio“</b> – fertig. <b>Rot</b> – darunter steht genau, was nicht passt</li>
+        <li><b>Paletten und Kacheln</b> werden aufgeteilt und gezählt wie in GB Studio („Automatisch“, gespiegelte Kacheln zählen einmal)</li>
+        <li><b>8 Paletten:</b> GB Studio warnt erst ab 9 und ersetzt still eine Palette durch deine Palette 8. Pixel Bro markiert sie rot und zeigt „In GB Studio: Farbe → Farbe“</li>
+        <li><b>Palette 8 (Text/UI)</b> deiner Szene unten eintragen – jeder nutzt eine andere. Sind die Farben fast gleich, passt es trotzdem</li>
+        <li><b>Mehr als 4 Farben</b> in einer Kachel: Die überzähligen Pixel sind im Bild rot markiert</li></ul>
+      <h4>Direkt korrigieren</h4>
+      <ul><li><b>Übernehmen</b> bei geprüften Tipps – Pixel Bro rechnet jeden Farbtausch vorher durch und schlägt nur vor, was wirklich auf 7 bringt</li>
+        <li><b>Wie GB Studio übernehmen</b> färbt überzählige Pixel so um, wie GB Studio es tun würde. <b>Angleichen</b> setzt im klassischen Modus die genauen 4 Farben</li>
+        <li>Alles lässt sich mit Strg+Z rückgängig machen</li></ul>
+      <h4>Im Bild</h4>
+      <ul><li><b>Im Bild zeigen</b>: jede Kachel mit ihrer Palettennummer, „6+“ = passt auch in andere Paletten</li>
+        <li>Oben links die Übersicht: <b>Klick auf eine Nummer</b> zeigt nur die Kacheln dieser Palette, Klick auf eine Farbe nimmt sie als Zeichenfarbe</li>
+        <li><b>Paletten speichern</b> legt alle Paletten als eigene Paletten an</li></ul>`,
+    enBody: `<p class="gd-lead">The heart of Game Boy projects: Image → <b>Check GB Studio palettes</b> (Shift+G). Pixel Bro calculates <b>exactly like GB Studio</b> – you know before importing whether everything fits.</p>
+      <div class="gd-cards">
+        <div><h5>Game Boy Color</h5><p>Every 8×8 tile uses one palette with 4 colors. 7 palettes are free, the 8th is for text and menus. At most 384 different tiles.</p></div>
+        <div><h5>Game Boy (classic)</h5><p>Only 4 brightness levels. GB Studio maps slightly different colors correctly – Pixel Bro shows “becomes …”. At most 192 tiles.</p></div>
+      </div>
+      <h4>Reading the result</h4>
+      <ul><li><b>Green “Ready for GB Studio”</b> – done. <b>Red</b> – below it says exactly what does not fit</li>
+        <li><b>Palettes and tiles</b> are split and counted like GB Studio (“Automatic”, flipped tiles count once)</li>
+        <li><b>8 palettes:</b> GB Studio only warns from 9 and silently replaces one palette with your palette 8. Pixel Bro marks it red and shows “In GB Studio: color → color”</li>
+        <li>Enter your scene's <b>palette 8 (text/UI)</b> at the bottom – everyone uses a different one. If the colors are almost the same, it still fits</li>
+        <li><b>More than 4 colors</b> in a tile: the extra pixels are marked red in the image</li></ul>
+      <h4>Fix it right away</h4>
+      <ul><li><b>Apply</b> on verified tips – Pixel Bro calculates every color swap first and only suggests what really gets you to 7</li>
+        <li><b>Apply like GB Studio</b> recolors extra pixels the way GB Studio would. <b>Match</b> sets the exact 4 colors in classic mode</li>
+        <li>Everything can be undone with Ctrl+Z</li></ul>
+      <h4>In the image</h4>
+      <ul><li><b>Show in image</b>: every tile with its palette number, “6+” = fits other palettes too</li>
+        <li>Overview at the top left: <b>click a number</b> to show only that palette's tiles, click a color to draw with it</li>
+        <li><b>Save palettes</b> adds all palettes as custom palettes</li></ul>` },
+];
+
+async function showGuide(startId) {
+  const en = settings.lang === 'en';
+  const toolGrid = () => `<div class="gd-tools">${Object.entries(GUIDE_TOOLS).map(([id, [nde, nen, dde, den]]) => {
+    const btn = document.querySelector(`.tool[data-tool="${id}"]`);
+    const svg = btn ? btn.querySelector('svg').outerHTML : '';
+    const key = btn ? ((btn.title.match(/\(([^)]+)\)/) || [])[1] || '') : '';
+    return `<div class="gd-tool"><span class="gd-ticon">${svg}</span><div><b>${en ? nen : nde}</b>${key ? `<kbd>${key}</kbd>` : ''}<p>${en ? den : dde}</p></div></div>`;
+  }).join('')}</div>`;
+  const body = el(`<div class="gd" data-i18n-skip>
+      <nav class="gd-nav">${GUIDE.map((c) => `<button type="button" data-id="${c.id}">${c.star ? '★ ' : ''}${en ? c.en : c.de}</button>`).join('')}
+        <button type="button" class="gd-keys">${en ? 'All shortcuts' : 'Alle Tastenkürzel'} ›</button></nav>
+      <div class="gd-page"></div></div>`);
+  const page = body.querySelector('.gd-page');
+  const show = (id) => {
+    const c = GUIDE.find((x) => x.id === id) || GUIDE[0];
+    body.querySelectorAll('.gd-nav [data-id]').forEach((b) => b.classList.toggle('active', b.dataset.id === c.id));
+    page.innerHTML = `<h3>${c.star ? '<span class="gd-star">★</span>' : ''}${en ? c.en : c.de}</h3>${en ? c.enBody : c.deBody}${c.tools ? toolGrid() : ''}`;
+    page.scrollTop = 0;
+  };
+  body.querySelectorAll('.gd-nav [data-id]').forEach((b) => b.onclick = () => show(b.dataset.id));
+  let openKeys = false;
+  body.querySelector('.gd-keys').onclick = () => { openKeys = true; $('#gd-close').click(); };
+  show(startId || 'start');
+  await modal({ title: en ? 'Pixel Bro – Guide' : 'Pixel Bro – Anleitung', body, actions: [{ label: 'Schließen', value: false, id: 'gd-close', primary: true }], wide: 'xl' });
+  if (openKeys) showShortcuts();
 }
 
 function showShortcuts() {
