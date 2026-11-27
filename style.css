@@ -39,6 +39,8 @@ body::before{
 
 
 a{color:inherit;text-decoration:none}
+/* Knöpfe und Eingabefelder übernehmen die Schrift der Seite (Browser nehmen sonst Arial) */
+button,input,select,textarea{font-family:inherit}
 code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
 .wrap{max-width:var(--max); margin:0 auto; padding:0 18px;}
 .muted{color:var(--muted)}
@@ -177,7 +179,7 @@ h1{
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   padding:6px 10px;
   border-radius: 999px;
-  font-weight:800;
+  font-weight:700;
 }
 
 .logoCard{display:flex; flex-direction:column; gap:12px;}
@@ -913,8 +915,11 @@ details.cl > summary .cl-date{
   }
 }
 
-/* Wallpaper-Filter: Abstand auch zwischen den Zeilen (Handy) */
-.filters{display:flex;flex-wrap:wrap;gap:10px}
+/* Wallpaper-Filter: gleicher schlichter Stil wie der Filter bei „Was wir gerade zocken“ */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters .btn--chip{border:1px solid var(--line);background:transparent;box-shadow:none;color:var(--muted);font-family:inherit;font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;min-height:0;line-height:1.3}
+.filters .btn--chip:hover{color:var(--text);transform:none}
+.filters .btn--chip.is-active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#111;border-color:transparent}
 
 /* ===== Startseite: Neuestes Update + YouTube (seit v2.1) ===== */
 .upd{align-items:stretch}
@@ -943,7 +948,7 @@ details.cl > summary .cl-date{
 /* ===== Startseite: Was wir gerade zocken (seit v2.1) ===== */
 .gHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .gFilter{display:flex;gap:6px;flex-wrap:wrap}
-.gFilter button{border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px inherit;padding:6px 12px;border-radius:999px;cursor:pointer}
+.gFilter button{border:1px solid var(--line);background:transparent;color:var(--muted);font-family:inherit;font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer}
 .gFilter button:hover{color:var(--text)}
 .gFilter button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#111;border-color:transparent}
 .gGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
@@ -958,7 +963,7 @@ details.cl > summary .cl-date{
 .gChip[data-p=PS]{border-color:#3d7bff88;color:#9ab8ff}
 .gChip[data-p=PC]{border-color:#9aa3b888}
 .gChip[data-p=Mobile]{border-color:#3ddc8488;color:#8ff0c0}
-.gToggle{display:block;width:100%;margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--accent);font:700 14px inherit;cursor:pointer}
+.gToggle{display:block;width:100%;margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--accent);font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
 .gToggle[hidden]{display:none}
 .gMore{color:var(--muted);margin:12px 0 0;font-size:14px}
 .gWant{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
