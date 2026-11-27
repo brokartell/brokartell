@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.15 – Feinschliff (gesammelt)
+- Kopfzeile wie in anderen Programmen: Datei · Bearbeiten · Bild · Ansicht · Hilfe links, Pixel Bro mittig (ohne Versionsnummer – die steht unter „Über Pixel Bro“), Schriftzug mittig zum Logo
+- Import: Bilder über 1024 × 1024 px werden gleich im Fenster gemeldet und lassen sich verkleinert als neues Sprite importieren (Pixel bleiben scharf)
+- GB-Übersicht: „Alle Paletten zeigen“ und „Zahlen an / aus“ untereinander, so breit wie die Palettenzeilen
+- Anleitung: einheitlicher Menüknopf, Link „Alle Tastenkürzel“ entfernt (steht unter Hilfe)
+- Optionsleiste: einzelner Trennstrich vor „Auswahl“ entfernt
+
 ## 1.5.14 – Feinschliff (gesammelt)
 - Auswahl drehen und spiegeln per Knopf: Solange etwas ausgewählt oder eingefügt ist, zeigt die Leiste oben „Auswahl: Drehen · ↔ · ↕“
 - Infoleiste unten zeigt den aktuellen Zoom
