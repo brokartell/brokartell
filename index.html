@@ -14,7 +14,7 @@
   <meta name="description" content="Bro Kartell — Multigaming Clan seit 4 Okt. 2013. Join us." />
   <meta name="theme-color" content="#0b0d14" />
   <link rel="icon" href="assets/logo.png" />
-  <link rel="stylesheet" href="style.css?v=204" />
+  <link rel="stylesheet" href="style.css?v=205" />
 </head>
   
 <body> 
@@ -122,36 +122,30 @@
       </section>
 
       <section id="games" class="panel section">
-        <div class="section__head">
-          <h2>Games</h2>
-        </div>
-
-        <div class="split">
-          <div class="panel card">
-            <h3>Aktive Games</h3>
-            <ul class="list">
-              <li>GTA 5 (PS4/PS5)</li>
-              <li>Fortnite (PS4/PS5/PC)</li>
-              <li>Warframe (PS4/PS5)</li>
-              <li>Arc Raiders (PS5)</li>
-              <li>No Man Sky (PS5/PC)</li>
-              <li>Hytale (PC)</li>
-              <li>Brawl Stars (Mobile)</li>
-              <li>COD (Mobile) </li>
-              <li>Knighthood (Mobile) </li>
-              <li>uvm...</li>
-            </ul>
-          </div>
-
-          <div class="panel card">
-            <h3>Was wir suchen</h3>
-            <ul class="list">
-              <li>Gute Kommunikation</li>
-              <li>Respekt & Teamplay</li>
-              <li>Aktivität (kein 24/7 Muss)</li>
-            </ul>
+        <div class="section__head gHead">
+          <h2>Was wir gerade zocken</h2>
+          <div class="gFilter" role="group" aria-label="Plattform">
+            <button type="button" class="on" data-f="all">Alle</button>
+            <button type="button" data-f="PS">PlayStation</button>
+            <button type="button" data-f="PC">PC</button>
+            <button type="button" data-f="Mobile">Mobile</button>
           </div>
         </div>
+        <!-- Neues Spiel: Kachel kopieren, Name, Art und Plattformen (PS / PC / Mobile, auch in data-p) anpassen -->
+        <div class="gGrid" id="gGrid">
+          <div class="gTile" data-p="PS"><div class="gIni">G5</div><div><div class="gName">GTA 5</div><div class="gGenre">Open World</div><div class="gChips"><span class="gChip" data-p="PS">PS</span></div></div></div>
+          <div class="gTile" data-p="PS PC"><div class="gIni">F</div><div><div class="gName">Fortnite</div><div class="gGenre">Battle Royale</div><div class="gChips"><span class="gChip" data-p="PS">PS</span><span class="gChip" data-p="PC">PC</span></div></div></div>
+          <div class="gTile" data-p="PS"><div class="gIni">W</div><div><div class="gName">Warframe</div><div class="gGenre">Action</div><div class="gChips"><span class="gChip" data-p="PS">PS</span></div></div></div>
+          <div class="gTile" data-p="PS"><div class="gIni">AR</div><div><div class="gName">Arc Raiders</div><div class="gGenre">Extraction Shooter</div><div class="gChips"><span class="gChip" data-p="PS">PS</span></div></div></div>
+          <div class="gTile" data-p="PS PC"><div class="gIni">NM</div><div><div class="gName">No Man’s Sky</div><div class="gGenre">Weltraum</div><div class="gChips"><span class="gChip" data-p="PS">PS</span><span class="gChip" data-p="PC">PC</span></div></div></div>
+          <div class="gTile" data-p="PC"><div class="gIni">H</div><div><div class="gName">Hytale</div><div class="gGenre">Sandbox</div><div class="gChips"><span class="gChip" data-p="PC">PC</span></div></div></div>
+          <div class="gTile" data-p="Mobile"><div class="gIni">BS</div><div><div class="gName">Brawl Stars</div><div class="gGenre">Arena</div><div class="gChips"><span class="gChip" data-p="Mobile">Mobile</span></div></div></div>
+          <div class="gTile" data-p="Mobile"><div class="gIni">CM</div><div><div class="gName">COD Mobile</div><div class="gGenre">Shooter</div><div class="gChips"><span class="gChip" data-p="Mobile">Mobile</span></div></div></div>
+          <div class="gTile" data-p="Mobile"><div class="gIni">K</div><div><div class="gName">Knighthood</div><div class="gGenre">RPG</div><div class="gChips"><span class="gChip" data-p="Mobile">Mobile</span></div></div></div>
+        </div>
+        <button type="button" class="gToggle" id="gToggle" hidden></button>
+        <p class="gMore">… und vieles mehr – im Discord findest du immer jemanden zum Mitzocken.</p>
+        <div class="gWant"><span class="gWantT">Was wir suchen:</span><span>💬 Gute Kommunikation</span><span>🤝 Respekt &amp; Teamplay</span><span>🎮 Aktivität – kein 24/7-Muss</span></div>
       </section>
 
       <section id="media" class="panel section">
@@ -193,6 +187,7 @@
       <li>Startseite: neuestes Update und neuestes YouTube-Video nebeneinander, alle Updates zum Aufklappen</li>
       <li>Roadmap entfernt – was in Entwicklung ist, steht bei Bro Kartell Games</li>
       <li>Pixel Bro hat einen eigenen Look in Lila mit eigenem Logo</li>
+      <li>Games: Spiele als Kacheln mit Plattform-Filter (PlayStation · PC · Mobile)</li>
       <li>Logos und Fußbereich auf allen Seiten einheitlich</li>
     </ul>
   </details>
@@ -525,6 +520,28 @@
         const list = document.getElementById('updList');
         first.querySelectorAll(':scope > ul > li').forEach((li) => list.appendChild(li.cloneNode(true)));
         first.hidden = true; // steht schon oben in der Karte – beim Aufklappen nicht doppelt zeigen
+      }
+      // Games: Plattform-Filter; am Handy nur 3 Spiele, Rest aufklappbar
+      const grid = document.getElementById('gGrid'), tog = document.getElementById('gToggle');
+      if (grid) {
+        let filter = 'all', expanded = false;
+        const mq = window.matchMedia('(max-width: 560px)');
+        const apply = () => {
+          const tiles = [...grid.children].filter((el) => el.classList.contains('gTile'));
+          const match = tiles.filter((el) => filter === 'all' || el.dataset.p.split(' ').includes(filter));
+          const limit = mq.matches && !expanded ? 3 : Infinity;
+          tiles.forEach((el) => { el.hidden = !match.includes(el) || match.indexOf(el) >= limit; });
+          tog.hidden = !mq.matches || match.length <= 3;
+          tog.textContent = expanded ? 'Weniger zeigen ↑' : `Alle ${match.length} Spiele zeigen ↓`;
+        };
+        document.querySelectorAll('.gFilter button').forEach((b) => b.addEventListener('click', () => {
+          filter = b.dataset.f; expanded = false;
+          document.querySelectorAll('.gFilter button').forEach((x) => x.classList.toggle('on', x === b));
+          apply();
+        }));
+        tog.addEventListener('click', () => { expanded = !expanded; apply(); });
+        mq.addEventListener('change', apply);
+        apply();
       }
       // Neuestes YouTube-Video: Uploads-Playlist des Kanals, erst nach Klick laden (youtube-nocookie)
       const btn = document.getElementById('ytPlay');
