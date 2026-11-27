@@ -43,7 +43,8 @@
       color:#fff !important;border:1px solid #b9a8ff55 !important;
       box-shadow:inset 0 1px 0 #ffffff40,0 10px 30px rgba(124,92,255,.35) !important;text-shadow:none !important}
     .btn--primary:hover{filter:brightness(1.08)}
-    .pbBrandLogo{width:44px;height:44px;image-rendering:pixelated;border-radius:10px;box-shadow:0 0 18px #7c5cff55}
+    /* Pixel-Bro-Logo im Header: quadratisch, ohne den schwarzen Schatten der anderen Logos, nur leichtes Lila-Leuchten */
+    .brand__logo.pbBrandLogo{width:44px;height:44px;object-fit:cover;image-rendering:pixelated;border-radius:10px;filter:none;box-shadow:0 0 16px #7c5cff59}
     .pbBrandName{background:linear-gradient(90deg,#9b82ff,#ff7ac6);-webkit-background-clip:text;background-clip:text;color:transparent}
     .badge{border-color:#9b82ff66;color:#cfc3ff;background:#7c5cff1f}
 
@@ -134,7 +135,7 @@
   <header class="topbar">
     <div class="wrap nav">
       <a class="brand" href="#top" aria-label="Pixel Bro">
-        <img class="brand__logo pbBrandLogo" src="pixel-bro/src/icon.png?v=2" alt="Pixel Bro Logo">
+        <img class="brand__logo pbBrandLogo" src="assets/pixel-bro-logo.png?v=1" alt="Pixel Bro Logo">
         <div class="brand__text">
           <div class="brand__name pbBrandName">PIXEL BRO</div>
           <div class="brand__tag">Pixel-Art • by Bro Kartell</div>
