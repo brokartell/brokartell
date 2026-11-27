@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.13';
+const APP_VERSION = '1.5.14';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -101,6 +101,7 @@ const settings = {
   lang: 'de',
   gbMode: 'color',   // GB-Studio-Prüfung: 'color' (Game Boy Color) oder 'classic' (Game Boy)
   gbSprite: false,   // klassisch: #65FF00 als Transparenz erlauben
+  gbLabels: true,    // GB-Prüfung im Bild: Palettennummern auf den Kacheln zeigen
   gbUi: null,        // GBC: Palette 8 (Text/UI) der Szene, 4 HEX-Werte wie in GB Studio angezeigt – null = GB-Studio-Vorgabe
   exportFormat: 'png', // zuletzt benutztes Export-Format: 'png' | 'sheet' | 'gif'
 };
@@ -227,7 +228,16 @@ function requestRender() {
 let hover = null; // { x, y } in Sprite-Koordinaten
 let antsOffset = 0;
 
+// Knöpfe „Auswahl drehen / spiegeln“ nur zeigen, solange etwas ausgewählt oder eingefügt ist
+let xformShown = null;
+function updateXformButtons() {
+  const has = !!(sel || float);
+  if (has === xformShown) return;
+  xformShown = has;
+  $('#opt-xform').hidden = !has;
+}
 function render() {
+  updateXformButtons();
   const dpr = devicePixelRatio;
   const cw = Math.round(stage.clientWidth * dpr), ch = Math.round(stage.clientHeight * dpr);
   if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; makeChecker(); }
@@ -488,8 +498,14 @@ function setZoom(z, cx, cy) {
   view.zoom = z;
   view.ox = Math.round(cx - sx * z);
   view.oy = Math.round(cy - sy * z);
-  $('#zoom-label').textContent = Math.round(z * 100) + '%';
+  showZoom(z);
   requestRender();
+}
+// Zoom oben an der Zeichenfläche und unten in der Infoleiste anzeigen
+function showZoom(z) {
+  const txt = Math.round(z * 100) + '%';
+  $('#zoom-label').textContent = txt;
+  $('#status-zoom').textContent = 'Zoom ' + txt;
 }
 function zoomStep(dir, cx, cy) {
   let i = ZOOMS.findIndex((z) => z >= view.zoom);
@@ -505,7 +521,7 @@ function zoomFit() {
   view.zoom = z;
   view.ox = Math.round((stage.clientWidth - doc.w * z) / 2);
   view.oy = Math.round((stage.clientHeight - doc.h * z) / 2);
-  $('#zoom-label').textContent = Math.round(z * 100) + '%';
+  showZoom(z);
   requestRender();
 }
 
@@ -2468,7 +2484,10 @@ function renderGbLegend(r) {
     rows = r.palettes.map((p, i) => `<div class="gb-lrow${r.over.has(i) ? ' gb-over' : ''}${gbView.filter >= 0 && gbView.filter !== i ? ' dim' : ''}" ${r.over.has(i) ? `title="${t('Palette zu viel – {n} Kacheln bekommen in GB Studio andere Farben', { n: r.uses[i] })}"` : ''}><button class="gb-ltag gb-lpick${gbView.filter === i ? ' active' : ''}" data-pal="${i}" title="${t('Klick: nur Palette {n} im Bild zeigen', { n: i + 1 })}" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</button>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
     if (r.extra.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.extra.slice(0, 8).map(([u]) => sw(u)).join('')}${r.extra.length > 8 ? `<span class="gb-lmore">+${r.extra.length - 8}</span>` : ''}</div>`);
   }
-  if (r.mode !== 'classic' && gbView.filter >= 0) rows.push(`<button class="gb-lall">${t('Alle Paletten zeigen')}</button>`);
+  if (r.mode !== 'classic') {
+    const on = settings.gbLabels !== false;
+    rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button></div>`);
+  }
   box.innerHTML = rows.join('');
   box.hidden = !rows.length;
 }
@@ -2512,7 +2531,7 @@ function drawGbOverlay(z) {
       const [x, y, tw, th] = tileBox(tile);
       if (tile.gbs !== filter || tile.colors.length > GB_COLORS) { ctx.fillStyle = 'rgba(8, 10, 16, .68)'; ctx.fillRect(x, y, tw, th); continue; }
       ctx.strokeStyle = col; ctx.strokeRect(x + 1, y + 1, tw - 2, th - 2);
-      if (s >= 24) {
+      if (s >= 24 && settings.gbLabels !== false) {
         const label = String(filter + 1);
         ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
         ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
@@ -2526,7 +2545,7 @@ function drawGbOverlay(z) {
     if (tile.colors.length > GB_COLORS) {
       ctx.fillStyle = 'rgba(255, 50, 80, .12)'; ctx.fillRect(x, y, tw, th);
       ctx.strokeStyle = '#ff3250'; ctx.strokeRect(x + 1.5, y + 1.5, tw - 3, th - 3);
-      if (s >= 24) { ctx.fillStyle = '#ff3250'; ctx.fillRect(x + 2, y + 2, font * 1.6, font + 4); ctx.fillStyle = '#fff'; ctx.fillText(tile.colors.length, x + 4, y + 4); }
+      if (s >= 24 && settings.gbLabels !== false) { ctx.fillStyle = '#ff3250'; ctx.fillRect(x + 2, y + 2, font * 1.6, font + 4); ctx.fillStyle = '#fff'; ctx.fillText(tile.colors.length, x + 4, y + 4); }
       continue;
     }
     if (tile.palette < 0) continue;
@@ -2540,7 +2559,7 @@ function drawGbOverlay(z) {
       ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
       ctx.globalAlpha = 1;
     }
-    if (s >= 24) {
+    if (s >= 24 && settings.gbLabels !== false) {
       const label = String(tile.palette + 1) + (tile.multi ? '+' : '');
       ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
       ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
@@ -2755,6 +2774,9 @@ const CURSORS = {
   move: svgCursor(`<g transform="translate(4 4)">${outlined('M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20')}</g>`, 16, 16, 'move'),
   grabbing: svgCursor(outlined('M22 15v-3a2 2 0 0 0-4 0v2M18 14v-3a2 2 0 0 0-4 0v3M14 14v-2a2 2 0 0 0-4 0v5M22 13a2 2 0 1 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4l-3.6-3.6a2 2 0 0 1 2.8-2.8L11 18'), 16, 16, 'grabbing'),
 };
+// Eigene lila Hand auch in der Vorschau (die Windows-Hand ist auf hellen Bildern kaum zu sehen)
+document.documentElement.style.setProperty('--cur-grab', CURSORS.grab);
+document.documentElement.style.setProperty('--cur-grabbing', CURSORS.grabbing);
 function updateCursor() {
   const t = activeTool();
   canvas.style.cursor = t === 'hand' ? CURSORS.grab : t === 'move' ? CURSORS.move : t === 'picker' ? CURSORS.picker : t === 'text' ? CURSORS.text : CURSORS.crosshair;
@@ -3161,8 +3183,8 @@ function scheduleAutosave() {
 }
 function saveSettings() {
   try {
-    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, exportFormat } = settings;
-    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, exportFormat }));
+    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, gbLabels, exportFormat } = settings;
+    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, gbLabels, exportFormat }));
   } catch (e) { /* ignorieren */ }
 }
 function loadSettings() {
@@ -3375,7 +3397,7 @@ const GUIDE = [
   { id: 'image', de: 'Bild & Ansicht', en: 'Image & view',
     deBody: `<h4>Bild-Menü</h4>
       <ul><li>Größe ändern (Strg+R) – Leinwand vergrößern oder Bild skalieren</li>
-        <li>Spiegeln (Umschalt+H / Umschalt+V), 90° drehen (Umschalt+R)</li>
+        <li>Spiegeln (Umschalt+H / Umschalt+V), 90° drehen (Umschalt+R) – ist etwas ausgewählt oder eingefügt, gilt es nur für die Auswahl (z. B. kopierten Stuhl drehen)</li>
         <li>Farbe ersetzen in allen Frames, Umriss hinzufügen, Ebene leeren</li></ul>
       <h4>Hilfen beim Zeichnen</h4>
       <ul><li><b>Spiegel ↔ / ↕</b>: zeichnet gleichzeitig gespiegelt – ideal für symmetrische Figuren</li>
@@ -3385,7 +3407,7 @@ const GUIDE = [
         <li>Helles / dunkles Design und Deutsch / English unter Ansicht</li></ul>`,
     enBody: `<h4>Image menu</h4>
       <ul><li>Resize (Ctrl+R) – enlarge the canvas or scale the image</li>
-        <li>Flip (Shift+H / Shift+V), rotate 90° (Shift+R)</li>
+        <li>Flip (Shift+H / Shift+V), rotate 90° (Shift+R) – with a selection or pasted object, only that is flipped or rotated</li>
         <li>Replace color in all frames, add outline, clear layer</li></ul>
       <h4>Drawing helpers</h4>
       <ul><li><b>Mirror ↔ / ↕</b>: draws mirrored at the same time – great for symmetric characters</li>
@@ -3676,6 +3698,11 @@ $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
 $('#gb-legend').addEventListener('click', (e) => {
+  if (e.target.closest('.gb-lnums')) {
+    settings.gbLabels = settings.gbLabels === false; saveSettings();
+    updateGbHud(); requestRender();
+    return;
+  }
   const pick = e.target.closest('.gb-lpick');
   if (pick || e.target.closest('.gb-lall')) {
     const i = pick ? +pick.dataset.pal : -1;
