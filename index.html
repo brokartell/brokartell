@@ -14,7 +14,7 @@
   <meta name="description" content="Bro Kartell — Multigaming Clan seit 4 Okt. 2013. Join us." />
   <meta name="theme-color" content="#0b0d14" />
   <link rel="icon" href="assets/logo.png" />
-  <link rel="stylesheet" href="style.css?v=203" />
+  <link rel="stylesheet" href="style.css?v=204" />
 </head>
   
 <body> 
@@ -174,52 +174,30 @@
 
       <!-- Roadmap & Changelog -->
       <section id="updates" class="panel section">
-        <div class="section__head">
-          <h2>Roadmap & Changelog</h2>
-        </div>
-
-        <div class="split">
-          <!-- Roadmap -->
-          <div class="panel card">
-            <h3>Roadmap</h3>
-
-            <div class="rc-block">
-              <div class="rc-title"><span class="rc-dot rc-hot"></span> Aktuell</div>
-              <ul class="rc-list">
-                <li>Bro Kartell - Second Punch (Gameboy Color Spiel)</li>
-                <li>Logo Historie</li>
-                <li>Discord Struktur überarbeiten</li>
-
-              </ul>
-            </div>
-
-            <div class="rc-block">
-              <div class="rc-title"><span class="rc-dot rc-work"></span> Als Nächstes</div>
-              <ul class="rc-list">
-                <li>Youtube Content</li>
-                <li>mehr Wallpaper</li>
-              </ul>
-            </div>
-
-            <div class="rc-block">
-              <div class="rc-title"><span class="rc-dot rc-idea"></span> Ideen</div>
-              <ul class="rc-list">
-                <li>Clan-Events / Mini-Turniere</li>
-                <li>Bro Kartell eSports Trikot</li>
-              </ul>
-            </div>
-
-            <p class="small rc-note">
-              <p style="text-align: center;">„Ideen“ sind unverbindlich – wir halten’s entspannt und realistisch.</p>
-            </p>
-          </div>
-
-          <!-- Changelog -->
-          <div class="panel card">
-            <h3>Changelog</h3>
-<div class="changelog">
+        <div class="split upd">
+          <!-- Neuestes Update: wird automatisch aus dem obersten Changelog-Eintrag gefüllt -->
+          <div class="panel card updCard">
+            <div class="updLabel">Neuestes Update</div>
+            <h3 class="updHead" id="updHead"></h3>
+            <ul class="updList" id="updList"></ul>
+            <details class="updAll">
+              <summary>Alle Updates ansehen →</summary>
+              <div class="changelog">
 
   <details open class="cl">
+    <summary>
+      <b>v2.1</b>
+      <span class="cl-title">• Aufgeräumt</span>
+    </summary>
+    <ul>
+      <li>Startseite: neuestes Update und neuestes YouTube-Video nebeneinander, alle Updates zum Aufklappen</li>
+      <li>Roadmap entfernt – was in Entwicklung ist, steht bei Bro Kartell Games</li>
+      <li>Pixel Bro hat einen eigenen Look in Lila mit eigenem Logo</li>
+      <li>Logos und Fußbereich auf allen Seiten einheitlich</li>
+    </ul>
+  </details>
+
+  <details class="cl">
     <summary>
       <b>v2.0</b>
       <span class="cl-title">• Pixel Bro</span>
@@ -492,10 +470,19 @@
   </details>
   <!-- /Archiv -->
 
-</div>
-          </div><!-- /Changelog-Karte -->
-        </div><!-- /split -->
 
+            </details>
+          </div>
+
+          <!-- Neuestes YouTube-Video: lädt erst nach Klick (Datenschutz), zeigt immer das neueste Upload -->
+          <div class="panel card ytCard" id="ytCard">
+            <button class="ytPlay" id="ytPlay" type="button" aria-label="Neuestes YouTube-Video abspielen">
+              <span class="ytBtn">▶</span>
+              <span class="ytText">Neuestes YouTube-Video</span>
+              <span class="ytHint">Mit Klick wird das Video von YouTube geladen</span>
+            </button>
+          </div>
+        </div>
       </section>
 
 <section id="join" class="panel section">
@@ -508,10 +495,10 @@
             </p>
           </div>
 
-          <div id="contact" style="display:flex; flex-direction:column; gap:10px">
-            <a class="btn btn--primary" id="discordJoin" href="https://discord.gg/J6aN7mTUGc" target="_blank" rel="noreferrer" style="justify-content:center">Discord beitreten</a>
-            <a class="btn btn--steam" href="https://steamcommunity.com/groups/bro-kartell" target="_blank" rel="noreferrer" style="justify-content:center">Steam-Gruppe</a>
-            <a class="btn" id="mailBtn" href="#" style="justify-content:center">info [at] bro-kartell.com</a>
+          <div id="contact" class="joinBtns">
+            <a class="btn btn--primary" id="discordJoin" href="https://discord.gg/J6aN7mTUGc" target="_blank" rel="noreferrer">Discord beitreten</a>
+            <a class="btn btn--steam" href="https://steamcommunity.com/groups/bro-kartell" target="_blank" rel="noreferrer">Steam-Gruppe</a>
+            <a class="joinMail" id="mailBtn" href="#">info [at] bro-kartell.com</a>
           </div>
         </div>
       </section>
@@ -528,6 +515,29 @@
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <script src="script.js?v=199"></script>
+  <script>
+    (() => {
+      // „Neuestes Update“ aus dem obersten Changelog-Eintrag füllen – neue Updates nur im Changelog eintragen
+      const first = document.querySelector('#updates .changelog > details.cl');
+      if (first) {
+        const v = first.querySelector('summary b'), t = first.querySelector('summary .cl-title');
+        document.getElementById('updHead').innerHTML = (v ? v.textContent : '') + (t ? ' <span>' + t.textContent + '</span>' : '');
+        const list = document.getElementById('updList');
+        first.querySelectorAll(':scope > ul > li').forEach((li, i) => { if (i < 3) list.appendChild(li.cloneNode(true)); });
+      }
+      // Neuestes YouTube-Video: Uploads-Playlist des Kanals, erst nach Klick laden (youtube-nocookie)
+      const btn = document.getElementById('ytPlay');
+      if (btn) btn.addEventListener('click', () => {
+        const f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/videoseries?list=UUKMNp1uum1lnBH1h3BGV1Iw&autoplay=1';
+        f.title = 'Neuestes YouTube-Video von Bro Kartell';
+        f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        f.allowFullscreen = true;
+        f.className = 'ytFrame';
+        btn.replaceWith(f);
+      });
+    })();
+  </script>
   
 <!-- Wallpaper Preview Modal -->
 <div class="imgModal" id="imgModal" aria-hidden="true">

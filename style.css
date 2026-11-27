@@ -915,3 +915,27 @@ details.cl > summary .cl-date{
 
 /* Wallpaper-Filter: Abstand auch zwischen den Zeilen (Handy) */
 .filters{display:flex;flex-wrap:wrap;gap:10px}
+
+/* ===== Startseite: Neuestes Update + YouTube (seit v2.1) ===== */
+.upd{align-items:stretch}
+.updLabel{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.updHead{margin:8px 0 8px !important;font-size:20px !important}
+.updHead span{color:var(--muted);font-weight:700;font-size:15px}
+.updList{margin:0 0 12px;padding-left:18px;color:var(--muted);font-size:14px;line-height:1.55}
+.updAll summary{cursor:pointer;color:var(--accent);font-weight:700;font-size:14px;list-style:none}
+.updAll summary::-webkit-details-marker{display:none}
+.updAll[open] summary{margin-bottom:12px}
+.ytCard{padding:0;overflow:hidden;min-height:260px;display:flex}
+.ytPlay{flex:1;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:radial-gradient(400px 220px at 50% 45%,#ff7a1822,transparent 70%),linear-gradient(180deg,#141822,#0c0f16);color:var(--text);font:inherit}
+.ytPlay:hover .ytBtn{transform:scale(1.06)}
+.ytBtn{width:64px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#111;display:grid;place-items:center;font-size:20px;box-shadow:0 10px 30px #ff7a1840;transition:transform .15s}
+.ytText{font-weight:800;letter-spacing:.04em}
+.ytHint{font-size:12px;color:var(--muted)}
+.ytFrame{flex:1;width:100%;min-height:260px;aspect-ratio:16/9;border:0;display:block}
+/* „Bock mitzuzocken?“: kleine Knöpfe rechts, E-Mail als Link */
+.joinBtns{display:flex;flex-direction:column;gap:10px;align-items:stretch;justify-self:end;width:220px}
+.joinBtns .btn{justify-content:center;padding:10px 14px;font-size:14px}
+.joinMail{text-align:center;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none}
+.joinMail:hover{text-decoration:underline}
+@media (max-width:760px){.joinBtns{width:100%;justify-self:stretch}}
