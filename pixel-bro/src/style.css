@@ -70,6 +70,8 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
 /* Menü links, Pixel Bro mittig in der Kopfzeile (wie in anderen Programmen), Version steht unter „Über Pixel Bro“ */
 #topbar .brand { position: absolute; left: 50%; transform: translateX(-50%); }
 #topbar .brand-version { display: none; }
+/* Schriftzug optisch mittig zum Logo (Großbuchstaben sitzen sonst etwas zu hoch) */
+#topbar .brand-name { font-size: 14px; position: relative; top: 1px; }
 @media (max-width: 980px) { #topbar .brand { display: none; } }
 .brand:hover { background: var(--panel-2); }
 .brand-icon { width: 22px; height: 22px; image-rendering: pixelated; border-radius: 5px; }
