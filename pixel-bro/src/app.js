@@ -3388,7 +3388,7 @@ const GUIDE = [
   { id: 'image', de: 'Bild & Ansicht', en: 'Image & view',
     deBody: `<h4>Bild-Menü</h4>
       <ul><li>Größe ändern (Strg+R) – Leinwand vergrößern oder Bild skalieren</li>
-        <li>Spiegeln (Umschalt+H / Umschalt+V), 90° drehen (Umschalt+R)</li>
+        <li>Spiegeln (Umschalt+H / Umschalt+V), 90° drehen (Umschalt+R) – ist etwas ausgewählt oder eingefügt, gilt es nur für die Auswahl (z. B. kopierten Stuhl drehen)</li>
         <li>Farbe ersetzen in allen Frames, Umriss hinzufügen, Ebene leeren</li></ul>
       <h4>Hilfen beim Zeichnen</h4>
       <ul><li><b>Spiegel ↔ / ↕</b>: zeichnet gleichzeitig gespiegelt – ideal für symmetrische Figuren</li>
@@ -3398,7 +3398,7 @@ const GUIDE = [
         <li>Helles / dunkles Design und Deutsch / English unter Ansicht</li></ul>`,
     enBody: `<h4>Image menu</h4>
       <ul><li>Resize (Ctrl+R) – enlarge the canvas or scale the image</li>
-        <li>Flip (Shift+H / Shift+V), rotate 90° (Shift+R)</li>
+        <li>Flip (Shift+H / Shift+V), rotate 90° (Shift+R) – with a selection or pasted object, only that is flipped or rotated</li>
         <li>Replace color in all frames, add outline, clear layer</li></ul>
       <h4>Drawing helpers</h4>
       <ul><li><b>Mirror ↔ / ↕</b>: draws mirrored at the same time – great for symmetric characters</li>
