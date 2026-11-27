@@ -3299,6 +3299,7 @@ const commands = {
         für <b style="color:var(--text)">Bro Kartell</b> – Multigaming Clan seit 2013</p>
       <p><a href="https://bro-kartell.com" target="_blank" rel="noopener">bro-kartell.com</a> ·
         <a href="https://bro-kartell.com/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
+      <p>Feedback &amp; Bugs: <a href="mailto:pixelbro@bro-kartell.com?subject=Pixel%20Bro%20Feedback" target="_blank" rel="noopener">pixelbro@bro-kartell.com</a></p>
       <p class="hint">© ${new Date().getFullYear()} <span>Jens Niebisch · Bro Kartell. Alle Rechte vorbehalten.</span><br>
         Projekte werden als <code>.pixelbro</code>-Datei gespeichert, die aktuelle Arbeit wird zusätzlich automatisch gesichert.</p>
       ${nativeApi ? `<p class="hint">${settings.autoUpdate

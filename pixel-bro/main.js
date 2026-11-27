@@ -68,7 +68,7 @@ function createWindow() {
 
   // Externe Links im Standardbrowser öffnen
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:/.test(url)) shell.openExternal(url);
+    if (/^(https?|mailto):/.test(url)) shell.openExternal(url); // Links im Browser, E-Mail im Mailprogramm öffnen
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e) => e.preventDefault());
