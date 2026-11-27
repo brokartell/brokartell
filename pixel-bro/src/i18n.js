@@ -391,6 +391,8 @@ const EN = {
   'nutzt in GB Studio Palette 8:': 'uses palette 8 in GB Studio:',
   'Palette 8 (Text/UI) deiner Szene:': 'Palette 8 (text/UI) of your scene:',
   'Vorgabe': 'Default',
+  'Zu groß für ein neues Sprite – höchstens {m} × {m} px.': 'Too large for a new sprite – at most {m} × {m} px.',
+  'Verkleinert als neues Sprite ({w} × {h} px)': 'Shrunk to a new sprite ({w} × {h} px)',
   'Drehen': 'Rotate',
   'Auswahl um 90° drehen (Umschalt+R)': 'Rotate selection 90° (Shift+R)',
   'Auswahl waagerecht spiegeln (Umschalt+H)': 'Flip selection horizontally (Shift+H)',

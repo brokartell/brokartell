@@ -3119,9 +3119,15 @@ async function importImage() {
 async function handleImageBlob(blob, name) {
   const img = await createImageBitmap(blob).catch(() => null);
   if (!img) return toast('Bild konnte nicht gelesen werden');
+  // Neue Sprites dürfen höchstens 1024 × 1024 px groß sein – größere Bilder gleich im Fenster melden und Verkleinern anbieten
+  const MAXD = 1024;
+  const big = img.width > MAXD || img.height > MAXD;
+  const f = Math.min(MAXD / img.width, MAXD / img.height);
+  const sw = Math.max(1, Math.round(img.width * f)), sh = Math.max(1, Math.round(img.height * f));
   const body = el(`<p>${name} · ${img.width} × ${img.height} px</p>
+    ${big ? `<p class="gb-warn imp-big">${t('Zu groß für ein neues Sprite – höchstens {m} × {m} px.', { m: MAXD })}</p>` : ''}
     <div class="field"><label>Importieren als</label><select id="im">
-      <option value="new">Neues Sprite</option>
+      ${big ? `<option value="shrink" selected>${t('Verkleinert als neues Sprite ({w} × {h} px)', { w: sw, h: sh })}</option>` : `<option value="new">Neues Sprite</option>`}
       <option value="layer">Neue Ebene im aktuellen Frame</option>
       <option value="sheet">Spritesheet → Frames aufteilen</option>
     </select></div>
@@ -3130,17 +3136,20 @@ async function handleImageBlob(blob, name) {
     <p class="hint">Frame-Größe gilt nur für „Spritesheet“.</p>`);
   const ok = await modal({ title: 'Bild importieren', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Importieren', value: true, primary: true }] });
   if (!ok) return;
-  const mode = body.querySelector('#im').value;
+  let mode = body.querySelector('#im').value;
   const c = document.createElement('canvas');
-  c.width = img.width; c.height = img.height;
+  const shrink = mode === 'shrink';
+  c.width = shrink ? sw : img.width; c.height = shrink ? sh : img.height;
   const cc = c.getContext('2d', { willReadFrequently: true });
-  cc.drawImage(img, 0, 0);
+  cc.imageSmoothingEnabled = false; // Pixel bleiben scharf
+  cc.drawImage(img, 0, 0, c.width, c.height);
+  if (shrink) mode = 'new';
   commitFloat(false);
   if (mode === 'new') {
-    if (img.width > 1024 || img.height > 1024) return toast('Maximal 1024 × 1024 px');
+    if (c.width > MAXD || c.height > MAXD) return toast('Maximal 1024 × 1024 px');
     if (doc) pushUndo();
-    newDocument(img.width, img.height);
-    doc.layers[0].frames[0] = new Uint32Array(cc.getImageData(0, 0, img.width, img.height).data.buffer);
+    newDocument(c.width, c.height);
+    doc.layers[0].frames[0] = new Uint32Array(cc.getImageData(0, 0, c.width, c.height).data.buffer);
     fileInfo.name = name;
   } else if (mode === 'layer') {
     pushUndo();
