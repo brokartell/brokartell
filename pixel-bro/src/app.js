@@ -3485,7 +3485,7 @@ async function showGuide(startId) {
   }).join('')}</div>`;
   const body = el(`<div class="gd" data-i18n-skip>
       <nav class="gd-nav">${GUIDE.map((c) => `<button type="button" data-id="${c.id}">${c.star ? '★ ' : ''}${en ? c.en : c.de}</button>`).join('')}
-        <button type="button" class="gd-keys">${en ? 'All shortcuts' : 'Alle Tastenkürzel'} ›</button></nav>
+</nav>
       <div class="gd-page"></div></div>`);
   const page = body.querySelector('.gd-page');
   const show = (id) => {
@@ -3495,11 +3495,8 @@ async function showGuide(startId) {
     page.scrollTop = 0;
   };
   body.querySelectorAll('.gd-nav [data-id]').forEach((b) => b.onclick = () => show(b.dataset.id));
-  let openKeys = false;
-  body.querySelector('.gd-keys').onclick = () => { openKeys = true; $('#gd-close').click(); };
   show(startId || 'start');
   await modal({ title: en ? 'Pixel Bro – Guide' : 'Pixel Bro – Anleitung', body, actions: [{ label: 'Schließen', value: false, id: 'gd-close', primary: true }], wide: 'xl' });
-  if (openKeys) showShortcuts();
 }
 
 function showShortcuts() {

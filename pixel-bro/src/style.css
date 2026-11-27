@@ -531,8 +531,7 @@ optgroup option { color: var(--text); }
 .gd-nav { display: flex; flex-direction: column; gap: 2px; padding-right: 14px; border-right: 1px solid var(--line); overflow: auto; }
 .gd-nav button { text-align: left; border: 0; background: none; color: var(--text-2); font: 600 13px var(--font); padding: 9px 12px; border-radius: 8px; cursor: pointer; }
 .gd-nav button:hover { background: var(--panel-2); color: var(--text); }
-.gd-nav button.active { background: var(--accent-soft); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
-.gd-nav .gd-keys { margin-top: auto; color: var(--accent-2); font-weight: 600; }
+.gd-nav button.active { background: var(--accent-soft); color: var(--text); }
 .gd-page { overflow: auto; padding-right: 6px; color: var(--text-2); font-size: 14px; line-height: 1.55; }
 .gd-page h3 { margin: 0 0 10px; font-size: 20px; color: var(--text); }
 .gd-page h4 { margin: 18px 0 6px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
