@@ -532,7 +532,7 @@
           const limit = mq.matches && !expanded ? 3 : Infinity;
           tiles.forEach((el) => { el.hidden = !match.includes(el) || match.indexOf(el) >= limit; });
           tog.hidden = !mq.matches || match.length <= 3;
-          tog.textContent = expanded ? 'Weniger zeigen ↑' : `Alle ${match.length} Spiele zeigen ↓`;
+          tog.textContent = expanded ? 'Weniger anzeigen ↑' : 'Weitere anzeigen ↓';
         };
         document.querySelectorAll('.gFilter button').forEach((b) => b.addEventListener('click', () => {
           filter = b.dataset.f; expanded = false;
