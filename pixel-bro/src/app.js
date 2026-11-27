@@ -488,8 +488,14 @@ function setZoom(z, cx, cy) {
   view.zoom = z;
   view.ox = Math.round(cx - sx * z);
   view.oy = Math.round(cy - sy * z);
-  $('#zoom-label').textContent = Math.round(z * 100) + '%';
+  showZoom(z);
   requestRender();
+}
+// Zoom oben an der Zeichenfläche und unten in der Infoleiste anzeigen
+function showZoom(z) {
+  const txt = Math.round(z * 100) + '%';
+  $('#zoom-label').textContent = txt;
+  $('#status-zoom').textContent = 'Zoom ' + txt;
 }
 function zoomStep(dir, cx, cy) {
   let i = ZOOMS.findIndex((z) => z >= view.zoom);
@@ -505,7 +511,7 @@ function zoomFit() {
   view.zoom = z;
   view.ox = Math.round((stage.clientWidth - doc.w * z) / 2);
   view.oy = Math.round((stage.clientHeight - doc.h * z) / 2);
-  $('#zoom-label').textContent = Math.round(z * 100) + '%';
+  showZoom(z);
   requestRender();
 }
 
