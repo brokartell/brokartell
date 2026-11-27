@@ -555,3 +555,6 @@ optgroup option { color: var(--text); }
 .gd-cards h5 { margin: 0 0 4px; font-size: 14px; color: var(--text); }
 .gd-cards p { margin: 0; font-size: 13px; }
 @media (max-width: 700px) { .gd { grid-template-columns: 1fr; height: auto; } .gd-nav { flex-direction: row; flex-wrap: wrap; border-right: 0; } .gd-tools, .gd-steps, .gd-cards { grid-template-columns: 1fr; } }
+.gb-lbtns { display: flex; gap: 4px; margin-top: 4px; }
+.gb-lbtns .gb-lall { margin-top: 0; flex: 1; }
+.gb-lnums.off { border-color: var(--accent); color: var(--text); }

@@ -101,6 +101,7 @@ const settings = {
   lang: 'de',
   gbMode: 'color',   // GB-Studio-Prüfung: 'color' (Game Boy Color) oder 'classic' (Game Boy)
   gbSprite: false,   // klassisch: #65FF00 als Transparenz erlauben
+  gbLabels: true,    // GB-Prüfung im Bild: Palettennummern auf den Kacheln zeigen
   gbUi: null,        // GBC: Palette 8 (Text/UI) der Szene, 4 HEX-Werte wie in GB Studio angezeigt – null = GB-Studio-Vorgabe
   exportFormat: 'png', // zuletzt benutztes Export-Format: 'png' | 'sheet' | 'gif'
 };
@@ -2474,7 +2475,10 @@ function renderGbLegend(r) {
     rows = r.palettes.map((p, i) => `<div class="gb-lrow${r.over.has(i) ? ' gb-over' : ''}${gbView.filter >= 0 && gbView.filter !== i ? ' dim' : ''}" ${r.over.has(i) ? `title="${t('Palette zu viel – {n} Kacheln bekommen in GB Studio andere Farben', { n: r.uses[i] })}"` : ''}><button class="gb-ltag gb-lpick${gbView.filter === i ? ' active' : ''}" data-pal="${i}" title="${t('Klick: nur Palette {n} im Bild zeigen', { n: i + 1 })}" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</button>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
     if (r.extra.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.extra.slice(0, 8).map(([u]) => sw(u)).join('')}${r.extra.length > 8 ? `<span class="gb-lmore">+${r.extra.length - 8}</span>` : ''}</div>`);
   }
-  if (r.mode !== 'classic' && gbView.filter >= 0) rows.push(`<button class="gb-lall">${t('Alle Paletten zeigen')}</button>`);
+  if (r.mode !== 'classic') {
+    const on = settings.gbLabels !== false;
+    rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button></div>`);
+  }
   box.innerHTML = rows.join('');
   box.hidden = !rows.length;
 }
@@ -2518,7 +2522,7 @@ function drawGbOverlay(z) {
       const [x, y, tw, th] = tileBox(tile);
       if (tile.gbs !== filter || tile.colors.length > GB_COLORS) { ctx.fillStyle = 'rgba(8, 10, 16, .68)'; ctx.fillRect(x, y, tw, th); continue; }
       ctx.strokeStyle = col; ctx.strokeRect(x + 1, y + 1, tw - 2, th - 2);
-      if (s >= 24) {
+      if (s >= 24 && settings.gbLabels !== false) {
         const label = String(filter + 1);
         ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
         ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
@@ -2532,7 +2536,7 @@ function drawGbOverlay(z) {
     if (tile.colors.length > GB_COLORS) {
       ctx.fillStyle = 'rgba(255, 50, 80, .12)'; ctx.fillRect(x, y, tw, th);
       ctx.strokeStyle = '#ff3250'; ctx.strokeRect(x + 1.5, y + 1.5, tw - 3, th - 3);
-      if (s >= 24) { ctx.fillStyle = '#ff3250'; ctx.fillRect(x + 2, y + 2, font * 1.6, font + 4); ctx.fillStyle = '#fff'; ctx.fillText(tile.colors.length, x + 4, y + 4); }
+      if (s >= 24 && settings.gbLabels !== false) { ctx.fillStyle = '#ff3250'; ctx.fillRect(x + 2, y + 2, font * 1.6, font + 4); ctx.fillStyle = '#fff'; ctx.fillText(tile.colors.length, x + 4, y + 4); }
       continue;
     }
     if (tile.palette < 0) continue;
@@ -2546,7 +2550,7 @@ function drawGbOverlay(z) {
       ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
       ctx.globalAlpha = 1;
     }
-    if (s >= 24) {
+    if (s >= 24 && settings.gbLabels !== false) {
       const label = String(tile.palette + 1) + (tile.multi ? '+' : '');
       ctx.fillStyle = col; ctx.fillRect(x + 2, y + 2, ctx.measureText(label).width + 6, font + 4);
       ctx.fillStyle = '#fff'; ctx.fillText(label, x + 5, y + 4);
@@ -3170,8 +3174,8 @@ function scheduleAutosave() {
 }
 function saveSettings() {
   try {
-    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, exportFormat } = settings;
-    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, exportFormat }));
+    const { tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, gbLabels, exportFormat } = settings;
+    localStorage.setItem('pixelbro.settings', JSON.stringify({ tool, size, filled, pixelPerfect, contiguous, shade, mirrorX, mirrorY, grid, onion, tileGrid, primary, secondary, recent, paletteName, theme, autoUpdate, center, gradSteps, gradDither, sprayDensity, lang, gbMode, gbSprite, gbUi, gbLabels, exportFormat }));
   } catch (e) { /* ignorieren */ }
 }
 function loadSettings() {
@@ -3685,6 +3689,11 @@ $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
 $('#gb-legend').addEventListener('click', (e) => {
+  if (e.target.closest('.gb-lnums')) {
+    settings.gbLabels = settings.gbLabels === false; saveSettings();
+    updateGbHud(); requestRender();
+    return;
+  }
   const pick = e.target.closest('.gb-lpick');
   if (pick || e.target.closest('.gb-lall')) {
     const i = pick ? +pick.dataset.pal : -1;
