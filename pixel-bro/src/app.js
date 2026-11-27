@@ -228,7 +228,16 @@ function requestRender() {
 let hover = null; // { x, y } in Sprite-Koordinaten
 let antsOffset = 0;
 
+// Knöpfe „Auswahl drehen / spiegeln“ nur zeigen, solange etwas ausgewählt oder eingefügt ist
+let xformShown = null;
+function updateXformButtons() {
+  const has = !!(sel || float);
+  if (has === xformShown) return;
+  xformShown = has;
+  $('#opt-xform').hidden = !has;
+}
 function render() {
+  updateXformButtons();
   const dpr = devicePixelRatio;
   const cw = Math.round(stage.clientWidth * dpr), ch = Math.round(stage.clientHeight * dpr);
   if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; makeChecker(); }

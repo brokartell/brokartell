@@ -558,3 +558,7 @@ optgroup option { color: var(--text); }
 .gb-lbtns { display: flex; gap: 4px; margin-top: 4px; }
 .gb-lbtns .gb-lall { margin-top: 0; flex: 1; }
 .gb-lnums.off { border-color: var(--accent); color: var(--text); }
+.opt-btn { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text); font: 600 12px var(--font); cursor: pointer; }
+.opt-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+.opt-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#opt-xform { padding: 0 10px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
