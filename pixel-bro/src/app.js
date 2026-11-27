@@ -3297,8 +3297,7 @@ const commands = {
       </div>
       <p>Entwickelt von <b style="color:var(--text)">Jens Niebisch</b><br>
         für <b style="color:var(--text)">Bro Kartell</b> – Multigaming Clan seit 2013</p>
-      <p><a href="https://bro-kartell.com/pixel-bro.html" target="_blank" rel="noopener">Pixel-Bro-Seite</a> ·
-        <a href="https://bro-kartell.com" target="_blank" rel="noopener">bro-kartell.com</a> ·
+      <p><a href="https://bro-kartell.com/pixel-bro.html" target="_blank" rel="noopener">Pixel Bro Homepage</a> ·
         <a href="https://bro-kartell.com/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
       <p>Feedback &amp; Bugs: <a href="mailto:pixelbro@bro-kartell.com?subject=Pixel%20Bro%20Feedback" target="_blank" rel="noopener">pixelbro@bro-kartell.com</a></p>
       <p class="hint">© ${new Date().getFullYear()} <span>Jens Niebisch · Bro Kartell. Alle Rechte vorbehalten.</span><br>
