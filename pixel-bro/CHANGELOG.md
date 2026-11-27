@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.14 – Feinschliff (gesammelt)
+- Auswahl drehen und spiegeln per Knopf: Solange etwas ausgewählt oder eingefügt ist, zeigt die Leiste oben „Auswahl: Drehen · ↔ · ↕“
+- Infoleiste unten zeigt den aktuellen Zoom
+- GB-Prüfung im Bild: Knopf „Zahlen aus / an“ unter der Paletten-Übersicht – blendet die Palettennummern aus, die Prüfung bleibt an
+- Vorschau: beim Zoomen die lila Pixel-Bro-Hand statt der weißen Windows-Hand
+- Anleitung: Hinweis, dass Spiegeln und Drehen bei einer Auswahl nur für die Auswahl gelten
+
 ## 1.5.13 – Anleitung
 - Neu unter Hilfe → Anleitung: großes Fenster mit Kapiteln – Erste Schritte, alle Werkzeuge mit Symbol und Taste, Farben & Paletten, Ebenen & Animation, Bild & Ansicht, Import & Export und ausführlich die GB-Studio-Prüfung. Auf Deutsch und Englisch
 
