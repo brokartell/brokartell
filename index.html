@@ -181,7 +181,7 @@
             <h3 class="updHead" id="updHead"></h3>
             <ul class="updList" id="updList"></ul>
             <details class="updAll">
-              <summary>Alle Updates ansehen →</summary>
+              <summary>Ältere Updates ansehen →</summary>
               <div class="changelog">
 
   <details open class="cl">
@@ -523,7 +523,8 @@
         const v = first.querySelector('summary b'), t = first.querySelector('summary .cl-title');
         document.getElementById('updHead').innerHTML = (v ? v.textContent : '') + (t ? ' <span>' + t.textContent + '</span>' : '');
         const list = document.getElementById('updList');
-        first.querySelectorAll(':scope > ul > li').forEach((li, i) => { if (i < 3) list.appendChild(li.cloneNode(true)); });
+        first.querySelectorAll(':scope > ul > li').forEach((li) => list.appendChild(li.cloneNode(true)));
+        first.hidden = true; // steht schon oben in der Karte – beim Aufklappen nicht doppelt zeigen
       }
       // Neuestes YouTube-Video: Uploads-Playlist des Kanals, erst nach Klick laden (youtube-nocookie)
       const btn = document.getElementById('ytPlay');
