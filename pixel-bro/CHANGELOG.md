@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.2
+- Wird der letzte Tab geschlossen, erscheint ein Startbildschirm mit abgedunkeltem Logo und den Knöpfen Neues Sprite, Projekt öffnen, Bild importieren und Zuletzt geöffnet – statt eines leeren „unbenannt“-Tabs. Pixel Bro merkt sich das auch beim nächsten Start
+- „+“ und Strg+T öffnen jetzt immer einen neuen Tab, auch wenn der aktuelle leer ist (vorher ging das manchmal nicht)
+
 ## 1.7.1
 - „Fast gleiche Kacheln“ wieder entfernt – die Markierungen waren eher verwirrend; einzelne Paletten lassen sich weiter per Klick in der Übersicht zeigen
 - Vorlage gehört jetzt zum Tab: ein neuer Tab startet ohne Vorlage, und wird der Vorlagen-Tab geschlossen, verschwindet sie überall
