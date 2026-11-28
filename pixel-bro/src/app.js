@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -175,11 +175,13 @@ const tabs = [];
 let activeTab = 0;
 let tabSeq = 1, curTabId = 1; // feste Nummer je Tab (für die Vorlage)
 function captureTab() {
-  return { id: curTabId, doc, cur: { ...cur }, fileInfo: { ...fileInfo }, dirty, undo: history.undo, redo: history.redo, sel, view: { ...view } };
+  return { id: curTabId, doc, cur: { ...cur }, fileInfo: { ...fileInfo }, dirty, undo: history.undo, redo: history.redo, sel, view: { ...view }, ref: { ...ref } };
 }
 function applyTab(tb) {
   float = null;
   curTabId = tb.id || ++tabSeq;
+  Object.assign(ref, tb.ref || { id: 0, opacity: 0.4 }); // Vorlage gehört zum Tab
+  refCache.key = '';
   doc = tb.doc; cur = { ...tb.cur }; fileInfo = { ...tb.fileInfo }; dirty = tb.dirty; sel = tb.sel;
   history.undo = tb.undo; history.redo = tb.redo;
   if (tb.view) Object.assign(view, tb.view);
@@ -205,6 +207,7 @@ function prepareNewTab() {
   tabs.push(null);
   activeTab = tabs.length - 1;
   curTabId = ++tabSeq;
+  ref.id = 0; refCache.key = ''; updateRefHud(); // neuer Tab startet ohne Vorlage
   history.undo = []; history.redo = [];
 }
 function switchTab(i) {
@@ -231,16 +234,20 @@ async function closeTab(i) {
     if (r === 'save' && !(await saveProject(false))) return;
     i = activeTab;
   }
-  if (ref.id === tb.id) ref.id = 0; // Vorlage geschlossen
+  // Vorlage geschlossen → in allen Tabs entfernen, die sie benutzt haben
+  if (ref.id === tb.id) ref.id = 0;
+  for (const o of tabs) if (o && o.ref && o.ref.id === tb.id) o.ref.id = 0;
   tabs.splice(i, 1);
   if (!tabs.length) {
-    tabs.push(null); activeTab = 0; curTabId = ++tabSeq;
+    tabs.push(null); activeTab = 0; curTabId = ++tabSeq; ref.id = 0;
     history.undo = []; history.redo = [];
     newDocument(32, 32);
     return;
   }
   if (i < activeTab) activeTab--;
   else if (i === activeTab) { activeTab = Math.min(i, tabs.length - 1); applyTab(tabs[activeTab]); }
+  refCache.key = '';
+  requestRender();
   renderTabs();
   updateRefHud();
   scheduleAutosave();
@@ -466,7 +473,7 @@ function render() {
     ctx.stroke();
   }
   // GB-Studio-Paletten: Kacheln mit Palettennummer
-  if (gbView.on) { if (gbView.near && gbView.result && gbView.result.nearTiles) drawNearTiles(z); else drawGbOverlay(z); }
+  if (gbView.on) drawGbOverlay(z);
   // Mittellinien (waagerecht + senkrecht durch die Bildmitte)
   if (settings.center) {
     const mx = Math.round((view.ox + (w * z) / 2) * dpr) / dpr + 0.5 / dpr;
@@ -2306,7 +2313,7 @@ const GB_TILE_LIMIT = { color: 384, classic: 192 };
 const GB_CLASSIC_COLORS = ['e0f8cf', '86c06c', '306850', '071821'].map(parseHex);
 const GB_SPRITE_TRANSPARENT = parseHex('65ff00');
 const GB_HUES = ['#7c5cff', '#22c3e6', '#3ddc84', '#ffb020', '#ff5ca8', '#a0e000', '#ff7a45', '#4f8bff', '#c58cff', '#00d0a0'];
-const gbView = { on: false, result: null, timer: null, filter: -1, near: false }; // filter: nur diese Palette im Bild zeigen (-1 = alle)
+const gbView = { on: false, result: null, timer: null, filter: -1 }; // filter: nur diese Palette im Bild zeigen (-1 = alle)
 const pl = (n, one, many, vars = {}) => t(n === 1 ? one : many, { n, ...vars });
 const gbMode = () => (settings.gbMode === 'classic' ? 'classic' : 'color');
 
@@ -2409,7 +2416,7 @@ function gbsSlots(palettes) {
 function gbsTileCount(tiles, slots, cols, rows, w, h) {
   const { pals, slotOf } = slots;
   const fullCols = Math.floor(w / GB_TILE), fullRows = Math.floor(h / GB_TILE);
-  const plain = new Set(), flipped = new Set(), groups = new Map();
+  const plain = new Set(), flipped = new Set();
   let flip = 0;
   const N = GB_TILE;
   for (let ty = 0; ty < fullRows; ty++) for (let tx = 0; tx < fullCols; tx++) {
@@ -2429,57 +2436,8 @@ function gbsTileCount(tiles, slots, cols, rows, w, h) {
     plain.add(k0);
     const vs = [k0, key(true, false), key(false, true), key(true, true)];
     if (!vs.some((k) => flipped.has(k))) { flipped.add(k0); flip++; }
-    // für „fast gleiche Kacheln“: Gruppen gleicher Kacheln (inkl. gespiegelter)
-    const canon = vs.slice().sort()[0];
-    let g = groups.get(canon);
-    if (!g) { g = { canon, entries: new Map(), count: 0 }; groups.set(canon, g); }
-    let en = g.entries.get(k0);
-    if (!en) { en = { idx: Uint8Array.from(idx), tiles: [] }; g.entries.set(k0, en); }
-    en.tiles.push(tile); g.count++;
   }
-  return { plain: plain.size, flip, near: nearTiles([...groups.values()]) };
-}
-
-/** Fast gleiche Kacheln: Kachel-Gruppen, die sich von einer anderen nur in 1–2 Pixeln (Farbnummer) unterscheiden –
-    auch gespiegelt. Markiert wird jeweils die seltenere Kachel mit genau den abweichenden Pixeln. */
-const NEAR_MAX = 2;
-function nearTiles(groups) {
-  const N = GB_TILE;
-  const flipIdx = (a, fx, fy) => { const o = new Uint8Array(64); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) o[y * N + x] = a[(fy ? N - 1 - y : y) * N + (fx ? N - 1 - x : x)]; return o; };
-  for (const g of groups) {
-    const rep = g.entries.values().next().value.idx;
-    g.vars = [rep, flipIdx(rep, 1, 0), flipIdx(rep, 0, 1), flipIdx(rep, 1, 1)];
-  }
-  const out = [], done = new Set();
-  for (let i = 0; i < groups.length; i++) for (let j = 0; j < groups.length; j++) {
-    if (i === j) continue;
-    const small = groups[i], big = groups[j];
-    if (done.has(small) || small.count > big.count || (small.count === big.count && i > j)) continue;
-    let bestPx = null;
-    for (const en of small.entries.values()) {
-      for (const v of big.vars) {
-        const px = [];
-        for (let k = 0; k < 64; k++) if (en.idx[k] !== v[k] && px.push(k) > NEAR_MAX) break;
-        if (px.length && px.length <= NEAR_MAX && (!bestPx || px.length < bestPx.length)) bestPx = px;
-        if (bestPx && bestPx.length === 1) break;
-      }
-      if (bestPx) {
-        // gleiche Abweichung bei allen Kacheln dieser Gruppe markieren (je Ausrichtung eigene Pixel)
-        for (const en2 of small.entries.values()) {
-          let px2 = null;
-          for (const v of big.vars) {
-            const px = [];
-            for (let k = 0; k < 64; k++) if (en2.idx[k] !== v[k] && px.push(k) > NEAR_MAX) break;
-            if (px.length && px.length <= NEAR_MAX && (!px2 || px.length < px2.length)) px2 = px;
-          }
-          if (px2) for (const tile of en2.tiles) out.push({ tile, px: px2 });
-        }
-        done.add(small);
-        break;
-      }
-    }
-  }
-  return { list: out, save: done.size };
+  return { plain: plain.size, flip };
 }
 
 // Wie viele Paletten bildet GB Studio, wenn Farbe from durch to ersetzt wird? (für geprüfte Tausch-Vorschläge)
@@ -2780,7 +2738,7 @@ function gbAnalyze() {
     }
     near.length = 0; near.push(...verified);
   }
-  Object.assign(res, { palettes, uses, bad, over, near, uiReplaced: slots.replaced, uiMap, uiClose, nearTiles: tileCount.near.list, nearSave: tileCount.near.save, uniqueTiles: tileCount.flip, uniqueTilesNoFlip: tileCount.plain, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
+  Object.assign(res, { palettes, uses, bad, over, near, uiReplaced: slots.replaced, uiMap, uiClose, uniqueTiles: tileCount.flip, uniqueTilesNoFlip: tileCount.plain, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
   res.ok = !bad.length && (palettes.length <= GB_MAX_PALETTES || uiClose) && res.uniqueTiles <= res.tileLimit;
   return res;
 }
@@ -2834,34 +2792,12 @@ function renderGbLegend(r) {
   }
   if (r.mode !== 'classic' && r.palettes.length) { // leeres Bild: keine Knöpfe, nur die Anzeige oben
     const on = settings.gbLabels !== false;
-    rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button>${r.nearSave ? `<button class="gb-lall gb-lnear${gbView.near ? ' on' : ''}" title="${t('Kacheln, die sich nur in 1–2 Pixeln von einer anderen unterscheiden – angleichen spart Kacheln')}">${t('Fast gleich: {n}', { n: r.nearSave })}</button>` : ''}</div>`);
+    rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button></div>`);
   }
   box.innerHTML = rows.join('');
   box.hidden = !rows.length;
 }
 
-/** Fast gleiche Kacheln: alles andere abgedunkelt, diese Kacheln weiß gestrichelt, abweichende Pixel pink */
-function drawNearTiles(z) {
-  const r = gbView.result;
-  const s = GB_TILE * z;
-  const near = new Map();
-  for (const n of r.nearTiles) near.set(n.tile, n.px);
-  ctx.save();
-  for (const tile of r.tiles) {
-    const x = view.ox + tile.tx * s, y = view.oy + tile.ty * s;
-    const tw = Math.min(s, (doc.w - tile.tx * GB_TILE) * z), th = Math.min(s, (doc.h - tile.ty * GB_TILE) * z);
-    const px = near.get(tile);
-    if (!px) { ctx.fillStyle = 'rgba(8, 10, 16, .62)'; ctx.fillRect(x, y, tw, th); continue; }
-    ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff';
-    ctx.strokeRect(x + 1, y + 1, tw - 2, th - 2); ctx.setLineDash([]);
-    for (const k of px) {
-      const qx = x + (k % GB_TILE) * z, qy = y + Math.floor(k / GB_TILE) * z;
-      ctx.fillStyle = 'rgba(255, 43, 214, .85)'; ctx.fillRect(qx, qy, z, z);
-      if (z >= 6) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(qx + 0.5, qy + 0.5, z - 1, z - 1); }
-    }
-  }
-  ctx.restore();
-}
 function drawGbOverlay(z) {
   const r = gbView.result;
   if (!r) return;
@@ -3017,7 +2953,6 @@ async function gbPaletteDialog() {
     if (over) issues.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – GB Studio braucht Platz 8 für Text und gibt dafür still Palette {p} die Farben deiner Palette 8 (siehe unten). Farben angleichen oder ähnliche Kacheln zusammenfassen.', '{n} Paletten zu viel – Kacheln mit Palette {p} bekommen in GB Studio falsche Farben. Farben angleichen oder ähnliche Kacheln zusammenfassen.', { p: [...r.over].map((i) => i + 1).join(', ') }));
     if (over) r.near.slice(0, 3).forEach(([a, b], k) => tips.push({ text: t('Geprüfter Tipp – damit reichen 7 Paletten:') + ` <span class="gb-pair">${swatch(a)}${toHex(a).toUpperCase()} → ${swatch(b)}${toHex(b).toUpperCase()}</span>`, apply: 'tip:' + k, label: t('Übernehmen') }));
     if (!tilesOk) issues.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
-    if (r.nearSave) tips.push({ text: pl(r.nearSave, '1 Kachel unterscheidet sich nur in 1–2 Pixeln von einer anderen – angleichen spart 1 Kachel.', '{n} Kacheln unterscheiden sich nur in 1–2 Pixeln von einer anderen – angleichen spart bis zu {n} Kacheln.'), apply: 'near', label: t('Im Bild zeigen') });
     main += `<div class="gbx-section gbx-ui"><div class="gbx-title">${t('Palette 8 · Text/UI deiner Szene')}<span class="hint">${t('HEX wie in GB Studio')}</span></div>
       <div class="gbx-uifields">${gbUiDisplay().map((h, k) => `<label class="gb-uihex">${swatch(parseHex('#' + h))}<input type="text" maxlength="7" spellcheck="false" value="#${h.toUpperCase()}" data-k="${k}" data-nofocus></label>`).join('')}
         <button type="button" class="btn gb-uireset" title="${t('GB-Studio-Vorgabe')}" ${settings.gbUi ? '' : 'hidden'}>↺</button></div></div>`;
@@ -3068,12 +3003,7 @@ async function gbPaletteDialog() {
       }
       n = gbRecolor(map);
     } else if (what === 'extra') n = gbFixExtraPixels(r);
-    else if (what === 'near') {
-      gbView.near = true;
-      $('#modal-actions button').click(); // Fenster schließen
-      setGbView(true);
-      return toast(t('Fast gleiche Kacheln sind hervorgehoben – die abweichenden Pixel pink'));
-    }
+
     toast(t('{n} Pixel umgefärbt', { n }) + ' · ' + t('Strg+Z macht es rückgängig'));
     reopen();
   });
@@ -3917,8 +3847,7 @@ const GUIDE = [
         <li><b>Paletten und Kacheln</b> werden aufgeteilt und gezählt wie in GB Studio („Automatisch“, gespiegelte Kacheln zählen einmal)</li>
         <li><b>8 Paletten:</b> GB Studio warnt erst ab 9 und ersetzt still eine Palette durch deine Palette 8. Pixel Bro markiert sie rot und zeigt „In GB Studio: Farbe → Farbe“</li>
         <li><b>Palette 8 (Text/UI)</b> deiner Szene unten eintragen – jeder nutzt eine andere. Sind die Farben fast gleich, passt es trotzdem</li>
-        <li><b>Mehr als 4 Farben</b> in einer Kachel: Die überzähligen Pixel sind im Bild rot markiert</li>
-        <li><b>Fast gleiche Kacheln:</b> Kacheln, die sich nur in 1–2 Pixeln von einer anderen unterscheiden – angleichen spart Kacheln. „Fast gleich“ in der Übersicht zeigt sie, die abweichenden Pixel pink</li></ul>
+        <li><b>Mehr als 4 Farben</b> in einer Kachel: Die überzähligen Pixel sind im Bild rot markiert</li></ul>
       <h4>Direkt korrigieren</h4>
       <ul><li><b>Übernehmen</b> bei geprüften Tipps – Pixel Bro rechnet jeden Farbtausch vorher durch und schlägt nur vor, was wirklich auf 7 bringt</li>
         <li><b>Wie GB Studio übernehmen</b> färbt überzählige Pixel so um, wie GB Studio es tun würde. <b>Angleichen</b> setzt im klassischen Modus die genauen 4 Farben</li>
@@ -3937,8 +3866,7 @@ const GUIDE = [
         <li><b>Palettes and tiles</b> are split and counted like GB Studio (“Automatic”, flipped tiles count once)</li>
         <li><b>8 palettes:</b> GB Studio only warns from 9 and silently replaces one palette with your palette 8. Pixel Bro marks it red and shows “In GB Studio: color → color”</li>
         <li>Enter your scene's <b>palette 8 (text/UI)</b> at the bottom – everyone uses a different one. If the colors are almost the same, it still fits</li>
-        <li><b>More than 4 colors</b> in a tile: the extra pixels are marked red in the image</li>
-        <li><b>Almost identical tiles:</b> tiles that differ from another by only 1–2 pixels – matching them saves tiles. “Almost same” in the overview shows them, differing pixels in pink</li></ul>
+        <li><b>More than 4 colors</b> in a tile: the extra pixels are marked red in the image</li></ul>
       <h4>Fix it right away</h4>
       <ul><li><b>Apply</b> on verified tips – Pixel Bro calculates every color swap first and only suggests what really gets you to 7</li>
         <li><b>Apply like GB Studio</b> recolors extra pixels the way GB Studio would. <b>Match</b> sets the exact 4 colors in classic mode</li>
@@ -4173,11 +4101,6 @@ $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
 $('#gb-legend').addEventListener('click', (e) => {
-  if (e.target.closest('.gb-lnear')) {
-    gbView.near = !gbView.near;
-    updateGbHud(); requestRender();
-    return;
-  }
   if (e.target.closest('.gb-lnums')) {
     settings.gbLabels = settings.gbLabels === false; saveSettings();
     updateGbHud(); requestRender();
