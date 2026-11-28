@@ -600,4 +600,3 @@ optgroup option { color: var(--text); }
 .recent-item b { font-weight: 600; font-size: 13px; }
 .recent-item span { font-size: 11px; color: var(--text-3); word-break: break-all; }
 /* Fast gleiche Kacheln */
-.gb-lnear.on { border-color: #ff2bd6; color: #ff8be9; }

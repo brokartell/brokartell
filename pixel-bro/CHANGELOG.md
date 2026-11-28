@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+- „Fast gleiche Kacheln“ wieder entfernt – die Markierungen waren eher verwirrend; einzelne Paletten lassen sich weiter per Klick in der Übersicht zeigen
+- Vorlage gehört jetzt zum Tab: ein neuer Tab startet ohne Vorlage, und wird der Vorlagen-Tab geschlossen, verschwindet sie überall
+
 ## 1.7.0 – Fünf neue Funktionen
 - GB-Prüfung (Game Boy Color): Fast gleiche Kacheln – Kacheln, die sich nur in 1–2 Pixeln von einer anderen unterscheiden (auch gespiegelt). „Fast gleich: n“ in der Übersicht oben links hebt sie hervor, die abweichenden Pixel sind pink. Angleichen spart Kacheln
 - Vorlage aus anderem Tab (Ansicht): ein anderes Bild scheint halb durchsichtig über dem aktuellen – zum Abzeichnen oder Vergleichen, Deckkraft einstellbar
