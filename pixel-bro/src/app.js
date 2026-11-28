@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.7.0';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -173,11 +173,13 @@ function updateTitle() {
    (clipboard) ist für alle Tabs gleich – so lässt sich etwas von einem Bild ins andere kopieren. */
 const tabs = [];
 let activeTab = 0;
+let tabSeq = 1, curTabId = 1; // feste Nummer je Tab (für die Vorlage)
 function captureTab() {
-  return { doc, cur: { ...cur }, fileInfo: { ...fileInfo }, dirty, undo: history.undo, redo: history.redo, sel, view: { ...view } };
+  return { id: curTabId, doc, cur: { ...cur }, fileInfo: { ...fileInfo }, dirty, undo: history.undo, redo: history.redo, sel, view: { ...view } };
 }
 function applyTab(tb) {
   float = null;
+  curTabId = tb.id || ++tabSeq;
   doc = tb.doc; cur = { ...tb.cur }; fileInfo = { ...tb.fileInfo }; dirty = tb.dirty; sel = tb.sel;
   history.undo = tb.undo; history.redo = tb.redo;
   if (tb.view) Object.assign(view, tb.view);
@@ -202,6 +204,7 @@ function prepareNewTab() {
   tabs[activeTab] = captureTab();
   tabs.push(null);
   activeTab = tabs.length - 1;
+  curTabId = ++tabSeq;
   history.undo = []; history.redo = [];
 }
 function switchTab(i) {
@@ -210,6 +213,7 @@ function switchTab(i) {
   tabs[activeTab] = captureTab();
   activeTab = i;
   applyTab(tabs[i]);
+  updateRefHud();
   scheduleAutosave();
 }
 function newTab() {
@@ -227,9 +231,10 @@ async function closeTab(i) {
     if (r === 'save' && !(await saveProject(false))) return;
     i = activeTab;
   }
+  if (ref.id === tb.id) ref.id = 0; // Vorlage geschlossen
   tabs.splice(i, 1);
   if (!tabs.length) {
-    tabs.push(null); activeTab = 0;
+    tabs.push(null); activeTab = 0; curTabId = ++tabSeq;
     history.undo = []; history.redo = [];
     newDocument(32, 32);
     return;
@@ -237,8 +242,65 @@ async function closeTab(i) {
   if (i < activeTab) activeTab--;
   else if (i === activeTab) { activeTab = Math.min(i, tabs.length - 1); applyTab(tabs[activeTab]); }
   renderTabs();
+  updateRefHud();
   scheduleAutosave();
 }
+/* ---------- Vorlage: ein anderer Tab scheint halb durchsichtig über dem Bild (seit 1.7.0) ---------- */
+const ref = { id: 0, opacity: 0.4 };
+const refCache = { key: '', canvas: null };
+const refTab = () => (ref.id && ref.id !== curTabId ? tabs.find((tb) => tb && tb.id === ref.id) : null);
+/** Komposit eines (anderen) Dokuments als Canvas */
+function docCanvas(d, f) {
+  const c = document.createElement('canvas');
+  c.width = d.w; c.height = d.h;
+  const cc = c.getContext('2d'), t2 = document.createElement('canvas');
+  t2.width = d.w; t2.height = d.h;
+  const tc = t2.getContext('2d');
+  for (const L of d.layers) {
+    if (!L.visible) continue;
+    tc.putImageData(bufToImageData(L.frames[Math.min(f, L.frames.length - 1)], d.w, d.h), 0, 0);
+    cc.globalAlpha = L.opacity; cc.drawImage(t2, 0, 0);
+  }
+  return c;
+}
+function refCanvas() {
+  const tb = refTab();
+  if (!tb) return null;
+  const f = Math.min(cur.frame, tb.doc.layers[0].frames.length - 1);
+  const key = tb.id + ':' + f;
+  if (refCache.key !== key) { refCache.key = key; refCache.canvas = docCanvas(tb.doc, f); }
+  return refCache.canvas;
+}
+function updateRefHud() {
+  const hud = $('#ref-hud');
+  if (!hud) return;
+  const tb = refTab();
+  hud.hidden = !tb;
+  if (tb) $('#ref-hud-name').textContent = tabLabel(tb);
+}
+async function referenceDialog() {
+  if (tabs.length < 2) return toast(t('Öffne zuerst ein zweites Bild in einem Tab – das kann dann als Vorlage durchscheinen'));
+  tabs[activeTab] = captureTab();
+  const others = tabs.filter((tb) => tb.id !== curTabId);
+  const body = el(`<p class="hint">${t('Ein anderes Bild scheint halb durchsichtig über diesem Bild – zum Abzeichnen oder Vergleichen. Es wird nicht mitgespeichert.')}</p>
+    <div class="field"><label>${t('Vorlage')}</label><select id="rf">
+      <option value="0">${t('Keine')}</option>
+      ${others.map((tb) => `<option value="${tb.id}" ${tb.id === ref.id ? 'selected' : ''}>${tabLabel(tb).replace(/</g, '&lt;')} (${tb.doc.w} × ${tb.doc.h})</option>`).join('')}
+    </select></div>
+    <div class="field"><label>${t('Deckkraft')} <span id="ro-v" class="mono">${Math.round(ref.opacity * 100)} %</span></label>
+      <input type="range" id="ro" min="10" max="90" step="5" value="${Math.round(ref.opacity * 100)}"></div>`);
+  if (!ref.id && others.length) body.querySelector('#rf').value = String(others[others.length - 1].id);
+  const ro = body.querySelector('#ro');
+  ro.oninput = () => { body.querySelector('#ro-v').textContent = ro.value + ' %'; };
+  const ok = await modal({ title: 'Vorlage aus anderem Tab', body, actions: [{ label: 'Abbrechen', value: false }, { label: 'Übernehmen', value: true, primary: true }] });
+  if (!ok) return;
+  ref.id = +body.querySelector('#rf').value;
+  ref.opacity = +ro.value / 100;
+  refCache.key = '';
+  updateRefHud();
+  requestRender();
+}
+
 function renderTabs() {
   const box = $('#tabs');
   if (!box || !tabs.length) return;
@@ -257,6 +319,7 @@ $('#tabs').addEventListener('pointerdown', (e) => {
 });
 $('#tabs').addEventListener('click', (e) => { const c = e.target.closest('[data-close]'); if (c) closeTab(+c.dataset.close); });
 $('#tab-new').addEventListener('click', () => newTab());
+$('#ref-hud-close').addEventListener('click', () => { ref.id = 0; updateRefHud(); requestRender(); });
 
 /* ---------- Canvas & Rendering ---------- */
 const canvas = $('#canvas');
@@ -373,6 +436,14 @@ function render() {
     ctx.drawImage(comp, view.ox + cx * W, view.oy + cy * H, W, H);
   }
   ctx.globalAlpha = 1;
+  // Vorlage aus anderem Tab, oben links ausgerichtet, halb durchsichtig
+  const rc = refCanvas();
+  if (rc) { // nur innerhalb des eigenen Bildes zeigen
+    const cw2 = Math.min(rc.width, w), ch2 = Math.min(rc.height, h);
+    ctx.globalAlpha = ref.opacity;
+    ctx.drawImage(rc, 0, 0, cw2, ch2, view.ox, view.oy, cw2 * z, ch2 * z);
+    ctx.globalAlpha = 1;
+  }
 
   // Pixelraster
   if (settings.grid && z >= 6) {
@@ -395,7 +466,7 @@ function render() {
     ctx.stroke();
   }
   // GB-Studio-Paletten: Kacheln mit Palettennummer
-  if (gbView.on) drawGbOverlay(z);
+  if (gbView.on) { if (gbView.near && gbView.result && gbView.result.nearTiles) drawNearTiles(z); else drawGbOverlay(z); }
   // Mittellinien (waagerecht + senkrecht durch die Bildmitte)
   if (settings.center) {
     const mx = Math.round((view.ox + (w * z) / 2) * dpr) / dpr + 0.5 / dpr;
@@ -414,6 +485,7 @@ function render() {
 
   // Auswahl
   drawSelectionOutline();
+  drawScaleHandles();
 
   // Formvorschau der Auswahl während des Ziehens
   if (drag && drag.selRect) {
@@ -446,7 +518,7 @@ function render() {
     ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.stroke(); ctx.setLineDash([]);
   }
   // Cursor
-  if (hover && !isPanning && ['pen', 'eraser', 'dither', 'shade', 'line', 'rect', 'ellipse'].includes(activeTool())) {
+  if (hover && !isPanning && ['pen', 'eraser', 'dither', 'shade', 'line', 'rect', 'ellipse', 'replace'].includes(activeTool())) {
     const s = settings.size, o = Math.floor((s - 1) / 2);
     const x = view.ox + (hover.x - o) * z, y = view.oy + (hover.y - o) * z;
     if (activeTool() !== 'eraser' && activeTool() !== 'shade') {
@@ -656,6 +728,16 @@ function stamp(buf, x, y, colorFn, rec) {
     }
   }
 }
+/** Ersetzen-Pinsel: nur Pixel mit der Startfarbe bekommen die neue Farbe, alles andere bleibt */
+function replaceAt(d, x, y) {
+  if (d.from === d.to) return;
+  stamp(d.buf, x, y, (tx, ty) => {
+    const [wx, wy] = wrapXY(tx, ty);
+    if (wx < 0 || wy < 0 || wx >= doc.w || wy >= doc.h) return 0;
+    const cur2 = d.buf[wy * doc.w + wx];
+    return cur2 === d.from ? d.to : cur2;
+  });
+}
 function bresenham(x0, y0, x1, y1, cb) {
   const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0);
   const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
@@ -687,7 +769,7 @@ let spaceDown = false, altDown = false, shiftDown = false;
 
 function activeTool() {
   if (spaceDown) return 'hand';
-  if (altDown && ['pen', 'eraser', 'bucket', 'dither', 'line', 'rect', 'ellipse', 'gradient', 'spray'].includes(settings.tool)) return 'picker';
+  if (altDown && ['pen', 'eraser', 'bucket', 'dither', 'line', 'rect', 'ellipse', 'gradient', 'spray', 'replace'].includes(settings.tool)) return 'picker';
   return settings.tool;
 }
 
@@ -714,6 +796,16 @@ function onPointerDown(e) {
   const tool = activeTool();
   const color = right ? settings.secondary : settings.primary;
 
+  // Eck-Anfasser der Auswahl: Größe ändern (½ · 1 · 2× · 3× · 4×)
+  const hd = e.button === 0 && handleAt(e);
+  if (hd && ensureScaleBase() && float.base) {
+    const b = float.base, s0 = b.scale;
+    const x0 = float.x, y0 = float.y, x1 = float.x + float.w, y1 = float.y + float.h;
+    drag = { tool: 'scale', fix: { x: hd[0] ? x0 : x1, y: hd[1] ? y0 : y1, ax: hd[0] ? 0 : 1, ay: hd[1] ? 0 : 1 }, s0 };
+    if (settings.tool !== 'move') setTool('move');
+    requestRender();
+    return;
+  }
   // Text-Werkzeug: in den eingefügten Text klicken = verschieben
   const onFloat = float && p.x >= float.x && p.y >= float.y && p.x < float.x + float.w && p.y < float.y + float.h;
   if (tool === 'text' && onFloat) {
@@ -746,6 +838,16 @@ function onPointerDown(e) {
     case 'text':
       textDialog(p);
       break;
+    case 'replace': {
+      // Ersetzen-Pinsel: übermalt nur die Farbe, auf die zuerst geklickt wurde
+      const [qx, qy] = wrapXY(p.x, p.y);
+      if (qx < 0 || qy < 0 || qx >= doc.w || qy >= doc.h) break;
+      pushUndo();
+      addRecent(color);
+      drag = { tool, from: curBuf()[qy * doc.w + qx], to: color, last: p, buf: curBuf() };
+      replaceAt(drag, p.x, p.y);
+      break;
+    }
     case 'pen':
     case 'eraser': {
       pushUndo();
@@ -808,7 +910,12 @@ function onPointerMove(e) {
   hover = settings.tile ? (() => { const [x, y] = wrapXY(p.x, p.y); return { x: p.x, y: p.y, wx: x, wy: y }; })() : (inside ? { x: p.x, y: p.y } : null);
   updateStatusPos(p);
 
-  if (!drag) { requestRender(); return; }
+  if (!drag) {
+    const hd = handleAt(e);
+    const want = hd ? (hd[0] === hd[1] ? 'nwse-resize' : 'nesw-resize') : '';
+    if (want !== (canvas.dataset.hcur || '')) { canvas.dataset.hcur = want; if (want) canvas.style.cursor = want; else updateCursor(); }
+    requestRender(); return;
+  }
   if (drag.pan) {
     view.ox = drag.ox + (e.clientX - drag.sx);
     view.oy = drag.oy + (e.clientY - drag.sy);
@@ -844,6 +951,10 @@ function handleDragPoint(p, e) {
       bresenham(drag.last.x, drag.last.y, p.x, p.y, (x, y) => stamp(drag.buf, x, y, drag.fn));
       drag.last = p;
       break;
+    case 'replace':
+      bresenham(drag.last.x, drag.last.y, p.x, p.y, (x, y) => replaceAt(drag, x, y));
+      drag.last = p;
+      break;
     case 'shade':
       bresenham(drag.last.x, drag.last.y, p.x, p.y, (x, y) => shadeAt(drag, x, y));
       drag.last = p;
@@ -868,6 +979,16 @@ function handleDragPoint(p, e) {
       float.x = drag.fx + (p.x - drag.start.x);
       float.y = drag.fy + (p.y - drag.start.y);
       break;
+    case 'scale': {
+      // Abstand vom festen Eck → nächste saubere Stufe
+      const b = float.base;
+      const rw = Math.abs(p.fx - drag.fix.x) / b.w, rh = Math.abs(p.fy - drag.fix.y) / b.h;
+      const raw = Math.max(rw, rh, 0.01);
+      let best = SCALE_STEPS[0];
+      for (const st of SCALE_STEPS) if (Math.abs(Math.log(st / raw)) < Math.abs(Math.log(best / raw))) best = st;
+      setFloatScale(best, drag.fix);
+      break;
+    }
   }
 }
 
@@ -888,7 +1009,7 @@ function onPointerUp(e) {
         setSelection(mask);
       }
     }
-  } else if (drag.tool === 'picker') {
+  } else if (drag.tool === 'picker' || drag.tool === 'scale') {
     // nichts
   } else if (drag.tool !== 'move') {
     afterPaint();
@@ -1319,11 +1440,88 @@ function transformMask(m, w, h, kind) {
   const u = transformBuf(Uint32Array.from(m), w, h, kind);
   return Uint8Array.from(u);
 }
+/* ---------- Auswahl skalieren (seit 1.7.0): nur saubere Stufen ½ · 1 · 2× · 3× · 4×, Pixel bleiben scharf ---------- */
+const SCALE_STEPS = [0.5, 1, 2, 3, 4];
+function scaleBuf(src, w, h, nw, nh, Type) {
+  const out = new Type(nw * nh);
+  for (let y = 0; y < nh; y++) {
+    const sy = Math.min(h - 1, Math.floor((y * h) / nh));
+    for (let x = 0; x < nw; x++) out[y * nw + x] = src[sy * w + Math.min(w - 1, Math.floor((x * w) / nw))];
+  }
+  return out;
+}
+function ensureScaleBase() {
+  if (!float) { if (!sel) return false; liftSelection(); }
+  if (!float || float.text) return !!float;
+  if (!float.base) float.base = { data: float.data.slice(), mask: float.mask.slice(), w: float.w, h: float.h, scale: 1 };
+  return true;
+}
+/** fix: welcher Punkt bleibt stehen – { x, y, ax, ay } mit ax/ay = 0 (links/oben), 0.5 (Mitte), 1 (rechts/unten) */
+function setFloatScale(s, fix) {
+  const b = float.base;
+  const nw = Math.max(1, Math.round(b.w * s)), nh = Math.max(1, Math.round(b.h * s));
+  if (nw > 1024 || nh > 1024) { toast(t('Zu groß – höchstens 1024 × 1024 px')); return false; }
+  if (s === b.scale && nw === float.w && nh === float.h) return true;
+  float.data = scaleBuf(b.data, b.w, b.h, nw, nh, Uint32Array);
+  float.mask = scaleBuf(b.mask, b.w, b.h, nw, nh, Uint8Array);
+  float.x = Math.round(fix.x - fix.ax * nw); float.y = Math.round(fix.y - fix.ay * nh);
+  float.w = nw; float.h = nh; b.scale = s;
+  selPathCache.key = null;
+  status(t('Auswahl {s}', { s: s === 0.5 ? '½' : s + '×' }) + ` · ${nw} × ${nh} px`);
+  requestRender();
+  return true;
+}
+function stepSelectionScale(dir) {
+  if (!ensureScaleBase() || !float.base) return;
+  const i = SCALE_STEPS.indexOf(float.base.scale);
+  const s = SCALE_STEPS[clamp((i < 0 ? 1 : i) + dir, 0, SCALE_STEPS.length - 1)];
+  if (s === float.base.scale) return toast(dir > 0 ? t('Größer geht nicht (4×)') : t('Kleiner geht nicht (½)'));
+  setFloatScale(s, { x: float.x + float.w / 2, y: float.y + float.h / 2, ax: 0.5, ay: 0.5 });
+  if (settings.tool !== 'move') setTool('move');
+  scheduleUI(true);
+}
+/** Rahmen der Auswahl (schwebend oder markiert) in Sprite-Koordinaten */
+function selBox() {
+  if (float) return { x: float.x, y: float.y, w: float.w, h: float.h };
+  if (!sel) return null;
+  if (sel.box === undefined) sel.box = selBounds(sel.mask, doc.w, doc.h);
+  return sel.box;
+}
+/** Welcher Eck-Anfasser liegt unter dem Mauszeiger? → [cx, cy] (0 = links/oben, 1 = rechts/unten) */
+function handleAt(e) {
+  if (!['move', 'select'].includes(activeTool()) || (float && float.text)) return null;
+  const b = selBox();
+  if (!b) return null;
+  const r = canvas.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top, z = view.zoom;
+  for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+    const hx = view.ox + (b.x + cx * b.w) * z, hy = view.oy + (b.y + cy * b.h) * z;
+    if (Math.abs(mx - hx) <= 7 && Math.abs(my - hy) <= 7) return [cx, cy];
+  }
+  return null;
+}
+function drawScaleHandles() {
+  if (!['move', 'select'].includes(activeTool()) || (float && float.text) || (drag && drag.selRect)) return;
+  const b = selBox();
+  if (!b) return;
+  const z = view.zoom;
+  for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+    const hx = Math.round(view.ox + (b.x + cx * b.w) * z), hy = Math.round(view.oy + (b.y + cy * b.h) * z);
+    ctx.fillStyle = '#7c5cff'; ctx.fillRect(hx - 4, hy - 4, 8, 8);
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.strokeRect(hx - 4.5, hy - 4.5, 9, 9);
+  }
+}
+
 function transform(kind) {
   if (sel || float) {
     if (!float) liftSelection();
     float.data = transformBuf(float.data, float.w, float.h, kind);
     float.mask = transformMask(float.mask, float.w, float.h, kind);
+    if (float.base) { // Ausgangsbild fürs Skalieren mitdrehen/-spiegeln
+      const b = float.base;
+      b.data = transformBuf(b.data, b.w, b.h, kind); b.mask = transformMask(b.mask, b.w, b.h, kind);
+      if (kind === 'r') [b.w, b.h] = [b.h, b.w];
+    }
     if (kind === 'r') {
       const cx = float.x + float.w / 2, cy = float.y + float.h / 2;
       [float.w, float.h] = [float.h, float.w];
@@ -2108,7 +2306,7 @@ const GB_TILE_LIMIT = { color: 384, classic: 192 };
 const GB_CLASSIC_COLORS = ['e0f8cf', '86c06c', '306850', '071821'].map(parseHex);
 const GB_SPRITE_TRANSPARENT = parseHex('65ff00');
 const GB_HUES = ['#7c5cff', '#22c3e6', '#3ddc84', '#ffb020', '#ff5ca8', '#a0e000', '#ff7a45', '#4f8bff', '#c58cff', '#00d0a0'];
-const gbView = { on: false, result: null, timer: null, filter: -1 }; // filter: nur diese Palette im Bild zeigen (-1 = alle)
+const gbView = { on: false, result: null, timer: null, filter: -1, near: false }; // filter: nur diese Palette im Bild zeigen (-1 = alle)
 const pl = (n, one, many, vars = {}) => t(n === 1 ? one : many, { n, ...vars });
 const gbMode = () => (settings.gbMode === 'classic' ? 'classic' : 'color');
 
@@ -2211,7 +2409,7 @@ function gbsSlots(palettes) {
 function gbsTileCount(tiles, slots, cols, rows, w, h) {
   const { pals, slotOf } = slots;
   const fullCols = Math.floor(w / GB_TILE), fullRows = Math.floor(h / GB_TILE);
-  const plain = new Set(), flipped = new Set();
+  const plain = new Set(), flipped = new Set(), groups = new Map();
   let flip = 0;
   const N = GB_TILE;
   for (let ty = 0; ty < fullRows; ty++) for (let tx = 0; tx < fullCols; tx++) {
@@ -2229,9 +2427,59 @@ function gbsTileCount(tiles, slots, cols, rows, w, h) {
     const key = (fx, fy) => { let k = ''; for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) k += idx[(fy ? N - 1 - y : y) * N + (fx ? N - 1 - x : x)]; return k; };
     const k0 = key(false, false);
     plain.add(k0);
-    if (![k0, key(true, false), key(false, true), key(true, true)].some((k) => flipped.has(k))) { flipped.add(k0); flip++; }
+    const vs = [k0, key(true, false), key(false, true), key(true, true)];
+    if (!vs.some((k) => flipped.has(k))) { flipped.add(k0); flip++; }
+    // für „fast gleiche Kacheln“: Gruppen gleicher Kacheln (inkl. gespiegelter)
+    const canon = vs.slice().sort()[0];
+    let g = groups.get(canon);
+    if (!g) { g = { canon, entries: new Map(), count: 0 }; groups.set(canon, g); }
+    let en = g.entries.get(k0);
+    if (!en) { en = { idx: Uint8Array.from(idx), tiles: [] }; g.entries.set(k0, en); }
+    en.tiles.push(tile); g.count++;
   }
-  return { plain: plain.size, flip };
+  return { plain: plain.size, flip, near: nearTiles([...groups.values()]) };
+}
+
+/** Fast gleiche Kacheln: Kachel-Gruppen, die sich von einer anderen nur in 1–2 Pixeln (Farbnummer) unterscheiden –
+    auch gespiegelt. Markiert wird jeweils die seltenere Kachel mit genau den abweichenden Pixeln. */
+const NEAR_MAX = 2;
+function nearTiles(groups) {
+  const N = GB_TILE;
+  const flipIdx = (a, fx, fy) => { const o = new Uint8Array(64); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) o[y * N + x] = a[(fy ? N - 1 - y : y) * N + (fx ? N - 1 - x : x)]; return o; };
+  for (const g of groups) {
+    const rep = g.entries.values().next().value.idx;
+    g.vars = [rep, flipIdx(rep, 1, 0), flipIdx(rep, 0, 1), flipIdx(rep, 1, 1)];
+  }
+  const out = [], done = new Set();
+  for (let i = 0; i < groups.length; i++) for (let j = 0; j < groups.length; j++) {
+    if (i === j) continue;
+    const small = groups[i], big = groups[j];
+    if (done.has(small) || small.count > big.count || (small.count === big.count && i > j)) continue;
+    let bestPx = null;
+    for (const en of small.entries.values()) {
+      for (const v of big.vars) {
+        const px = [];
+        for (let k = 0; k < 64; k++) if (en.idx[k] !== v[k] && px.push(k) > NEAR_MAX) break;
+        if (px.length && px.length <= NEAR_MAX && (!bestPx || px.length < bestPx.length)) bestPx = px;
+        if (bestPx && bestPx.length === 1) break;
+      }
+      if (bestPx) {
+        // gleiche Abweichung bei allen Kacheln dieser Gruppe markieren (je Ausrichtung eigene Pixel)
+        for (const en2 of small.entries.values()) {
+          let px2 = null;
+          for (const v of big.vars) {
+            const px = [];
+            for (let k = 0; k < 64; k++) if (en2.idx[k] !== v[k] && px.push(k) > NEAR_MAX) break;
+            if (px.length && px.length <= NEAR_MAX && (!px2 || px.length < px2.length)) px2 = px;
+          }
+          if (px2) for (const tile of en2.tiles) out.push({ tile, px: px2 });
+        }
+        done.add(small);
+        break;
+      }
+    }
+  }
+  return { list: out, save: done.size };
 }
 
 // Wie viele Paletten bildet GB Studio, wenn Farbe from durch to ersetzt wird? (für geprüfte Tausch-Vorschläge)
@@ -2532,7 +2780,7 @@ function gbAnalyze() {
     }
     near.length = 0; near.push(...verified);
   }
-  Object.assign(res, { palettes, uses, bad, over, near, uiReplaced: slots.replaced, uiMap, uiClose, uniqueTiles: tileCount.flip, uniqueTilesNoFlip: tileCount.plain, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
+  Object.assign(res, { palettes, uses, bad, over, near, uiReplaced: slots.replaced, uiMap, uiClose, nearTiles: tileCount.near.list, nearSave: tileCount.near.save, uniqueTiles: tileCount.flip, uniqueTilesNoFlip: tileCount.plain, extraPixels, extra: [...extraColors.entries()].sort((a, b) => b[1] - a[1]) });
   res.ok = !bad.length && (palettes.length <= GB_MAX_PALETTES || uiClose) && res.uniqueTiles <= res.tileLimit;
   return res;
 }
@@ -2586,12 +2834,34 @@ function renderGbLegend(r) {
   }
   if (r.mode !== 'classic' && r.palettes.length) { // leeres Bild: keine Knöpfe, nur die Anzeige oben
     const on = settings.gbLabels !== false;
-    rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button></div>`);
+    rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button>${r.nearSave ? `<button class="gb-lall gb-lnear${gbView.near ? ' on' : ''}" title="${t('Kacheln, die sich nur in 1–2 Pixeln von einer anderen unterscheiden – angleichen spart Kacheln')}">${t('Fast gleich: {n}', { n: r.nearSave })}</button>` : ''}</div>`);
   }
   box.innerHTML = rows.join('');
   box.hidden = !rows.length;
 }
 
+/** Fast gleiche Kacheln: alles andere abgedunkelt, diese Kacheln weiß gestrichelt, abweichende Pixel pink */
+function drawNearTiles(z) {
+  const r = gbView.result;
+  const s = GB_TILE * z;
+  const near = new Map();
+  for (const n of r.nearTiles) near.set(n.tile, n.px);
+  ctx.save();
+  for (const tile of r.tiles) {
+    const x = view.ox + tile.tx * s, y = view.oy + tile.ty * s;
+    const tw = Math.min(s, (doc.w - tile.tx * GB_TILE) * z), th = Math.min(s, (doc.h - tile.ty * GB_TILE) * z);
+    const px = near.get(tile);
+    if (!px) { ctx.fillStyle = 'rgba(8, 10, 16, .62)'; ctx.fillRect(x, y, tw, th); continue; }
+    ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff';
+    ctx.strokeRect(x + 1, y + 1, tw - 2, th - 2); ctx.setLineDash([]);
+    for (const k of px) {
+      const qx = x + (k % GB_TILE) * z, qy = y + Math.floor(k / GB_TILE) * z;
+      ctx.fillStyle = 'rgba(255, 43, 214, .85)'; ctx.fillRect(qx, qy, z, z);
+      if (z >= 6) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(qx + 0.5, qy + 0.5, z - 1, z - 1); }
+    }
+  }
+  ctx.restore();
+}
 function drawGbOverlay(z) {
   const r = gbView.result;
   if (!r) return;
@@ -2747,6 +3017,7 @@ async function gbPaletteDialog() {
     if (over) issues.push(pl(r.palettes.length - GB_MAX_PALETTES, '1 Palette zu viel – GB Studio braucht Platz 8 für Text und gibt dafür still Palette {p} die Farben deiner Palette 8 (siehe unten). Farben angleichen oder ähnliche Kacheln zusammenfassen.', '{n} Paletten zu viel – Kacheln mit Palette {p} bekommen in GB Studio falsche Farben. Farben angleichen oder ähnliche Kacheln zusammenfassen.', { p: [...r.over].map((i) => i + 1).join(', ') }));
     if (over) r.near.slice(0, 3).forEach(([a, b], k) => tips.push({ text: t('Geprüfter Tipp – damit reichen 7 Paletten:') + ` <span class="gb-pair">${swatch(a)}${toHex(a).toUpperCase()} → ${swatch(b)}${toHex(b).toUpperCase()}</span>`, apply: 'tip:' + k, label: t('Übernehmen') }));
     if (!tilesOk) issues.push(pl(r.uniqueTiles - r.tileLimit, '1 Kachel zu viel – gleiche Bereiche wiederverwenden.', '{n} Kacheln zu viel – gleiche Bereiche wiederverwenden.'));
+    if (r.nearSave) tips.push({ text: pl(r.nearSave, '1 Kachel unterscheidet sich nur in 1–2 Pixeln von einer anderen – angleichen spart 1 Kachel.', '{n} Kacheln unterscheiden sich nur in 1–2 Pixeln von einer anderen – angleichen spart bis zu {n} Kacheln.'), apply: 'near', label: t('Im Bild zeigen') });
     main += `<div class="gbx-section gbx-ui"><div class="gbx-title">${t('Palette 8 · Text/UI deiner Szene')}<span class="hint">${t('HEX wie in GB Studio')}</span></div>
       <div class="gbx-uifields">${gbUiDisplay().map((h, k) => `<label class="gb-uihex">${swatch(parseHex('#' + h))}<input type="text" maxlength="7" spellcheck="false" value="#${h.toUpperCase()}" data-k="${k}" data-nofocus></label>`).join('')}
         <button type="button" class="btn gb-uireset" title="${t('GB-Studio-Vorgabe')}" ${settings.gbUi ? '' : 'hidden'}>↺</button></div></div>`;
@@ -2797,6 +3068,12 @@ async function gbPaletteDialog() {
       }
       n = gbRecolor(map);
     } else if (what === 'extra') n = gbFixExtraPixels(r);
+    else if (what === 'near') {
+      gbView.near = true;
+      $('#modal-actions button').click(); // Fenster schließen
+      setGbView(true);
+      return toast(t('Fast gleiche Kacheln sind hervorgehoben – die abweichenden Pixel pink'));
+    }
     toast(t('{n} Pixel umgefärbt', { n }) + ' · ' + t('Strg+Z macht es rückgängig'));
     reopen();
   });
@@ -2834,12 +3111,12 @@ async function gbPaletteDialog() {
 const TOOL_OPTIONS = {
   pen: ['size', 'pp'], eraser: ['size'], bucket: ['contig'], picker: [],
   line: ['size'], rect: ['size', 'fill'], ellipse: ['size', 'fill'],
-  select: [], wand: ['contig'], move: [], dither: ['size'], shade: ['size', 'shade'], hand: [],
+  select: [], wand: ['contig'], move: [], dither: ['size'], shade: ['size', 'shade'], hand: [], replace: ['size'],
   gradient: ['grad', 'contig'], spray: ['size', 'spray'], text: [],
 };
 const TOOL_NAMES = {
   pen: 'Stift', eraser: 'Radierer', bucket: 'Füllen', picker: 'Pipette', line: 'Linie', rect: 'Rechteck',
-  ellipse: 'Ellipse', select: 'Auswahl', wand: 'Zauberstab', move: 'Verschieben', dither: 'Dithering', shade: 'Aufhellen/Abdunkeln', hand: 'Hand',
+  ellipse: 'Ellipse', select: 'Auswahl', wand: 'Zauberstab', move: 'Verschieben', dither: 'Dithering', shade: 'Aufhellen/Abdunkeln', hand: 'Hand', replace: 'Farbe ersetzen',
   gradient: 'Verlauf', spray: 'Sprühdose', text: 'Text',
 };
 function setTool(t) {
@@ -3186,6 +3463,7 @@ function loadProject(text, name, path) {
     cur = { layer: doc.layers.length - 1, frame: 0 };
     if (r.palette && r.palette.length) adoptProjectPalette(r.palette.map(parseHex).filter((x) => x !== null), name || 'Projekt');
     fileInfo = { path: path || null, name: name || 'unbenannt.pixelbro' };
+    addRecentFile(path);
     dirty = false;
     updateTitle();
     syncDocUI();
@@ -3203,11 +3481,59 @@ async function saveProject(saveAs = false) {
   const p = await saveBytes(bytes, name, [{ name: t('Pixel-Bro-Projekt'), extensions: ['pixelbro'] }], 'application/json', saveAs ? null : fileInfo.path);
   if (p) {
     fileInfo = { path: nativeApi ? p : null, name: p.split(/[\\/]/).pop() };
+    if (nativeApi) addRecentFile(p);
     dirty = false;
     updateTitle();
   }
   return p;
 }
+/* ---------- Zuletzt geöffnet (Windows-App, seit 1.7.0) ---------- */
+const RECENT_MAX = 10;
+function recentFiles() { try { return JSON.parse(localStorage.getItem('pixelbro.recentFiles') || '[]'); } catch (e) { return []; } }
+function addRecentFile(path) {
+  if (!path || !nativeApi) return;
+  const list = recentFiles().filter((p) => p !== path);
+  list.unshift(path);
+  try { localStorage.setItem('pixelbro.recentFiles', JSON.stringify(list.slice(0, RECENT_MAX))); } catch (e) { /* egal */ }
+}
+function removeRecentFile(path) {
+  try { localStorage.setItem('pixelbro.recentFiles', JSON.stringify(recentFiles().filter((p) => p !== path))); } catch (e) { /* egal */ }
+}
+async function openRecentPath(path) {
+  const data = nativeApi && nativeApi.readPath ? await nativeApi.readPath(path) : null;
+  const name = path.split(/[\\/]/).pop();
+  if (!data) { removeRecentFile(path); return toast(t('Datei nicht gefunden: {name}', { name })); }
+  if (/\.(pixelbro|json)$/i.test(path)) loadProject(new TextDecoder().decode(data), name, path);
+  else { addRecentFile(path); openImageDirect(new Blob([data]), name); }
+}
+async function recentDialog() {
+  const list = recentFiles();
+  if (!list.length) return toast(t('Noch keine zuletzt geöffneten Dateien'));
+  const body = el(`<div class="recent-list">${list.map((p, i) => {
+      const name = p.split(/[\\/]/).pop(), dir = p.slice(0, p.length - name.length);
+      return `<button type="button" class="recent-item" data-i="${i}"><b>${name.replace(/</g, '&lt;')}</b><span>${dir.replace(/</g, '&lt;')}</span></button>`;
+    }).join('')}</div>`);
+  let pick = null;
+  body.querySelectorAll('.recent-item').forEach((b) => b.onclick = () => { pick = list[+b.dataset.i]; $('#recent-close').click(); });
+  const r = await modal({ title: 'Zuletzt geöffnet', body, actions: [{ label: 'Liste leeren', value: 'clear' }, { label: 'Schließen', value: false, id: 'recent-close', primary: true }] });
+  if (r === 'clear') { try { localStorage.removeItem('pixelbro.recentFiles'); } catch (e) { /* egal */ } return toast(t('Liste geleert')); }
+  if (pick) openRecentPath(pick);
+}
+/** Bild direkt als neues Sprite in einem neuen Tab öffnen (ohne Import-Fenster) */
+async function openImageDirect(blob, name) {
+  const img = await createImageBitmap(blob).catch(() => null);
+  if (!img) return toast('Bild konnte nicht gelesen werden');
+  if (img.width > 1024 || img.height > 1024) return handleImageBlob(blob, name);
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const cc = c.getContext('2d', { willReadFrequently: true }); cc.drawImage(img, 0, 0);
+  commitFloat(false);
+  prepareNewTab();
+  newDocument(img.width, img.height);
+  doc.layers[0].frames[0] = new Uint32Array(cc.getImageData(0, 0, img.width, img.height).data.buffer);
+  fileInfo.name = name.replace(/\.[^.]+$/, '');
+  markDirty(); updateTitle(); zoomFit(); afterStructureChange();
+}
+
 async function openProject() {
   if (nativeApi) {
     const r = await nativeApi.openFile({ filters: [{ name: t('Pixel-Bro-Projekt'), extensions: ['pixelbro', 'json'] }] });
@@ -3217,7 +3543,7 @@ async function openProject() {
 async function importImage() {
   if (nativeApi) {
     const r = await nativeApi.openFile({ filters: [{ name: t('Bilder'), extensions: ['png', 'gif', 'jpg', 'jpeg', 'bmp', 'webp'] }] });
-    if (r) handleImageBlob(new Blob([r.data]), r.name);
+    if (r) { addRecentFile(r.path); handleImageBlob(new Blob([r.data]), r.name); }
   } else $('#file-import').click();
 }
 async function handleImageBlob(blob, name) {
@@ -3356,6 +3682,10 @@ function setLanguage(lang) {
 
 const commands = {
   new: dialogNew,
+  recent: () => recentDialog(),
+  reference: () => referenceDialog(),
+  'sel-up': () => stepSelectionScale(1),
+  'sel-down': () => stepSelectionScale(-1),
   'tab-new': () => newTab(),
   'tab-close': () => closeTab(activeTab),
   'tab-next': () => tabs.length > 1 && switchTab((activeTab + 1) % tabs.length),
@@ -3459,6 +3789,7 @@ const GUIDE_TOOLS = {
   move: ['Verschieben', 'Move', 'Verschiebt die Auswahl oder die ganze Ebene. Pfeiltasten = 1 Pixel, Enter bestätigt.', 'Moves the selection or the whole layer. Arrow keys = 1 pixel, Enter confirms.'],
   dither: ['Dithering', 'Dither', 'Malt ein Schachbrett aus Primär- und Zweitfarbe – für Übergänge und Schatten.', 'Paints a checkerboard of primary and secondary color – for blends and shading.'],
   spray: ['Sprühdose', 'Spray', 'Sprüht zufällige Pixel, Dichte oben einstellbar.', 'Sprays random pixels, density adjustable at the top.'],
+  replace: ['Farbe ersetzen', 'Replace color', 'Malt wie ein Pinsel, färbt aber nur die Farbe um, auf die du zuerst klickst – alles andere bleibt. Z. B. ein rotes Dach braun machen, ohne die Linien zu übermalen.', 'Paints like a brush but only recolors the color you click first – everything else stays. E.g. make a red roof brown without painting over the outlines.'],
   shade: ['Aufhellen / Abdunkeln', 'Lighten / darken', 'Macht vorhandene Pixel heller, mit Umschalt dunkler.', 'Makes existing pixels lighter, with Shift darker.'],
   hand: ['Hand', 'Hand', 'Verschiebt die Ansicht. Geht auch mit gedrückter Leertaste.', 'Pans the view. Also works by holding Space.'],
 };
@@ -3473,7 +3804,9 @@ const GUIDE = [
       <h4>Tabs – mehrere Bilder gleichzeitig</h4>
       <ul><li>Jedes Bild öffnet sich in einem eigenen <b>Tab</b> über der Zeichenfläche – mit eigener Größe, eigenen Ebenen und eigenem Rückgängig</li>
         <li>Klick auf einen Tab wechselt das Bild (Strg+Tab), <b>+</b> oder Strg+T öffnet einen neuen Tab, × oder Strg+W schließt ihn</li>
-        <li><b>Zwischen Bildern kopieren:</b> auswählen, Strg+C, Tab wechseln, Strg+V – z. B. ein Auto aus der Karthalle in den Außenbereich</li></ul>
+        <li><b>Zwischen Bildern kopieren:</b> auswählen, Strg+C, Tab wechseln, Strg+V – z. B. ein Auto aus der Karthalle in den Außenbereich</li>
+        <li><b>Vorlage:</b> Ansicht → Vorlage aus anderem Tab – ein anderes Bild scheint halb durchsichtig über deinem, zum Abzeichnen oder Vergleichen</li>
+        <li><b>Zuletzt geöffnet:</b> Datei → Zuletzt geöffnet … (Windows-App)</li></ul>
       <h4>Zeichenfläche</h4>
       <ul><li>Mausrad zoomt, Umschalt + Mausrad scrollt waagerecht, Leertaste halten verschiebt</li>
         <li>„Einpassen“ oben rechts (Taste 0) zeigt das ganze Bild</li>
@@ -3491,7 +3824,9 @@ const GUIDE = [
       <h4>Tabs – several images at once</h4>
       <ul><li>Every image opens in its own <b>tab</b> above the canvas – with its own size, layers and undo</li>
         <li>Click a tab to switch (Ctrl+Tab), <b>+</b> or Ctrl+T opens a new tab, × or Ctrl+W closes it</li>
-        <li><b>Copy between images:</b> select, Ctrl+C, switch tab, Ctrl+V – e.g. a kart from one map into another</li></ul>
+        <li><b>Copy between images:</b> select, Ctrl+C, switch tab, Ctrl+V – e.g. a kart from one map into another</li>
+        <li><b>Reference:</b> View → Reference from another tab – another image shows semi-transparent over yours, for tracing or comparing</li>
+        <li><b>Recently opened:</b> File → Recently opened … (Windows app)</li></ul>
       <h4>Canvas</h4>
       <ul><li>Mouse wheel zooms, Shift + wheel scrolls horizontally, hold Space to pan</li>
         <li>“Fit” at the top right (key 0) shows the whole image</li>
@@ -3533,6 +3868,7 @@ const GUIDE = [
     deBody: `<h4>Bild-Menü</h4>
       <ul><li>Größe ändern (Strg+R) – Leinwand vergrößern oder Bild skalieren</li>
         <li>Spiegeln (Umschalt+H / Umschalt+V), 90° drehen (Umschalt+R) – ist etwas ausgewählt oder eingefügt, gilt es nur für die Auswahl (z. B. kopierten Stuhl drehen)</li>
+        <li><b>Auswahl vergrößern / verkleinern:</b> an den lila Ecken ziehen oder ×2 / ÷2 oben – nur in sauberen Stufen ½ · 2× · 3× · 4×, die Pixel bleiben scharf</li>
         <li>Farbe ersetzen in allen Frames, Umriss hinzufügen, Ebene leeren</li></ul>
       <h4>Hilfen beim Zeichnen</h4>
       <ul><li><b>Spiegel ↔ / ↕</b>: zeichnet gleichzeitig gespiegelt – ideal für symmetrische Figuren</li>
@@ -3543,6 +3879,7 @@ const GUIDE = [
     enBody: `<h4>Image menu</h4>
       <ul><li>Resize (Ctrl+R) – enlarge the canvas or scale the image</li>
         <li>Flip (Shift+H / Shift+V), rotate 90° (Shift+R) – with a selection or pasted object, only that is flipped or rotated</li>
+        <li><b>Scale a selection:</b> drag the purple corners or use ×2 / ÷2 at the top – only clean steps ½ · 2× · 3× · 4×, pixels stay sharp</li>
         <li>Replace color in all frames, add outline, clear layer</li></ul>
       <h4>Drawing helpers</h4>
       <ul><li><b>Mirror ↔ / ↕</b>: draws mirrored at the same time – great for symmetric characters</li>
@@ -3580,7 +3917,8 @@ const GUIDE = [
         <li><b>Paletten und Kacheln</b> werden aufgeteilt und gezählt wie in GB Studio („Automatisch“, gespiegelte Kacheln zählen einmal)</li>
         <li><b>8 Paletten:</b> GB Studio warnt erst ab 9 und ersetzt still eine Palette durch deine Palette 8. Pixel Bro markiert sie rot und zeigt „In GB Studio: Farbe → Farbe“</li>
         <li><b>Palette 8 (Text/UI)</b> deiner Szene unten eintragen – jeder nutzt eine andere. Sind die Farben fast gleich, passt es trotzdem</li>
-        <li><b>Mehr als 4 Farben</b> in einer Kachel: Die überzähligen Pixel sind im Bild rot markiert</li></ul>
+        <li><b>Mehr als 4 Farben</b> in einer Kachel: Die überzähligen Pixel sind im Bild rot markiert</li>
+        <li><b>Fast gleiche Kacheln:</b> Kacheln, die sich nur in 1–2 Pixeln von einer anderen unterscheiden – angleichen spart Kacheln. „Fast gleich“ in der Übersicht zeigt sie, die abweichenden Pixel pink</li></ul>
       <h4>Direkt korrigieren</h4>
       <ul><li><b>Übernehmen</b> bei geprüften Tipps – Pixel Bro rechnet jeden Farbtausch vorher durch und schlägt nur vor, was wirklich auf 7 bringt</li>
         <li><b>Wie GB Studio übernehmen</b> färbt überzählige Pixel so um, wie GB Studio es tun würde. <b>Angleichen</b> setzt im klassischen Modus die genauen 4 Farben</li>
@@ -3599,7 +3937,8 @@ const GUIDE = [
         <li><b>Palettes and tiles</b> are split and counted like GB Studio (“Automatic”, flipped tiles count once)</li>
         <li><b>8 palettes:</b> GB Studio only warns from 9 and silently replaces one palette with your palette 8. Pixel Bro marks it red and shows “In GB Studio: color → color”</li>
         <li>Enter your scene's <b>palette 8 (text/UI)</b> at the bottom – everyone uses a different one. If the colors are almost the same, it still fits</li>
-        <li><b>More than 4 colors</b> in a tile: the extra pixels are marked red in the image</li></ul>
+        <li><b>More than 4 colors</b> in a tile: the extra pixels are marked red in the image</li>
+        <li><b>Almost identical tiles:</b> tiles that differ from another by only 1–2 pixels – matching them saves tiles. “Almost same” in the overview shows them, differing pixels in pink</li></ul>
       <h4>Fix it right away</h4>
       <ul><li><b>Apply</b> on verified tips – Pixel Bro calculates every color swap first and only suggests what really gets you to 7</li>
         <li><b>Apply like GB Studio</b> recolors extra pixels the way GB Studio would. <b>Match</b> sets the exact 4 colors in classic mode</li>
@@ -3641,6 +3980,7 @@ function showShortcuts() {
     ['M / W / V', 'Auswahl / Zauberstab / Verschieben'],
     ['D / U / H', 'Dithering / Aufhellen-Abdunkeln / Hand'],
     ['J / K / S', 'Verlauf / Text / Sprühdose'],
+    ['Q', 'Farbe ersetzen (Pinsel)'],
     ['Rechtsklick', 'Mit Sekundärfarbe zeichnen'],
     ['Alt (halten)', 'Pipette'],
     ['Leertaste (halten)', 'Ansicht verschieben'],
@@ -3690,7 +4030,7 @@ $$('[data-cmd]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropa
 $$('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
 
 /* ---------- Tastatur ---------- */
-const TOOL_KEYS = { b: 'pen', p: 'pen', e: 'eraser', g: 'bucket', i: 'picker', l: 'line', r: 'rect', o: 'ellipse', m: 'select', w: 'wand', v: 'move', d: 'dither', u: 'shade', h: 'hand', j: 'gradient', s: 'spray', k: 'text' };
+const TOOL_KEYS = { q: 'replace', b: 'pen', p: 'pen', e: 'eraser', g: 'bucket', i: 'picker', l: 'line', r: 'rect', o: 'ellipse', m: 'select', w: 'wand', v: 'move', d: 'dither', u: 'shade', h: 'hand', j: 'gradient', s: 'spray', k: 'text' };
 document.addEventListener('keydown', (e) => {
   if (e.target.matches('input[type="text"], input[type="number"], select')) return;
   if (!$('#modal-backdrop').hidden) return;
@@ -3833,6 +4173,11 @@ $('#pal-from-image').addEventListener('click', paletteFromImageDialog);
 $('#gb-hud-open').addEventListener('click', gbPaletteDialog);
 $('#gb-hud-close').addEventListener('click', () => setGbView(false));
 $('#gb-legend').addEventListener('click', (e) => {
+  if (e.target.closest('.gb-lnear')) {
+    gbView.near = !gbView.near;
+    updateGbHud(); requestRender();
+    return;
+  }
   if (e.target.closest('.gb-lnums')) {
     settings.gbLabels = settings.gbLabels === false; saveSettings();
     updateGbHud(); requestRender();
@@ -3872,7 +4217,7 @@ stage.addEventListener('drop', async (e) => {
   const f = e.dataTransfer.files[0];
   if (!f) return;
   if (/\.(pixelbro|json)$/i.test(f.name)) loadProject(await f.text(), f.name, f.path || null);
-  else if (f.type.startsWith('image/')) handleImageBlob(f, f.name);
+  else if (f.type.startsWith('image/')) { if (f.path) addRecentFile(f.path); handleImageBlob(f, f.name); }
 });
 
 window.addEventListener('beforeunload', (e) => {
@@ -4012,18 +4357,18 @@ function init() {
     for (const s of list) {
       try {
         const d = deserialize(s.data).doc;
-        tabs.push({ doc: d, cur: { layer: d.layers.length - 1, frame: 0 }, fileInfo: { path: s.path || null, name: s.name || 'unbenannt' },
+        tabs.push({ id: ++tabSeq, doc: d, cur: { layer: d.layers.length - 1, frame: 0 }, fileInfo: { path: s.path || null, name: s.name || 'unbenannt' },
           dirty: !!s.dirty, undo: [], redo: [], sel: null, view: null });
       } catch (e) { /* kaputten Tab überspringen */ }
     }
     if (tabs.length) {
       activeTab = Math.min(Math.max(0, a.active || 0), tabs.length - 1);
       const tb = tabs[activeTab];
-      doc = tb.doc; cur = { ...tb.cur }; fileInfo = { ...tb.fileInfo }; dirty = tb.dirty;
+      doc = tb.doc; cur = { ...tb.cur }; fileInfo = { ...tb.fileInfo }; dirty = tb.dirty; curTabId = tb.id;
       restored = true;
     }
   } catch (e) { /* ignorieren */ }
-  if (!restored) { doc = createDoc(32, 32); tabs.push(null); activeTab = 0; }
+  if (!restored) { doc = createDoc(32, 32); tabs.push(null); activeTab = 0; curTabId = ++tabSeq; }
 
   syncDocUI();
   renderPalette();
