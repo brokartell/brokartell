@@ -377,7 +377,9 @@ const scrollbars = {
   h: { el: $('#sbar-h'), axis: 'x' },
   v: { el: $('#sbar-v'), axis: 'y' },
 };
-/** Liefert für eine Achse: sichtbare Größe, Gesamtgröße und aktuelle Scrollposition. */
+/** Liefert für eine Achse: sichtbare Größe, Gesamtgröße, aktuelle Scrollposition und ob etwas abgeschnitten ist.
+    Der Scrollbereich umfasst Bild (+ Rand) UND den sichtbaren Bereich – so erscheint die Leiste, sobald ein Teil
+    des Bildes aus dem Fenster ragt, auch wenn das Bild eigentlich kleiner als das Fenster ist (z. B. verschoben). */
 function scrollMetrics(axis) {
   const copies = settings.tile ? 3 : 1;
   const first = settings.tile ? -1 : 0;
@@ -385,21 +387,25 @@ function scrollMetrics(axis) {
   const origin = axis === 'x' ? view.ox : view.oy;
   const visible = axis === 'x' ? stage.clientWidth : stage.clientHeight;
   const contentStart = origin + first * size;      // linke/obere Kante des Inhalts
-  const total = size * copies + SCROLL_PAD * 2;
-  const pos = SCROLL_PAD - contentStart;            // 0 = ganz links/oben
-  return { visible, total, pos, max: Math.max(0, total - visible), first, size };
+  const contentEnd = contentStart + size * copies;
+  const start = Math.min(contentStart - SCROLL_PAD, 0);
+  const end = Math.max(contentEnd + SCROLL_PAD, visible);
+  const total = end - start;
+  const pos = -start;                               // 0 = ganz links/oben
+  const cut = contentStart < -0.5 || contentEnd > visible + 0.5;
+  return { visible, total, pos, max: Math.max(0, total - visible), cut };
 }
 function setScrollPos(axis, pos) {
   const m = scrollMetrics(axis);
   pos = clamp(pos, 0, m.max);
-  const origin = SCROLL_PAD - pos - m.first * m.size;
-  if (axis === 'x') view.ox = Math.round(origin); else view.oy = Math.round(origin);
+  const shift = Math.round(m.pos - pos);            // Inhalt um so viel verschieben
+  if (axis === 'x') view.ox += shift; else view.oy += shift;
   requestRender();
 }
 function updateScrollbars() {
   for (const sb of Object.values(scrollbars)) {
     const m = scrollMetrics(sb.axis);
-    const show = m.total > m.visible + 1;
+    const show = m.cut && m.max > 1;
     sb.el.hidden = !show;
     if (!show) continue;
     const track = sb.axis === 'x' ? sb.el.clientWidth : sb.el.clientHeight;
@@ -419,11 +425,12 @@ for (const sb of Object.values(scrollbars)) {
     e.preventDefault();
     thumb.setPointerCapture(e.pointerId);
     thumb.classList.add('dragging');
-    const start = coord(e), startPos = scrollMetrics(sb.axis).pos;
+    let last = coord(e);
     const move = (ev) => {
+      // schrittweise: der Scrollbereich ändert sich beim Verschieben mit, deshalb immer vom aktuellen Stand aus
       const m = scrollMetrics(sb.axis);
-      const free = Math.max(1, sb.track - sb.len);
-      setScrollPos(sb.axis, startPos + (coord(ev) - start) * m.max / free);
+      const d = coord(ev) - last; last = coord(ev);
+      setScrollPos(sb.axis, m.pos + d * m.total / Math.max(1, sb.track));
     };
     const up = () => {
       thumb.classList.remove('dragging');
