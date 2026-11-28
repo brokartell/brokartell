@@ -2584,7 +2584,7 @@ function renderGbLegend(r) {
     rows = r.palettes.map((p, i) => `<div class="gb-lrow${r.over.has(i) ? ' gb-over' : ''}${gbView.filter >= 0 && gbView.filter !== i ? ' dim' : ''}" ${r.over.has(i) ? `title="${t('Palette zu viel – {n} Kacheln bekommen in GB Studio andere Farben', { n: r.uses[i] })}"` : ''}><button class="gb-ltag gb-lpick${gbView.filter === i ? ' active' : ''}" data-pal="${i}" title="${t('Klick: nur Palette {n} im Bild zeigen', { n: i + 1 })}" style="background:${r.over.has(i) ? '#ff3250' : GB_HUES[i % GB_HUES.length]}">${i + 1}</button>${p.map(sw).join('')}${empty.repeat(GB_COLORS - p.length)}</div>`);
     if (r.extra.length) rows.push(`<div class="gb-lrow"><span class="gb-ltag warn">!</span>${r.extra.slice(0, 8).map(([u]) => sw(u)).join('')}${r.extra.length > 8 ? `<span class="gb-lmore">+${r.extra.length - 8}</span>` : ''}</div>`);
   }
-  if (r.mode !== 'classic') {
+  if (r.mode !== 'classic' && r.palettes.length) { // leeres Bild: keine Knöpfe, nur die Anzeige oben
     const on = settings.gbLabels !== false;
     rows.push(`<div class="gb-lbtns">${gbView.filter >= 0 ? `<button class="gb-lall">${t('Alle Paletten zeigen')}</button>` : ''}<button class="gb-lall gb-lnums${on ? '' : ' off'}" title="${t('Palettennummern auf den Kacheln ein- oder ausblenden')}">${on ? t('Zahlen aus') : t('Zahlen an')}</button></div>`);
   }
