@@ -4,6 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('native', {
   saveFile: (opts) => ipcRenderer.invoke('save-file', opts),
   openFile: (opts) => ipcRenderer.invoke('open-file', opts),
+  readPath: (p) => ipcRenderer.invoke('read-path', p),
   onOpenPath: (cb) => ipcRenderer.on('open-path', (_e, p, data) => cb(p, data)),
   onSaveAndClose: (cb) => ipcRenderer.on('save-and-close', () => cb()),
   setLanguage: (lang) => ipcRenderer.send('set-language', lang),

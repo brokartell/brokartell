@@ -87,6 +87,12 @@ ipcMain.handle('save-file', async (_e, { defaultPath, filters, data, path: targe
   return p;
 });
 
+// „Zuletzt geöffnet“: bekannte Datei erneut lesen (nur Projekt- und Bilddateien)
+ipcMain.handle('read-path', async (_e, p) => {
+  if (typeof p !== 'string' || !/\.(pixelbro|json|png|gif|jpe?g|bmp|webp)$/i.test(p)) return null;
+  try { return new Uint8Array(await fs.readFile(p)); } catch (e) { return null; }
+});
+
 ipcMain.handle('open-file', async (_e, { filters }) => {
   const r = await dialog.showOpenDialog(win, { filters, properties: ['openFile'] });
   if (r.canceled || !r.filePaths.length) return null;

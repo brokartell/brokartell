@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0 – Fünf neue Funktionen
+- GB-Prüfung (Game Boy Color): Fast gleiche Kacheln – Kacheln, die sich nur in 1–2 Pixeln von einer anderen unterscheiden (auch gespiegelt). „Fast gleich: n“ in der Übersicht oben links hebt sie hervor, die abweichenden Pixel sind pink. Angleichen spart Kacheln
+- Vorlage aus anderem Tab (Ansicht): ein anderes Bild scheint halb durchsichtig über dem aktuellen – zum Abzeichnen oder Vergleichen, Deckkraft einstellbar
+- Zuletzt geöffnet (Datei, Windows-App): die letzten 10 Projekte und Bilder
+- Neues Werkzeug „Farbe ersetzen“ (Q): malt wie ein Pinsel, färbt aber nur die Farbe um, auf die zuerst geklickt wurde
+- Auswahl skalieren: an den lila Ecken ziehen oder ×2 / ÷2 – nur saubere Stufen ½ · 2× · 3× · 4×, Pixel bleiben scharf
+
 ## 1.6.1
 - Aktiver Tab einheitlich hellila hinterlegt (wie in der Anleitung)
 - GB-Prüfung: bei leerem Bild nur die Anzeige oben – Paletten-Übersicht und „Zahlen an / aus“ erscheinen mit der ersten Farbe
