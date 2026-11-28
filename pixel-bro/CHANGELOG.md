@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+- Aktiver Tab einheitlich hellila hinterlegt (wie in der Anleitung)
+- GB-Prüfung: bei leerem Bild nur die Anzeige oben – Paletten-Übersicht und „Zahlen an / aus“ erscheinen mit der ersten Farbe
+
 ## 1.6.0 – Tabs
 - Neu: Tabs über der Zeichenfläche – mehrere Bilder gleichzeitig offen, jedes mit eigener Größe, eigenen Ebenen, Frames und eigenem Rückgängig. Klick auf einen Tab wechselt das Bild, + oder Strg+T öffnet einen neuen Tab, × oder Strg+W schließt ihn (fragt bei ungespeicherten Änderungen), Strg+Tab springt zum nächsten
 - Zwischen Tabs kopieren: auswählen, Strg+C, Tab wechseln, Strg+V
