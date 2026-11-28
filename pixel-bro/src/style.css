@@ -570,3 +570,19 @@ optgroup option { color: var(--text); }
 .opt-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
 .opt-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #opt-xform { padding: 0 6px; }
+
+/* Tabs (seit 1.6.0): mehrere Bilder gleichzeitig offen */
+#stage-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+#stage-col > #stage { flex: 1; min-height: 0; }
+#tabbar { display: flex; align-items: flex-end; gap: 2px; height: 34px; padding: 0 8px; background: var(--bg-2); border-bottom: 1px solid var(--line); flex: none; }
+#tabs { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#tabs::-webkit-scrollbar { display: none; }
+.tab { display: flex; align-items: center; gap: 6px; max-width: 220px; height: 28px; padding: 0 6px 0 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0; color: var(--text-2); font-size: 12.5px; cursor: pointer; user-select: none; flex: none; }
+.tab:hover { background: var(--panel-2); color: var(--text); }
+.tab.active { background: var(--stage); color: var(--text); border-color: var(--line); box-shadow: inset 0 2px 0 var(--accent); }
+.tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.tab-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); flex: none; }
+.tab-close { width: 20px; height: 20px; border: 0; border-radius: 5px; background: none; color: var(--text-3); font-size: 15px; line-height: 1; cursor: pointer; flex: none; }
+.tab-close:hover { background: var(--line-2); color: var(--text); }
+.tab-add { width: 28px; height: 26px; margin-bottom: 2px; border: 0; border-radius: 7px; background: none; color: var(--text-2); font-size: 18px; cursor: pointer; flex: none; }
+.tab-add:hover { background: var(--panel-2); color: var(--text); }
