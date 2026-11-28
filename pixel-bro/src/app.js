@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.7.2';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -163,7 +163,7 @@ function markDirty() {
   scheduleAutosave();
 }
 function updateTitle() {
-  document.title = `${dirty ? '● ' : ''}${fileInfo.name === 'unbenannt' ? t('unbenannt') : fileInfo.name} – Pixel Bro`;
+  document.title = emptyState ? 'Pixel Bro' : `${dirty ? '● ' : ''}${fileInfo.name === 'unbenannt' ? t('unbenannt') : fileInfo.name} – Pixel Bro`;
   renderTabs();
 }
 
@@ -198,11 +198,13 @@ function activeTabIsBlank() {
   return !dirty && !fileInfo.path && fileInfo.name === 'unbenannt' && !history.undo.length
     && doc.layers.length === 1 && doc.layers[0].frames.length === 1 && !doc.layers[0].frames[0].some((u) => u);
 }
-/** Vor dem Öffnen/Anlegen eines Bildes: neuen Tab anlegen (außer der aktuelle ist leer). */
-function prepareNewTab() {
+/** Vor dem Öffnen/Anlegen eines Bildes: neuen Tab anlegen (außer der aktuelle ist leer).
+    force = immer einen neuen Tab (Knopf + / Strg+T) */
+function prepareNewTab(force = false) {
   commitFloat(false);
   if (!tabs.length) return;
-  if (activeTabIsBlank()) return;
+  if (emptyState) { setEmptyState(false); curTabId = ++tabSeq; ref.id = 0; history.undo = []; history.redo = []; return; }
+  if (!force && activeTabIsBlank()) return;
   tabs[activeTab] = captureTab();
   tabs.push(null);
   activeTab = tabs.length - 1;
@@ -220,8 +222,20 @@ function switchTab(i) {
   scheduleAutosave();
 }
 function newTab() {
-  prepareNewTab();
+  prepareNewTab(true);
   newDocument(32, 32);
+}
+/* Leerer Startbildschirm, wenn der letzte Tab geschlossen ist (wie bei Pyxel Edit / Aseprite).
+   Intern bleibt ein leeres Dokument, damit nichts kaputtgeht – es ist nur verdeckt und gesperrt. */
+let emptyState = false;
+const EMPTY_OK = new Set(['new', 'open', 'import', 'tab-new', 'recent', 'guide', 'shortcuts', 'about', 'update-check', 'toggle-autoupdate', 'toggle-theme', 'lang-de', 'lang-en']);
+function setEmptyState(on) {
+  emptyState = on;
+  $('#empty-state').hidden = !on;
+  document.body.classList.toggle('no-tabs', on);
+  if (on && typeof gbView !== 'undefined' && gbView.on) setGbView(false);
+  renderTabs();
+  updateTitle();
 }
 async function closeTab(i) {
   if (i === activeTab) commitFloat(false);
@@ -238,10 +252,12 @@ async function closeTab(i) {
   if (ref.id === tb.id) ref.id = 0;
   for (const o of tabs) if (o && o.ref && o.ref.id === tb.id) o.ref.id = 0;
   tabs.splice(i, 1);
-  if (!tabs.length) {
+  if (!tabs.length) { // letzter Tab zu → leerer Startbildschirm
     tabs.push(null); activeTab = 0; curTabId = ++tabSeq; ref.id = 0;
     history.undo = []; history.redo = [];
     newDocument(32, 32);
+    setEmptyState(true);
+    scheduleAutosave();
     return;
   }
   if (i < activeTab) activeTab--;
@@ -311,6 +327,7 @@ async function referenceDialog() {
 function renderTabs() {
   const box = $('#tabs');
   if (!box || !tabs.length) return;
+  if (emptyState) { box.innerHTML = ''; return; }
   tabs[activeTab] = captureTab();
   box.innerHTML = tabs.map((tb, i) => `<div class="tab${i === activeTab ? ' active' : ''}" role="tab" data-i="${i}" title="${tb.fileInfo.path || tabLabel(tb)} · ${tb.doc.w} × ${tb.doc.h} px">
       <span class="tab-name">${tb.dirty ? '<i class="tab-dot"></i>' : ''}${tabLabel(tb).replace(/</g, '&lt;')}</span>
@@ -3543,6 +3560,7 @@ let autosaveTimer = null;
 // Sichert alle offenen Tabs (Name, Pfad, Pixel, ungespeichert ja/nein) – beim nächsten Start sind alle wieder da
 function writeAutosave() {
   if (!tabs.length) return;
+  if (emptyState) { try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ tabs: [], active: 0, empty: true })); } catch (e) { /* egal */ } return; }
   tabs[activeTab] = captureTab();
   const list = tabs.map((tb) => ({ name: tb.fileInfo.name, path: tb.fileInfo.path, dirty: tb.dirty, data: serialize(tb.doc) }));
   try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ tabs: list, active: activeTab })); }
@@ -3697,6 +3715,7 @@ const commands = {
 };
 function run(cmd) {
   closeMenus();
+  if (emptyState && !EMPTY_OK.has(cmd)) return; // ohne offenes Bild nur Öffnen/Neu usw.
   const fn = commands[cmd];
   if (fn) fn();
 }
@@ -3966,6 +3985,12 @@ document.addEventListener('keydown', (e) => {
   shiftDown = e.shiftKey;
   if (e.key === 'Alt') { e.preventDefault(); altDown = true; updateCursor(); return; }
   if (e.key === ' ') { e.preventDefault(); if (!spaceDown) { spaceDown = true; updateCursor(); } return; }
+  if (emptyState) { // Startbildschirm: nur Neu, Öffnen, Importieren, neuer Tab, F1
+    const em = { n: 'new', o: 'open', i: 'import', t: 'tab-new' };
+    if ((e.ctrlKey || e.metaKey) && em[k]) { e.preventDefault(); run(em[k]); }
+    else if (e.key === 'F1') { e.preventDefault(); run('shortcuts'); }
+    return;
+  }
 
   if (e.ctrlKey || e.metaKey) {
     if (e.key === 'Tab') { e.preventDefault(); return run(e.shiftKey ? 'tab-prev' : 'tab-next'); }
@@ -4291,7 +4316,10 @@ function init() {
       restored = true;
     }
   } catch (e) { /* ignorieren */ }
+  let startEmpty = false;
+  try { startEmpty = !restored && !!(JSON.parse(localStorage.getItem('pixelbro.autosave') || 'null') || {}).empty; } catch (e) { /* egal */ }
   if (!restored) { doc = createDoc(32, 32); tabs.push(null); activeTab = 0; curTabId = ++tabSeq; }
+  if (startEmpty) requestAnimationFrame(() => setEmptyState(true));
 
   syncDocUI();
   renderPalette();
