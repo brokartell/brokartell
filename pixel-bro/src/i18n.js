@@ -392,6 +392,7 @@ const EN = {
   'nutzt in GB Studio Palette 8:': 'uses palette 8 in GB Studio:',
   'Palette 8 (Text/UI) deiner Szene:': 'Palette 8 (text/UI) of your scene:',
   'Vorgabe': 'Default',
+  'Neues Sprite / Projekt öffnen / Bild importieren': 'New sprite / open project / import image',
   'Projekt öffnen': 'Open project',
   'Zuletzt geöffnet …': 'Recently opened …',
   'Zuletzt geöffnet': 'Recently opened',

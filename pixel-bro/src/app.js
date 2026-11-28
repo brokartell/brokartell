@@ -3755,7 +3755,8 @@ const GUIDE = [
         <li>Klick auf einen Tab wechselt das Bild (Strg+Tab), <b>+</b> oder Strg+T öffnet einen neuen Tab, × oder Strg+W schließt ihn</li>
         <li><b>Zwischen Bildern kopieren:</b> auswählen, Strg+C, Tab wechseln, Strg+V – z. B. ein Auto aus der Karthalle in den Außenbereich</li>
         <li><b>Vorlage:</b> Ansicht → Vorlage aus anderem Tab – ein anderes Bild scheint halb durchsichtig über deinem, zum Abzeichnen oder Vergleichen</li>
-        <li><b>Zuletzt geöffnet:</b> Datei → Zuletzt geöffnet … (Windows-App)</li></ul>
+        <li><b>Zuletzt geöffnet:</b> Datei → Zuletzt geöffnet … (Windows-App)</li>
+        <li>Sind alle Tabs geschlossen, zeigt Pixel Bro einen Startbildschirm mit Neues Sprite, Projekt öffnen, Bild importieren und Zuletzt geöffnet</li></ul>
       <h4>Zeichenfläche</h4>
       <ul><li>Mausrad zoomt, Umschalt + Mausrad scrollt waagerecht, Leertaste halten verschiebt</li>
         <li>„Einpassen“ oben rechts (Taste 0) zeigt das ganze Bild</li>
@@ -3775,7 +3776,8 @@ const GUIDE = [
         <li>Click a tab to switch (Ctrl+Tab), <b>+</b> or Ctrl+T opens a new tab, × or Ctrl+W closes it</li>
         <li><b>Copy between images:</b> select, Ctrl+C, switch tab, Ctrl+V – e.g. a kart from one map into another</li>
         <li><b>Reference:</b> View → Reference from another tab – another image shows semi-transparent over yours, for tracing or comparing</li>
-        <li><b>Recently opened:</b> File → Recently opened … (Windows app)</li></ul>
+        <li><b>Recently opened:</b> File → Recently opened … (Windows app)</li>
+        <li>When all tabs are closed, Pixel Bro shows a start screen with New sprite, Open project, Import image and Recently opened</li></ul>
       <h4>Canvas</h4>
       <ul><li>Mouse wheel zooms, Shift + wheel scrolls horizontally, hold Space to pan</li>
         <li>“Fit” at the top right (key 0) shows the whole image</li>
@@ -3940,6 +3942,7 @@ function showShortcuts() {
     ['+ / − / 0', 'Zoom rein / raus / einpassen'],
     [', / .', 'Vorheriger / nächster Frame'],
     ['N / Umschalt+N', 'Neuer Frame / Frame duplizieren'],
+    ['Strg+N / Strg+O / Strg+I', 'Neues Sprite / Projekt öffnen / Bild importieren'],
     ['Strg+T / Strg+W', 'Neuer Tab / Tab schließen'],
     ['Strg+Tab', 'Zum nächsten Tab'],
     ['Pfeiltasten', 'Auswahl um 1 px verschieben'],
