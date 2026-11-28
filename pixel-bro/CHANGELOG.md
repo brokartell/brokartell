@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0 – Tabs
+- Neu: Tabs über der Zeichenfläche – mehrere Bilder gleichzeitig offen, jedes mit eigener Größe, eigenen Ebenen, Frames und eigenem Rückgängig. Klick auf einen Tab wechselt das Bild, + oder Strg+T öffnet einen neuen Tab, × oder Strg+W schließt ihn (fragt bei ungespeicherten Änderungen), Strg+Tab springt zum nächsten
+- Zwischen Tabs kopieren: auswählen, Strg+C, Tab wechseln, Strg+V
+- Neues Sprite, Projekt öffnen und Bild importieren öffnen ein neues Tab (ein leerer „unbenannt“-Tab wird wiederverwendet); eine schon offene Datei springt zu ihrem Tab
+- Die automatische Sicherung merkt sich alle offenen Tabs
+- Zeichenfläche: Scrollleisten erscheinen, sobald ein Teil des Bildes aus dem Fenster ragt
+- „Über Pixel Bro“: Link zur Pixel Bro Homepage und Feedback-Adresse pixelbro@bro-kartell.com (öffnet das Mailprogramm)
+- Schrift der GB-Anzeige oben links und des Umschalters Color / klassisch korrigiert
+
 ## 1.5.15 – Feinschliff (gesammelt)
 - Kopfzeile wie in anderen Programmen: Datei · Bearbeiten · Bild · Ansicht · Hilfe links, Pixel Bro mittig (ohne Versionsnummer – die steht unter „Über Pixel Bro“), Schriftzug mittig zum Logo
 - Import: Bilder über 1024 × 1024 px werden gleich im Fenster gemeldet und lassen sich verkleinert als neues Sprite importieren (Pixel bleiben scharf)

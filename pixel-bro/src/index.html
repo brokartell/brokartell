@@ -20,6 +20,9 @@
             <button data-cmd="open"><span>Projekt öffnen …</span><kbd>Strg+O</kbd></button>
             <button data-cmd="save"><span>Projekt speichern</span><kbd>Strg+S</kbd></button>
             <hr>
+            <button data-cmd="tab-new"><span>Neuer Tab</span><kbd>Strg+T</kbd></button>
+            <button data-cmd="tab-close"><span>Tab schließen</span><kbd>Strg+W</kbd></button>
+            <hr>
             <button data-cmd="import"><span>Bild importieren …</span><kbd>Strg+I</kbd></button>
             <hr>
             <button data-cmd="export-png"><span>Als PNG exportieren …</span><kbd>Strg+E</kbd></button>
@@ -186,22 +189,29 @@
 
 
       <!-- Zeichenfläche -->
-      <section id="stage">
-        <canvas id="canvas"></canvas>
-        <div class="sbar sbar-h" id="sbar-h" hidden><div class="sbar-thumb"></div></div>
-        <div class="sbar sbar-v" id="sbar-v" hidden><div class="sbar-thumb"></div></div>
-        <div id="gb-hud" hidden>
-          <button id="gb-hud-open" title="Details anzeigen"><span class="gb-dot"></span><span id="gb-hud-text"></span></button>
-          <button id="gb-hud-close" class="icon-btn small" title="Ansicht ausblenden"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <div id="stage-col">
+        <!-- Tabs: mehrere Bilder gleichzeitig offen, jedes mit eigener Größe -->
+        <div id="tabbar" role="tablist" aria-label="Offene Bilder" data-i18n-skip>
+          <div id="tabs"></div>
+          <button id="tab-new" class="tab-add" title="Neuer Tab (Strg+T)">+</button>
         </div>
-        <div id="gb-legend" hidden title="Klick: Primärfarbe · Rechtsklick: Sekundärfarbe"></div>
-        <div id="zoom-hud">
-          <button class="icon-btn small" data-cmd="zoom-out" title="Verkleinern">−</button>
-          <span id="zoom-label" class="mono">100%</span>
-          <button class="icon-btn small" data-cmd="zoom-in" title="Vergrößern">+</button>
-          <button class="icon-btn small" data-cmd="zoom-fit" title="Einpassen"><svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
-        </div>
-      </section>
+        <section id="stage">
+          <canvas id="canvas"></canvas>
+          <div class="sbar sbar-h" id="sbar-h" hidden><div class="sbar-thumb"></div></div>
+          <div class="sbar sbar-v" id="sbar-v" hidden><div class="sbar-thumb"></div></div>
+          <div id="gb-hud" hidden>
+            <button id="gb-hud-open" title="Details anzeigen"><span class="gb-dot"></span><span id="gb-hud-text"></span></button>
+            <button id="gb-hud-close" class="icon-btn small" title="Ansicht ausblenden"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          </div>
+          <div id="gb-legend" hidden title="Klick: Primärfarbe · Rechtsklick: Sekundärfarbe"></div>
+          <div id="zoom-hud">
+            <button class="icon-btn small" data-cmd="zoom-out" title="Verkleinern">−</button>
+            <span id="zoom-label" class="mono">100%</span>
+            <button class="icon-btn small" data-cmd="zoom-in" title="Vergrößern">+</button>
+            <button class="icon-btn small" data-cmd="zoom-fit" title="Einpassen"><svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+          </div>
+        </section>
+      </div>
 
       <!-- Seitenleiste -->
       <aside id="sidebar">

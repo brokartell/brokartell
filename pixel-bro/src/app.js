@@ -7,7 +7,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const nativeApi = window.native || null; // Electron-Brücke (preload.js)
-const APP_VERSION = '1.5.15';
+const APP_VERSION = '1.6.0';
 
 /* ---------- Farben ---------- */
 const pack = (r, g, b, a = 255) => (((a & 255) << 24) | ((b & 255) << 16) | ((g & 255) << 8) | (r & 255)) >>> 0;
@@ -157,13 +157,106 @@ function redo() {
   afterStructureChange();
 }
 function markDirty() {
+  const was = dirty;
   dirty = true;
-  updateTitle();
+  if (!was) updateTitle(); else document.title.startsWith('●') || updateTitle();
   scheduleAutosave();
 }
 function updateTitle() {
   document.title = `${dirty ? '● ' : ''}${fileInfo.name === 'unbenannt' ? t('unbenannt') : fileInfo.name} – Pixel Bro`;
+  renderTabs();
 }
+
+/* ---------- Tabs: mehrere Bilder gleichzeitig offen (seit 1.6.0) ----------
+   Das aktive Bild liegt wie bisher in den globalen Variablen (doc, cur, fileInfo, dirty, history, sel, view).
+   Beim Wechseln wird der Stand in tabs[activeTab] gesichert und der andere Tab geladen. Die Zwischenablage
+   (clipboard) ist für alle Tabs gleich – so lässt sich etwas von einem Bild ins andere kopieren. */
+const tabs = [];
+let activeTab = 0;
+function captureTab() {
+  return { doc, cur: { ...cur }, fileInfo: { ...fileInfo }, dirty, undo: history.undo, redo: history.redo, sel, view: { ...view } };
+}
+function applyTab(tb) {
+  float = null;
+  doc = tb.doc; cur = { ...tb.cur }; fileInfo = { ...tb.fileInfo }; dirty = tb.dirty; sel = tb.sel;
+  history.undo = tb.undo; history.redo = tb.redo;
+  if (tb.view) Object.assign(view, tb.view);
+  if (typeof gbView !== 'undefined') gbView.filter = -1;
+  selPathCache.key = null;
+  syncDocUI();
+  updateTitle();
+  if (!tb.view) zoomFit(); else showZoom(view.zoom);
+  afterStructureChange();
+}
+const tabLabel = (tb) => (tb.fileInfo.name === 'unbenannt' ? t('unbenannt') : tb.fileInfo.name).replace(/\.pixelbro$/i, '');
+/** Ist der aktive Tab ein leeres, unverändertes „unbenannt“? Dann darf er für ein neues Bild wiederverwendet werden. */
+function activeTabIsBlank() {
+  return !dirty && !fileInfo.path && fileInfo.name === 'unbenannt' && !history.undo.length
+    && doc.layers.length === 1 && doc.layers[0].frames.length === 1 && !doc.layers[0].frames[0].some((u) => u);
+}
+/** Vor dem Öffnen/Anlegen eines Bildes: neuen Tab anlegen (außer der aktuelle ist leer). */
+function prepareNewTab() {
+  commitFloat(false);
+  if (!tabs.length) return;
+  if (activeTabIsBlank()) return;
+  tabs[activeTab] = captureTab();
+  tabs.push(null);
+  activeTab = tabs.length - 1;
+  history.undo = []; history.redo = [];
+}
+function switchTab(i) {
+  if (i === activeTab || i < 0 || i >= tabs.length) return;
+  commitFloat(false);
+  tabs[activeTab] = captureTab();
+  activeTab = i;
+  applyTab(tabs[i]);
+  scheduleAutosave();
+}
+function newTab() {
+  prepareNewTab();
+  newDocument(32, 32);
+}
+async function closeTab(i) {
+  if (i === activeTab) commitFloat(false);
+  const tb = i === activeTab ? captureTab() : tabs[i];
+  if (tb.dirty) {
+    if (i !== activeTab) switchTab(i);
+    const r = await modal({ title: 'Tab schließen', body: `<p>${t('„{name}“ hat ungespeicherte Änderungen.', { name: tabLabel(tb) })}</p>`,
+      actions: [{ label: 'Abbrechen', value: null }, { label: 'Nicht speichern', value: 'drop' }, { label: 'Speichern …', value: 'save', primary: true }] });
+    if (!r) return;
+    if (r === 'save' && !(await saveProject(false))) return;
+    i = activeTab;
+  }
+  tabs.splice(i, 1);
+  if (!tabs.length) {
+    tabs.push(null); activeTab = 0;
+    history.undo = []; history.redo = [];
+    newDocument(32, 32);
+    return;
+  }
+  if (i < activeTab) activeTab--;
+  else if (i === activeTab) { activeTab = Math.min(i, tabs.length - 1); applyTab(tabs[activeTab]); }
+  renderTabs();
+  scheduleAutosave();
+}
+function renderTabs() {
+  const box = $('#tabs');
+  if (!box || !tabs.length) return;
+  tabs[activeTab] = captureTab();
+  box.innerHTML = tabs.map((tb, i) => `<div class="tab${i === activeTab ? ' active' : ''}" role="tab" data-i="${i}" title="${tb.fileInfo.path || tabLabel(tb)} · ${tb.doc.w} × ${tb.doc.h} px">
+      <span class="tab-name">${tb.dirty ? '<i class="tab-dot"></i>' : ''}${tabLabel(tb).replace(/</g, '&lt;')}</span>
+      <button class="tab-close" data-close="${i}" title="${t('Tab schließen (Strg+W)')}">×</button></div>`).join('');
+}
+$('#tabs').addEventListener('pointerdown', (e) => {
+  const c = e.target.closest('[data-close]');
+  if (c) { e.preventDefault(); return; }
+  const tb = e.target.closest('.tab');
+  if (!tb) return;
+  if (e.button === 1) { e.preventDefault(); closeTab(+tb.dataset.i); return; }
+  if (e.button === 0) switchTab(+tb.dataset.i);
+});
+$('#tabs').addEventListener('click', (e) => { const c = e.target.closest('[data-close]'); if (c) closeTab(+c.dataset.close); });
+$('#tab-new').addEventListener('click', () => newTab());
 
 /* ---------- Canvas & Rendering ---------- */
 const canvas = $('#canvas');
@@ -377,7 +470,9 @@ const scrollbars = {
   h: { el: $('#sbar-h'), axis: 'x' },
   v: { el: $('#sbar-v'), axis: 'y' },
 };
-/** Liefert für eine Achse: sichtbare Größe, Gesamtgröße und aktuelle Scrollposition. */
+/** Liefert für eine Achse: sichtbare Größe, Gesamtgröße, aktuelle Scrollposition und ob etwas abgeschnitten ist.
+    Der Scrollbereich umfasst Bild (+ Rand) UND den sichtbaren Bereich – so erscheint die Leiste, sobald ein Teil
+    des Bildes aus dem Fenster ragt, auch wenn das Bild eigentlich kleiner als das Fenster ist (z. B. verschoben). */
 function scrollMetrics(axis) {
   const copies = settings.tile ? 3 : 1;
   const first = settings.tile ? -1 : 0;
@@ -385,21 +480,25 @@ function scrollMetrics(axis) {
   const origin = axis === 'x' ? view.ox : view.oy;
   const visible = axis === 'x' ? stage.clientWidth : stage.clientHeight;
   const contentStart = origin + first * size;      // linke/obere Kante des Inhalts
-  const total = size * copies + SCROLL_PAD * 2;
-  const pos = SCROLL_PAD - contentStart;            // 0 = ganz links/oben
-  return { visible, total, pos, max: Math.max(0, total - visible), first, size };
+  const contentEnd = contentStart + size * copies;
+  const start = Math.min(contentStart - SCROLL_PAD, 0);
+  const end = Math.max(contentEnd + SCROLL_PAD, visible);
+  const total = end - start;
+  const pos = -start;                               // 0 = ganz links/oben
+  const cut = contentStart < -0.5 || contentEnd > visible + 0.5;
+  return { visible, total, pos, max: Math.max(0, total - visible), cut };
 }
 function setScrollPos(axis, pos) {
   const m = scrollMetrics(axis);
   pos = clamp(pos, 0, m.max);
-  const origin = SCROLL_PAD - pos - m.first * m.size;
-  if (axis === 'x') view.ox = Math.round(origin); else view.oy = Math.round(origin);
+  const shift = Math.round(m.pos - pos);            // Inhalt um so viel verschieben
+  if (axis === 'x') view.ox += shift; else view.oy += shift;
   requestRender();
 }
 function updateScrollbars() {
   for (const sb of Object.values(scrollbars)) {
     const m = scrollMetrics(sb.axis);
-    const show = m.total > m.visible + 1;
+    const show = m.cut && m.max > 1;
     sb.el.hidden = !show;
     if (!show) continue;
     const track = sb.axis === 'x' ? sb.el.clientWidth : sb.el.clientHeight;
@@ -419,11 +518,12 @@ for (const sb of Object.values(scrollbars)) {
     e.preventDefault();
     thumb.setPointerCapture(e.pointerId);
     thumb.classList.add('dragging');
-    const start = coord(e), startPos = scrollMetrics(sb.axis).pos;
+    let last = coord(e);
     const move = (ev) => {
+      // schrittweise: der Scrollbereich ändert sich beim Verschieben mit, deshalb immer vom aktuellen Stand aus
       const m = scrollMetrics(sb.axis);
-      const free = Math.max(1, sb.track - sb.len);
-      setScrollPos(sb.axis, startPos + (coord(ev) - start) * m.max / free);
+      const d = coord(ev) - last; last = coord(ev);
+      setScrollPos(sb.axis, m.pos + d * m.total / Math.max(1, sb.track));
     };
     const up = () => {
       thumb.classList.remove('dragging');
@@ -2842,7 +2942,7 @@ async function dialogNew() {
   if (!ok) return;
   const w = clamp(parseInt(body.querySelector('#nw').value) || 32, 1, 1024);
   const h = clamp(parseInt(body.querySelector('#nh').value) || 32, 1, 1024);
-  if (doc) pushUndo();
+  prepareNewTab();
   newDocument(w, h);
 }
 function newDocument(w, h) {
@@ -3054,11 +3154,11 @@ function unb64(s) {
   for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
   return u8;
 }
-function serialize() {
+function serialize(d = doc) {
   return JSON.stringify({
-    app: 'PixelBro', version: 1, w: doc.w, h: doc.h, fps: doc.fps,
+    app: 'PixelBro', version: 1, w: d.w, h: d.h, fps: d.fps,
     palette: settings.palette.map((c) => toHex(c, true)),
-    layers: doc.layers.map((l) => ({ name: l.name, visible: l.visible, opacity: l.opacity, frames: l.frames.map((f) => b64(new Uint8Array(f.buffer))) })),
+    layers: d.layers.map((l) => ({ name: l.name, visible: l.visible, opacity: l.opacity, frames: l.frames.map((f) => b64(new Uint8Array(f.buffer))) })),
   });
 }
 function deserialize(text) {
@@ -3076,7 +3176,11 @@ function deserialize(text) {
 function loadProject(text, name, path) {
   try {
     const r = deserialize(text);
-    if (doc) pushUndo();
+    // Schon offen? Dann zu diesem Tab wechseln statt doppelt öffnen
+    const open = path ? tabs.findIndex((tb, i) => (i === activeTab ? fileInfo.path : tb && tb.fileInfo.path) === path) : -1;
+    if (open >= 0) { switchTab(open); return toast(t('Schon geöffnet: {name}', { name: name || path })); }
+    prepareNewTab();
+    history.undo = []; history.redo = [];
     float = null; sel = null;
     doc = r.doc;
     cur = { layer: doc.layers.length - 1, frame: 0 };
@@ -3147,10 +3251,10 @@ async function handleImageBlob(blob, name) {
   commitFloat(false);
   if (mode === 'new') {
     if (c.width > MAXD || c.height > MAXD) return toast('Maximal 1024 × 1024 px');
-    if (doc) pushUndo();
+    prepareNewTab();
     newDocument(c.width, c.height);
     doc.layers[0].frames[0] = new Uint32Array(cc.getImageData(0, 0, c.width, c.height).data.buffer);
-    fileInfo.name = name;
+    fileInfo.name = name.replace(/\.[^.]+$/, '');
   } else if (mode === 'layer') {
     pushUndo();
     const L = makeLayer(name.replace(/\.[^.]+$/, ''), doc.w, doc.h, frameCount());
@@ -3162,7 +3266,7 @@ async function handleImageBlob(blob, name) {
     const fh = clamp(parseInt(body.querySelector('#fh').value) || 16, 1, 1024);
     const cols = Math.floor(img.width / fw), rows = Math.floor(img.height / fh);
     if (!cols || !rows) return toast('Frame-Größe passt nicht ins Bild');
-    if (doc) pushUndo();
+    prepareNewTab();
     newDocument(fw, fh);
     const frames = [];
     for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) {
@@ -3180,15 +3284,24 @@ async function handleImageBlob(blob, name) {
 
 /* ---------- Autosave & Einstellungen ---------- */
 let autosaveTimer = null;
+// Sichert alle offenen Tabs (Name, Pfad, Pixel, ungespeichert ja/nein) – beim nächsten Start sind alle wieder da
+function writeAutosave() {
+  if (!tabs.length) return;
+  tabs[activeTab] = captureTab();
+  const list = tabs.map((tb) => ({ name: tb.fileInfo.name, path: tb.fileInfo.path, dirty: tb.dirty, data: serialize(tb.doc) }));
+  try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ tabs: list, active: activeTab })); }
+  catch (e) {
+    // Speicher voll (sehr viele/große Tabs): wenigstens den aktiven Tab sichern
+    try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ tabs: [list[activeTab]], active: 0 })); } catch (e2) { /* nichts zu machen */ }
+  }
+}
 function autosaveNow() {
   clearTimeout(autosaveTimer);
-  try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ name: fileInfo.name, path: fileInfo.path, data: serialize() })); } catch (e) { /* Speicher voll */ }
+  writeAutosave();
 }
 function scheduleAutosave() {
   clearTimeout(autosaveTimer);
-  autosaveTimer = setTimeout(() => {
-    try { localStorage.setItem('pixelbro.autosave', JSON.stringify({ name: fileInfo.name, path: fileInfo.path, data: serialize() })); } catch (e) { /* Speicher voll */ }
-  }, 1200);
+  autosaveTimer = setTimeout(writeAutosave, 1200);
 }
 function saveSettings() {
   try {
@@ -3243,6 +3356,10 @@ function setLanguage(lang) {
 
 const commands = {
   new: dialogNew,
+  'tab-new': () => newTab(),
+  'tab-close': () => closeTab(activeTab),
+  'tab-next': () => tabs.length > 1 && switchTab((activeTab + 1) % tabs.length),
+  'tab-prev': () => tabs.length > 1 && switchTab((activeTab - 1 + tabs.length) % tabs.length),
   open: openProject,
   save: () => saveProject(false),
   'save-as': () => saveProject(true),
@@ -3353,6 +3470,10 @@ const GUIDE = [
         <div><b>2</b><p><b>Zeichnen</b> mit den Werkzeugen links. Farben wählst du rechts unter „Farbe &amp; Palette“.</p></div>
         <div><b>3</b><p><b>Speichern</b> als Projekt (.pixelbro, Strg+S) – mit allen Ebenen und Frames. Fertige Bilder über <b>Exportieren</b> oben rechts.</p></div>
       </div>
+      <h4>Tabs – mehrere Bilder gleichzeitig</h4>
+      <ul><li>Jedes Bild öffnet sich in einem eigenen <b>Tab</b> über der Zeichenfläche – mit eigener Größe, eigenen Ebenen und eigenem Rückgängig</li>
+        <li>Klick auf einen Tab wechselt das Bild (Strg+Tab), <b>+</b> oder Strg+T öffnet einen neuen Tab, × oder Strg+W schließt ihn</li>
+        <li><b>Zwischen Bildern kopieren:</b> auswählen, Strg+C, Tab wechseln, Strg+V – z. B. ein Auto aus der Karthalle in den Außenbereich</li></ul>
       <h4>Zeichenfläche</h4>
       <ul><li>Mausrad zoomt, Umschalt + Mausrad scrollt waagerecht, Leertaste halten verschiebt</li>
         <li>„Einpassen“ oben rechts (Taste 0) zeigt das ganze Bild</li>
@@ -3367,6 +3488,10 @@ const GUIDE = [
         <div><b>2</b><p><b>Draw</b> with the tools on the left. Pick colors on the right under “Color &amp; palette”.</p></div>
         <div><b>3</b><p><b>Save</b> as a project (.pixelbro, Ctrl+S) – with all layers and frames. Finished images via <b>Export</b> at the top right.</p></div>
       </div>
+      <h4>Tabs – several images at once</h4>
+      <ul><li>Every image opens in its own <b>tab</b> above the canvas – with its own size, layers and undo</li>
+        <li>Click a tab to switch (Ctrl+Tab), <b>+</b> or Ctrl+T opens a new tab, × or Ctrl+W closes it</li>
+        <li><b>Copy between images:</b> select, Ctrl+C, switch tab, Ctrl+V – e.g. a kart from one map into another</li></ul>
       <h4>Canvas</h4>
       <ul><li>Mouse wheel zooms, Shift + wheel scrolls horizontally, hold Space to pan</li>
         <li>“Fit” at the top right (key 0) shows the whole image</li>
@@ -3528,6 +3653,8 @@ function showShortcuts() {
     ['+ / − / 0', 'Zoom rein / raus / einpassen'],
     [', / .', 'Vorheriger / nächster Frame'],
     ['N / Umschalt+N', 'Neuer Frame / Frame duplizieren'],
+    ['Strg+T / Strg+W', 'Neuer Tab / Tab schließen'],
+    ['Strg+Tab', 'Zum nächsten Tab'],
     ['Pfeiltasten', 'Auswahl um 1 px verschieben'],
     ['Enter / Esc', 'Verschieben bestätigen / Auswahl aufheben'],
     ['T', 'Kachel-Modus'],
@@ -3573,7 +3700,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') { e.preventDefault(); if (!spaceDown) { spaceDown = true; updateCursor(); } return; }
 
   if (e.ctrlKey || e.metaKey) {
-    const map = { z: e.shiftKey ? 'redo' : 'undo', y: 'redo', s: e.shiftKey ? 'save-as' : 'save', o: 'open', n: 'new', i: 'import', e: 'export-png', g: 'export-gif', c: 'copy', x: 'cut', v: 'paste', a: 'select-all', d: 'deselect', r: 'resize' };
+    if (e.key === 'Tab') { e.preventDefault(); return run(e.shiftKey ? 'tab-prev' : 'tab-next'); }
+    const map = { t: 'tab-new', w: 'tab-close', z: e.shiftKey ? 'redo' : 'undo', y: 'redo', s: e.shiftKey ? 'save-as' : 'save', o: 'open', n: 'new', i: 'import', e: 'export-png', g: 'export-gif', c: 'copy', x: 'cut', v: 'paste', a: 'select-all', d: 'deselect', r: 'resize' };
     if (map[k]) { e.preventDefault(); run(map[k]); }
     return;
   }
@@ -3749,7 +3877,7 @@ stage.addEventListener('drop', async (e) => {
 
 window.addEventListener('beforeunload', (e) => {
   autosaveNow(); // letzte Striche sofort sichern, nicht erst nach der Wartezeit
-  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+  if (dirty || tabs.some((tb, i) => i !== activeTab && tb && tb.dirty)) { e.preventDefault(); e.returnValue = ''; }
 });
 
 /* ---------- Updates (nur Windows-App) ---------- */
@@ -3880,15 +4008,22 @@ function init() {
   let restored = false;
   try {
     const a = JSON.parse(localStorage.getItem('pixelbro.autosave') || 'null');
-    if (a && a.data) {
-      const r = deserialize(a.data);
-      doc = r.doc;
-      cur = { layer: doc.layers.length - 1, frame: 0 };
-      fileInfo = { path: a.path || null, name: a.name || 'unbenannt' };
+    const list = a ? (a.tabs || (a.data ? [{ name: a.name, path: a.path, data: a.data }] : [])) : [];
+    for (const s of list) {
+      try {
+        const d = deserialize(s.data).doc;
+        tabs.push({ doc: d, cur: { layer: d.layers.length - 1, frame: 0 }, fileInfo: { path: s.path || null, name: s.name || 'unbenannt' },
+          dirty: !!s.dirty, undo: [], redo: [], sel: null, view: null });
+      } catch (e) { /* kaputten Tab überspringen */ }
+    }
+    if (tabs.length) {
+      activeTab = Math.min(Math.max(0, a.active || 0), tabs.length - 1);
+      const tb = tabs[activeTab];
+      doc = tb.doc; cur = { ...tb.cur }; fileInfo = { ...tb.fileInfo }; dirty = tb.dirty;
       restored = true;
     }
   } catch (e) { /* ignorieren */ }
-  if (!restored) { doc = createDoc(32, 32); }
+  if (!restored) { doc = createDoc(32, 32); tabs.push(null); activeTab = 0; }
 
   syncDocUI();
   renderPalette();
@@ -3898,7 +4033,7 @@ function init() {
   updateTitle();
   requestAnimationFrame(() => { zoomFit(); afterStructureChange(); });
   requestAnimationFrame(previewLoop);
-  if (restored) setTimeout(() => toast('Letzte Sitzung wiederhergestellt'), 400);
+  if (restored) setTimeout(() => toast(tabs.length > 1 ? t('Letzte Sitzung wiederhergestellt ({n} Tabs)', { n: tabs.length }) : 'Letzte Sitzung wiederhergestellt'), 400);
 
   if (nativeApi && nativeApi.onOpenPath) {
     nativeApi.onOpenPath((path, data) => loadProject(new TextDecoder().decode(data), path.split(/[\\/]/).pop(), path));
@@ -3907,8 +4042,14 @@ function init() {
   // Schließen-Dialog → „Speichern …“: erst speichern, dann schließen
   if (nativeApi && nativeApi.onSaveAndClose) {
     nativeApi.onSaveAndClose(async () => {
-      const p = await saveProject(false);
-      if (p) window.close();
+      // alle Tabs mit ungespeicherten Änderungen nacheinander speichern
+      for (let i = 0; i < tabs.length; i++) {
+        const isDirty = i === activeTab ? dirty : tabs[i] && tabs[i].dirty;
+        if (!isDirty) continue;
+        switchTab(i);
+        if (!(await saveProject(false))) return;
+      }
+      window.close();
     });
   }
 
